@@ -11,7 +11,15 @@
     "comingSoon": "Soon",
     "backHome": "Back to home",
     "tryAgain": "Try again",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…",
+    "done": "Done",
+    "copy": "Copy",
+    "copied": "Copied",
+    "search": "Search",
+    "all": "All"
   },
   "metadata": {
     "description": "Contributions, aid cases and monthly reports for the Ehsas Program welfare fund of Megowal village."
@@ -19,6 +27,7 @@
   "landing": {
     "about": "Ehsas Program is a welfare fund run by the people of Megowal village. Members give a fixed amount every month, and the fund helps families in need with weddings, funerals, medical treatment, school fees and other needs. Every rupee is recorded openly.",
     "loginCta": "Log in to your account",
+    "openAccount": "Open my account",
     "loginNote": "Members and heads log in with their mobile number.",
     "points": {
       "transparent": {
@@ -40,16 +49,129 @@
     "title": "Log in",
     "subtitle": "Enter your mobile number and password.",
     "mobile": "Mobile number",
-    "mobileHint": "For example 03001234567",
+    "mobileHint": "For example 0300-1234567",
     "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "submit": "Log in",
     "submitting": "Checking…",
-    "notReady": "Login will be switched on in the next update.",
-    "forgot": "Forgot your password? Ask a head of the program to reset it."
+    "forgot": "Forgot your password? Ask the admin to reset it."
+  },
+  "account": {
+    "menu": "Account menu",
+    "profile": "Profile",
+    "logout": "Log out",
+    "myMemberAccount": "My member account",
+    "management": "Management",
+    "profileTitle": "My profile",
+    "details": "Details",
+    "name": "Name",
+    "mobile": "Mobile",
+    "role": "Role",
+    "linkedMember": "Member record",
+    "notLinked": "Not linked to a member",
+    "changePasswordTitle": "Change password",
+    "changePasswordSubtitle": "Use at least 8 characters. Do not share it with anyone.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Repeat new password",
+    "savePassword": "Save password",
+    "passwordChanged": "Password changed.",
+    "forcedTitle": "Set your own password",
+    "forcedSubtitle": "You logged in with a temporary password. Choose your own password to continue.",
+    "forcedSubmit": "Save and continue",
+    "languageTitle": "Language",
+    "languageSubtitle": "Choose the language for your screens.",
+    "languageSaved": "Language saved."
+  },
+  "roles": {
+    "admin": "Admin",
+    "head": "Head",
+    "member": "Member"
+  },
+  "userStatus": {
+    "active": "Active",
+    "disabled": "Disabled"
+  },
+  "users": {
+    "title": "Users",
+    "subtitle": "People who can log in to the app",
+    "add": "Add user",
+    "searchPlaceholder": "Search by name or mobile",
+    "count": "{count, plural, one {# user} other {# users}}",
+    "lastLogin": "Last login",
+    "never": "Never",
+    "mustChange": "Has temporary password",
+    "member": "Member",
+    "emptyTitle": "No users found",
+    "emptyBody": "Try a different search, or add a user.",
+    "actions": {
+      "menu": "Actions for {name}",
+      "edit": "Edit",
+      "resetPassword": "Reset password",
+      "disable": "Disable",
+      "enable": "Enable"
+    },
+    "form": {
+      "createTitle": "Add user",
+      "createSubtitle": "A temporary password is made for the new user.",
+      "editTitle": "Edit user",
+      "name": "Full name",
+      "mobile": "Mobile number",
+      "role": "Role",
+      "member": "Member record",
+      "noMember": "Not linked",
+      "memberHint": "Required for members. Heads can be linked to their own member record.",
+      "linkedTo": "linked to {name}",
+      "language": "Language",
+      "create": "Add user"
+    },
+    "created": "User added.",
+    "updated": "User saved.",
+    "disabled": "User disabled.",
+    "enabled": "User enabled.",
+    "confirmDisableTitle": "Disable {name}?",
+    "confirmDisableBody": "They will not be able to log in until you enable them again.",
+    "confirmResetTitle": "Reset password for {name}?",
+    "confirmResetBody": "A new temporary password will be made. Their old password stops working straight away.",
+    "confirm": "Yes, continue",
+    "tempTitle": "Temporary password",
+    "tempBody": "Give this password to {name}. They must change it after logging in. It will not be shown again.",
+    "tempMobile": "Mobile",
+    "tempPassword": "Password",
+    "shareWhatsApp": "Send on WhatsApp",
+    "whatsappMessage": "Assalam-o-Alaikum {name}. Your Ehsas Program login:\nMobile: {mobile}\nTemporary password: {password}\nYou will be asked to set your own password after logging in.\n{url}"
   },
   "validation": {
     "mobileFormat": "Mobile number must start with 03 and have 11 digits.",
-    "passwordRequired": "Please enter your password."
+    "passwordRequired": "Please enter your password.",
+    "passwordTooShort": "Password must be at least 8 characters.",
+    "passwordTooLong": "Password is too long.",
+    "passwordsDontMatch": "The two passwords do not match.",
+    "passwordSameAsOld": "New password must be different from the current one.",
+    "nameRequired": "Please enter the name.",
+    "nameTooLong": "Name is too long.",
+    "roleRequired": "Please choose a role.",
+    "memberRequired": "A member login must be linked to a member record.",
+    "invalidId": "Invalid selection."
+  },
+  "serverErrors": {
+    "unauthenticated": "Your session has ended. Please log in again.",
+    "forbidden": "You are not allowed to do this.",
+    "invalidInput": "Some details are not valid. Please check the form.",
+    "notFound": "This record was not found. It may have been removed.",
+    "unknown": "Something went wrong. Please try again.",
+    "invalidCredentials": "Mobile number or password is wrong.",
+    "rateLimited": "Too many wrong attempts. Please wait 15 minutes and try again.",
+    "accountDisabled": "This account is disabled. Please contact the admin.",
+    "mobileTaken": "Another user already has this mobile number.",
+    "memberNotFound": "The selected member was not found.",
+    "memberAlreadyLinked": "This member is already linked to another user.",
+    "cannotChangeOwnRole": "You cannot change your own role.",
+    "cannotDisableSelf": "You cannot disable your own account.",
+    "lastAdmin": "There must be at least one active admin.",
+    "wrongPassword": "Current password is wrong.",
+    "passwordSameAsTemp": "Please choose a password different from the temporary one."
   },
   "manage": {
     "areaName": "Management",
@@ -61,7 +183,9 @@
       "expenses": "Expenses",
       "accounts": "Accounts",
       "reports": "Reports",
-      "settings": "Settings"
+      "users": "Users",
+      "settings": "Settings",
+      "profile": "Profile"
     },
     "dashboard": {
       "title": "Dashboard",

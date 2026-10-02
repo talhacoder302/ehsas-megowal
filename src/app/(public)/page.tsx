@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { localeDirection, locales } from "@/i18n/config";
+import { homePathFor } from "@/lib/roles";
+import { auth } from "@/server/auth";
 
 const points = [
   { key: "transparent", icon: ScaleIcon },
@@ -17,6 +19,8 @@ const points = [
 export default async function LandingPage() {
   const locale = await getLocale();
   const t = await getTranslations();
+  const session = await auth();
+  const home = session?.user?.role ? homePathFor(session.user.role) : null;
 
   // The short description is always shown in both languages, current language first.
   const ordered = [locale, ...locales.filter((l) => l !== locale)];
@@ -56,9 +60,9 @@ export default async function LandingPage() {
 
           <div className="flex flex-col items-center gap-2">
             <Button asChild size="lg" className="h-11 px-6 text-base">
-              <Link href="/login">
+              <Link href={home ?? "/login"}>
                 <LogInIcon className="rtl:-scale-x-100" />
-                {t("landing.loginCta")}
+                {home ? t("landing.openAccount") : t("landing.loginCta")}
               </Link>
             </Button>
             <p className="text-sm text-muted-foreground">{t("landing.loginNote")}</p>

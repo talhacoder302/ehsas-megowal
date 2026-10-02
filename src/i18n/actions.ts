@@ -1,17 +1,18 @@
 "use server";
 
-import { cookies } from "next/headers";
-import { z } from "zod";
-import { LOCALE_COOKIE, locales } from "./config";
+import { languageSchema } from "@/lib/validators";
+import { unstable_update } from "@/server/auth";
+import { getCurrentUser } from "@/server/auth/current-user";
+import { setOwnLanguage } from "@/server/users";
+import { writeLocaleCookie } from "./cookie";
 
-const localeSchema = z.enum(locales);
-
+/** Language switcher: always sets the cookie, and saves the choice on the account when signed in. */
 export async function setLocale(input: unknown): Promise<void> {
-  const locale = localeSchema.parse(input);
-  const cookieStore = await cookies();
-  cookieStore.set(LOCALE_COOKIE, locale, {
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: "lax",
-  });
+  const locale = languageSchema.parse(input);
+  await writeLocaleCookie(locale);
+
+  if (await getCurrentUser()) {
+    await setOwnLanguage(locale);
+    await unstable_update({});
+  }
 }

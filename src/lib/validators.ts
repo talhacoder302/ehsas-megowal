@@ -1,27 +1,106 @@
 import { z } from "zod";
+import { locales } from "@/i18n/config";
 import { fromUrduDigits } from "@/lib/money";
+import { ROLES } from "@/lib/roles";
 
 // Error messages are keys in the "validation" namespace of the i18n messages.
 
-/** "0300-1234567", "+92 300 1234567" and "923001234567" all become "03001234567". */
+/**
+ * Brings any common way of writing a Pakistani mobile number to 03XXXXXXXXX:
+ * "0300-1234567", "+92 300 1234567", "923001234567", "0092 300 1234567",
+ * "300 1234567" and Urdu digits all become "03001234567".
+ * Input that does not look like a Pakistani mobile is returned as digits only
+ * so validation can reject it.
+ */
 export function normalizeMobile(input: string): string {
-  const digits = fromUrduDigits(input).replace(/[^\d+]/g, "");
-  if (digits.startsWith("+92")) return `0${digits.slice(3)}`;
-  if (digits.startsWith("92") && digits.length === 12) return `0${digits.slice(2)}`;
+  let digits = fromUrduDigits(input).replace(/\D/g, "");
+  if (digits.startsWith("0092")) digits = digits.slice(4);
+  else if (digits.startsWith("92") && digits.length === 12) digits = digits.slice(2);
+  if (digits.length === 10 && digits.startsWith("3")) digits = `0${digits}`;
   return digits;
 }
 
 export const MOBILE_PATTERN = /^03\d{9}$/;
+
+export function isValidMobile(input: string): boolean {
+  return MOBILE_PATTERN.test(normalizeMobile(input));
+}
+
+/** "03001234567" -> "0300-1234567" for display. */
+export function formatMobile(mobile: string): string {
+  return MOBILE_PATTERN.test(mobile) ? `${mobile.slice(0, 4)}-${mobile.slice(4)}` : mobile;
+}
+
+/** "03001234567" -> "923001234567" for wa.me links. */
+export function mobileToInternational(mobile: string): string {
+  return MOBILE_PATTERN.test(mobile) ? `92${mobile.slice(1)}` : mobile;
+}
 
 export const mobileSchema = z
   .string()
   .transform(normalizeMobile)
   .pipe(z.string().regex(MOBILE_PATTERN, "mobileFormat"));
 
+export const PASSWORD_MIN = 8;
+// bcrypt only uses the first 72 bytes.
+export const PASSWORD_MAX = 72;
+
+export const newPasswordSchema = z
+  .string()
+  .min(PASSWORD_MIN, "passwordTooShort")
+  .max(PASSWORD_MAX, "passwordTooLong");
+
 export const loginSchema = z.object({
   mobile: mobileSchema,
-  password: z.string().min(1, "passwordRequired"),
+  password: z.string().min(1, "passwordRequired").max(200, "passwordTooLong"),
 });
-
 export type LoginInput = z.input<typeof loginSchema>;
 export type LoginValues = z.output<typeof loginSchema>;
+
+const objectIdSchema = z.string().regex(/^[0-9a-f]{24}$/i, "invalidId");
+
+export const userFormSchema = z
+  .object({
+    name: z.string().trim().min(2, "nameRequired").max(80, "nameTooLong"),
+    mobile: mobileSchema,
+    role: z.enum(ROLES, "roleRequired"),
+    memberId: z.union([objectIdSchema, z.literal("")]).transform((v) => v || null),
+    language: z.enum(locales),
+  })
+  .refine((v) => v.role !== "member" || v.memberId !== null, {
+    message: "memberRequired",
+    path: ["memberId"],
+  });
+export type UserFormInput = z.input<typeof userFormSchema>;
+export type UserFormValues = z.output<typeof userFormSchema>;
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "passwordRequired").max(200),
+    newPassword: newPasswordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((v) => v.newPassword === v.confirmPassword, {
+    message: "passwordsDontMatch",
+    path: ["confirmPassword"],
+  })
+  .refine((v) => v.newPassword !== v.currentPassword, {
+    message: "passwordSameAsOld",
+    path: ["newPassword"],
+  });
+export type ChangePasswordInput = z.input<typeof changePasswordSchema>;
+
+/** Used on the forced change after a reset: the user just logged in with the temporary password. */
+export const setPasswordSchema = z
+  .object({
+    newPassword: newPasswordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((v) => v.newPassword === v.confirmPassword, {
+    message: "passwordsDontMatch",
+    path: ["confirmPassword"],
+  });
+export type SetPasswordInput = z.input<typeof setPasswordSchema>;
+
+export const languageSchema = z.enum(locales);
+export { objectIdSchema };
