@@ -1,6 +1,12 @@
 import "server-only";
+import type { Types } from "mongoose";
+import type { Locale } from "@/i18n/config";
 import { connectDB } from "@/lib/db";
-import { Settings, type SettingsDoc } from "@/models";
+import type { Role } from "@/lib/roles";
+import { Member, Settings, User, type SettingsDoc } from "@/models";
+import { logActivity } from "./activity-log";
+import { generateTempPassword, hashPassword } from "./passwords";
+import { formatMemberNo, nextSequence } from "./sequence";
 
 // System-level setup used only by scripts (seed, migrations). Never call these
 // from Server Actions or route handlers; they do not check a session.
@@ -28,4 +34,82 @@ export async function ensureDefaultSettings(): Promise<SettingsDoc> {
   ).lean();
   if (!doc) throw new Error("Could not create settings");
   return doc;
+}
+
+export type SeedUser = {
+  name: string;
+  mobile: string;
+  role: Role;
+  language: Locale;
+  memberId?: Types.ObjectId | null;
+  /** Password to set. A random temporary one is made when left out. */
+  password?: string;
+  /** Force a password change at first login. */
+  mustChangePassword: boolean;
+};
+
+/**
+ * Creates the user if no user has this mobile yet. Existing users are never
+ * changed, so re-running the seed does not reset anyone's password.
+ * Returns the password that was set, or null if the user already existed.
+ */
+export async function ensureUser(seed: SeedUser): Promise<{ created: boolean; password: string | null }> {
+  await connectDB();
+  if (await User.exists({ mobile: seed.mobile })) return { created: false, password: null };
+
+  const password = seed.password ?? generateTempPassword();
+  const user = await User.create({
+    name: seed.name,
+    mobile: seed.mobile,
+    role: seed.role,
+    language: seed.language,
+    memberId: seed.memberId ?? null,
+    passwordHash: await hashPassword(password),
+    mustChangePassword: seed.mustChangePassword,
+    status: "active",
+  });
+  await logActivity({
+    actorId: null,
+    action: "user.created",
+    entity: "User",
+    entityId: user._id,
+    meta: { source: "seed", role: seed.role },
+  });
+  return { created: true, password };
+}
+
+export type SeedMember = {
+  name: string;
+  fatherName: string;
+  mobile: string;
+  mohalla: string;
+  joinDate: Date;
+  openingDue?: number;
+};
+
+/**
+ * Adds members that are not there yet (matched on name + father name), giving
+ * each the next EP-xxx number. Returns every member in the list, in order.
+ */
+export async function ensureMembers(seeds: SeedMember[]): Promise<{ id: Types.ObjectId; memberNo: string; created: boolean }[]> {
+  await connectDB();
+  const out: { id: Types.ObjectId; memberNo: string; created: boolean }[] = [];
+  for (const seed of seeds) {
+    const existing = await Member.findOne({ name: seed.name, fatherName: seed.fatherName }).select("memberNo").lean();
+    if (existing) {
+      out.push({ id: existing._id, memberNo: existing.memberNo, created: false });
+      continue;
+    }
+    const memberNo = formatMemberNo(await nextSequence("member"));
+    const member = await Member.create({ ...seed, memberNo, address: `${seed.mohalla}, Megowal`, status: "active" });
+    await logActivity({
+      actorId: null,
+      action: "member.created",
+      entity: "Member",
+      entityId: member._id,
+      meta: { source: "seed", memberNo },
+    });
+    out.push({ id: member._id, memberNo, created: true });
+  }
+  return out;
 }
