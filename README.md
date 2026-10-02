@@ -33,12 +33,17 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
    | `NEXT_PUBLIC_APP_URL` | no | Public URL of the app, defaults to `http://localhost:3000`. |
    | `R2_*` | no | Cloudflare R2 for receipt photos. Uploads are turned off if any is missing. |
    | `RESEND_API_KEY`, `EMAIL_FROM` | no | Email through Resend. Email is turned off if missing. |
+   | `SEED_ADMIN_MOBILE`, `SEED_ADMIN_PASSWORD` | for seeding | The first admin login created by `npm run seed`. Password at least 8 characters. |
+   | `SEED_ADMIN_NAME` | no | Admin display name, defaults to "Admin". |
+   | `SEED_DEMO_PASSWORD` | no | One temporary password for the demo users; otherwise random ones are printed. |
 
-3. Create the database and default settings:
+3. Create the database, default settings, the admin login and demo data:
 
    ```bash
    npm run seed
    ```
+
+   The seed prints the logins it creates. Demo users (2 heads and 1 member) must change their password at first login. On the live site use `npm run seed -- --no-demo` to create only the settings and the admin.
 
 4. Start the dev server and open http://localhost:3000:
 
@@ -55,14 +60,18 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
 | `npm start` | Run the production build |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript check (`tsc --noEmit`) |
-| `npm run seed` | Create collections, indexes, default settings and demo data. Safe to run again. |
+| `npm test` | Unit tests (Vitest) |
+| `npm run seed` | Create collections, indexes, default settings, the admin login and demo data. Safe to run again; never changes existing passwords. |
 
 ## Checking it works
 
 - `/` landing page with a login button
-- `/login` login form (sign-in is switched on in the next module)
-- `/manage` management area with sidebar (menu button on phones)
+- `/login` log in with the admin mobile and password from `.env.local` (any format works: `0300-1234567`, `+92 300 1234567`)
+- `/manage` management area with sidebar (menu button on phones); the admin also sees **Users**
+- `/manage/users` add users, link them to members, reset passwords (share on WhatsApp), disable and enable
 - `/member` member area with bottom navigation, Urdu by default
+- `/manage/profile` and `/member/profile` change password and language
+- 5 wrong passwords for one mobile lock it for 15 minutes
 - `/api/health` returns `{"status":"ok","db":"up"}` when the database is reachable
 
 ## Deploying to Hostinger (Node.js hosting)
