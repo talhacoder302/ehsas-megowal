@@ -1,0 +1,94 @@
+{
+  "common": {
+    "programName": "Ehsas Program",
+    "village": "Megowal",
+    "appTitle": "Ehsas Program Megowal",
+    "tagline": "Village welfare fund",
+    "language": "Language",
+    "login": "Log in",
+    "openMenu": "Open menu",
+    "navigation": "Navigation",
+    "comingSoon": "Soon",
+    "backHome": "Back to home",
+    "tryAgain": "Try again",
+    "loading": "Loading…"
+  },
+  "metadata": {
+    "description": "Contributions, aid cases and monthly reports for the Ehsas Program welfare fund of Megowal village."
+  },
+  "landing": {
+    "about": "Ehsas Program is a welfare fund run by the people of Megowal village. Members give a fixed amount every month, and the fund helps families in need with weddings, funerals, medical treatment, school fees and other needs. Every rupee is recorded openly.",
+    "loginCta": "Log in to your account",
+    "loginNote": "Members and heads log in with their mobile number.",
+    "points": {
+      "transparent": {
+        "title": "Open accounts",
+        "body": "Every month's report shows the total collected, the total spent and the balance."
+      },
+      "aid": {
+        "title": "Help tracked to the end",
+        "body": "Every aid case is followed from request to completion, and families' names stay private."
+      },
+      "members": {
+        "title": "Check anytime",
+        "body": "Members can see their contributions, pending months and reports on their phone."
+      }
+    },
+    "footer": "Ehsas Program, Megowal"
+  },
+  "login": {
+    "title": "Log in",
+    "subtitle": "Enter your mobile number and password.",
+    "mobile": "Mobile number",
+    "mobileHint": "For example 03001234567",
+    "password": "Password",
+    "submit": "Log in",
+    "submitting": "Checking…",
+    "notReady": "Login will be switched on in the next update.",
+    "forgot": "Forgot your password? Ask a head of the program to reset it."
+  },
+  "validation": {
+    "mobileFormat": "Mobile number must start with 03 and have 11 digits.",
+    "passwordRequired": "Please enter your password."
+  },
+  "manage": {
+    "areaName": "Management",
+    "nav": {
+      "dashboard": "Dashboard",
+      "members": "Members",
+      "payments": "Payments",
+      "cases": "Aid cases",
+      "expenses": "Expenses",
+      "accounts": "Accounts",
+      "reports": "Reports",
+      "settings": "Settings"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "subtitle": "Overview of the fund",
+      "emptyTitle": "No records yet",
+      "emptyBody": "Collections, aid cases and balances will show here once members and payments are added."
+    }
+  },
+  "member": {
+    "nav": {
+      "home": "Home",
+      "payments": "Payments",
+      "cases": "Cases",
+      "reports": "Reports",
+      "profile": "Profile"
+    },
+    "home": {
+      "greeting": "Assalam-o-Alaikum",
+      "subtitle": "Your account summary will show here.",
+      "emptyTitle": "Nothing to show yet",
+      "emptyBody": "Your contributions and pending months will show here once your account is set up."
+    }
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "body": "Please try again. If it keeps happening, tell the admin.",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "This page does not exist or has been moved."
+  }
+}
