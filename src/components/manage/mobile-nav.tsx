@@ -6,9 +6,10 @@ import { MenuIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { localeDirection } from "@/i18n/config";
+import type { Role } from "@/lib/roles";
 import { ManageNav } from "./manage-nav";
 
-export function MobileNav() {
+export function MobileNav({ role }: { role: Role }) {
   const t = useTranslations("common");
   const locale = useLocale();
   const [open, setOpen] = useState(false);
@@ -26,7 +27,7 @@ export function MobileNav() {
           <SheetTitle>{t("appTitle")}</SheetTitle>
         </SheetHeader>
         <div className="px-3">
-          <ManageNav onNavigate={() => setOpen(false)} />
+          <ManageNav role={role} onNavigate={() => setOpen(false)} />
         </div>
       </SheetContent>
     </Sheet>

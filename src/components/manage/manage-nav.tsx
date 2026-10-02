@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { manageNavItems } from "./nav-items";
+import type { Role } from "@/lib/roles";
+import { navItemsFor } from "./nav-items";
 
 function isActive(pathname: string, href: string) {
   return href === "/manage" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
@@ -13,13 +14,13 @@ function isActive(pathname: string, href: string) {
 
 const itemClass = "flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors";
 
-export function ManageNav({ onNavigate }: { onNavigate?: () => void }) {
+export function ManageNav({ role, onNavigate }: { role: Role; onNavigate?: () => void }) {
   const t = useTranslations();
   const pathname = usePathname();
 
   return (
     <nav aria-label={t("common.navigation")} className="flex flex-col gap-1">
-      {manageNavItems.map(({ key, href, icon: Icon, ready }) => {
+      {navItemsFor(role).map(({ key, href, icon: Icon, ready }) => {
         const label = t(`manage.nav.${key}`);
 
         if (!ready) {

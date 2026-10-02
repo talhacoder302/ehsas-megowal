@@ -21,7 +21,7 @@ const items: readonly MemberNavItem[] = [
   { key: "payments", href: "/member/payments", icon: HandCoinsIcon, ready: false },
   { key: "cases", href: "/member/cases", icon: HeartHandshakeIcon, ready: false },
   { key: "reports", href: "/member/reports", icon: FileChartColumnIcon, ready: false },
-  { key: "profile", href: "/member/profile", icon: UserIcon, ready: false },
+  { key: "profile", href: "/member/profile", icon: UserIcon, ready: true },
 ];
 
 function isActive(pathname: string, href: string) {

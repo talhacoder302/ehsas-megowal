@@ -152,3 +152,9 @@
     line-height: 1.5;
   }
 }
+
+/* Fixed-height pills clip Nastaliq; let them grow in Urdu. */
+:lang(ur) :is([data-slot="badge"], [data-slot="tabs-trigger"]) {
+  height: auto;
+  padding-block: 0.125rem;
+}

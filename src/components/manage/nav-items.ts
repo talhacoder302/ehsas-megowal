@@ -6,10 +6,13 @@ import {
   LayoutDashboardIcon,
   ReceiptIcon,
   SettingsIcon,
+  ShieldCheckIcon,
+  UserIcon,
   UsersIcon,
   WalletIcon,
 } from "lucide-react";
 import type { Messages } from "@/i18n/messages";
+import type { Role } from "@/lib/roles";
 
 export type ManageNavKey = keyof Messages["manage"]["nav"];
 
@@ -30,5 +33,11 @@ export const manageNavItems: readonly ManageNavItem[] = [
   { key: "expenses", href: "/manage/expenses", icon: ReceiptIcon, ready: false },
   { key: "accounts", href: "/manage/accounts", icon: WalletIcon, ready: false },
   { key: "reports", href: "/manage/reports", icon: FileChartColumnIcon, ready: false },
+  { key: "users", href: "/manage/users", icon: ShieldCheckIcon, ready: true, adminOnly: true },
   { key: "settings", href: "/manage/settings", icon: SettingsIcon, ready: false, adminOnly: true },
+  { key: "profile", href: "/manage/profile", icon: UserIcon, ready: true },
 ];
+
+export function navItemsFor(role: Role): ManageNavItem[] {
+  return manageNavItems.filter((item) => !item.adminOnly || role === "admin");
+}
