@@ -1,12 +1,14 @@
 import "server-only";
 import type { Types } from "mongoose";
 import type { Locale } from "@/i18n/config";
+import { dateKey } from "@/lib/dates";
 import { connectDB } from "@/lib/db";
+import type { MemberStatus } from "@/lib/member-status";
 import type { Role } from "@/lib/roles";
-import { Member, Settings, User, type SettingsDoc } from "@/models";
+import { DEFAULT_MEMBER_NO_PREFIX, Member, Settings, User, type SettingsDoc } from "@/models";
 import { logActivity } from "./activity-log";
 import { generateTempPassword, hashPassword } from "./passwords";
-import { formatMemberNo, nextSequence } from "./sequence";
+import { nextMemberNo } from "./sequence";
 
 // System-level setup used only by scripts (seed, migrations). Never call these
 // from Server Actions or route handlers; they do not check a session.
@@ -33,6 +35,11 @@ export async function ensureDefaultSettings(): Promise<SettingsDoc> {
     { upsert: true, returnDocument: "after", setDefaultsOnInsert: true },
   ).lean();
   if (!doc) throw new Error("Could not create settings");
+  // Fields added after the document was first made get their defaults.
+  if (!doc.memberNoPrefix) {
+    await Settings.updateOne({ key: "main" }, { $set: { memberNoPrefix: DEFAULT_MEMBER_NO_PREFIX } });
+    doc.memberNoPrefix = DEFAULT_MEMBER_NO_PREFIX;
+  }
   return doc;
 }
 
@@ -81,34 +88,55 @@ export async function ensureUser(seed: SeedUser): Promise<{ created: boolean; pa
 export type SeedMember = {
   name: string;
   fatherName: string;
+  /** Empty for members without a phone. */
   mobile: string;
   mohalla: string;
   joinDate: Date;
   openingDue?: number;
+  notes?: string;
+  /** A status change to record after creating the member (left, deceased, exempt). */
+  statusChange?: { status: MemberStatus; date: Date; reason: string };
 };
 
 /**
  * Adds members that are not there yet (matched on name + father name), giving
- * each the next EP-xxx number. Returns every member in the list, in order.
+ * each the next member number. Returns every member in the list, in order.
  */
 export async function ensureMembers(seeds: SeedMember[]): Promise<{ id: Types.ObjectId; memberNo: string; created: boolean }[]> {
   await connectDB();
   const out: { id: Types.ObjectId; memberNo: string; created: boolean }[] = [];
-  for (const seed of seeds) {
+  for (const { statusChange, ...seed } of seeds) {
     const existing = await Member.findOne({ name: seed.name, fatherName: seed.fatherName }).select("memberNo").lean();
     if (existing) {
       out.push({ id: existing._id, memberNo: existing.memberNo, created: false });
       continue;
     }
-    const memberNo = formatMemberNo(await nextSequence("member"));
-    const member = await Member.create({ ...seed, memberNo, address: `${seed.mohalla}, Megowal`, status: "active" });
+    const memberNo = await nextMemberNo();
+    const member = await Member.create({
+      ...seed,
+      memberNo,
+      address: `${seed.mohalla}, Megowal`,
+      status: statusChange?.status ?? "active",
+      statusChangedAt: statusChange?.date ?? null,
+      statusReason: statusChange?.reason ?? "",
+      statusHistory: statusChange ? [{ ...statusChange, changedBy: null, changedAt: statusChange.date }] : [],
+    });
     await logActivity({
       actorId: null,
       action: "member.created",
       entity: "Member",
       entityId: member._id,
-      meta: { source: "seed", memberNo },
+      meta: { source: "seed", memberNo, name: seed.name },
     });
+    if (statusChange) {
+      await logActivity({
+        actorId: null,
+        action: "member.status_changed",
+        entity: "Member",
+        entityId: member._id,
+        meta: { source: "seed", from: "active", to: statusChange.status, date: dateKey(statusChange.date), reason: statusChange.reason },
+      });
+    }
     out.push({ id: member._id, memberNo, created: true });
   }
   return out;
