@@ -69,6 +69,37 @@ export function monthRange(month: MonthKey): { start: Date; end: Date } {
   };
 }
 
+/** A calendar day in "YYYY-MM-DD" form, the value of an <input type="date">. */
+export type DateKey = string;
+
+const DATE_KEY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** The Pakistan calendar day of an instant, e.g. "2026-10-04". */
+export function dateKey(date: Date | number | string): DateKey {
+  return format(toPakistanTime(date), "yyyy-MM-dd");
+}
+
+export function todayKey(): DateKey {
+  return dateKey(Date.now());
+}
+
+/** "2026-10-04" -> midnight of that day in Pakistan time. Returns null for impossible dates like "2026-02-30". */
+export function parseDateKey(value: string): Date | null {
+  const match = DATE_KEY_PATTERN.exec(value);
+  if (!match) return null;
+  const [, y, m, d] = match.map(Number);
+  const date = new Date(new TZDate(y, m - 1, d, TIME_ZONE).getTime());
+  return dateKey(date) === value ? date : null;
+}
+
+/** A required "YYYY-MM-DD" day that is not after today. Messages are keys in the "validation" namespace. */
+export const pastDateKeySchema = z
+  .string()
+  .trim()
+  .min(1, { message: "dateRequired", abort: true })
+  .refine((v) => parseDateKey(v) !== null, { message: "dateInvalid", abort: true })
+  .refine((v) => v <= todayKey(), "dateInFuture");
+
 function intlLocale(locale: Locale): string {
   return locale === "ur" ? "ur-PK" : "en-PK";
 }
@@ -88,6 +119,18 @@ export function formatDate(date: Date | number | string, locale: Locale = "en"):
     day: "numeric",
     month: "short",
     year: "numeric",
+    timeZone: TIME_ZONE,
+  }).format(new Date(date));
+}
+
+/** "3 Oct 2026, 4:05 pm" style date and time in Pakistan time. */
+export function formatDateTime(date: Date | number | string, locale: Locale = "en"): string {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
     timeZone: TIME_ZONE,
   }).format(new Date(date));
 }
