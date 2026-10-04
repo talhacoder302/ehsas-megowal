@@ -27,7 +27,7 @@ export type ManageNavItem = {
 
 export const manageNavItems: readonly ManageNavItem[] = [
   { key: "dashboard", href: "/manage", icon: LayoutDashboardIcon, ready: true },
-  { key: "members", href: "/manage/members", icon: UsersIcon, ready: false },
+  { key: "members", href: "/manage/members", icon: UsersIcon, ready: true },
   { key: "payments", href: "/manage/payments", icon: HandCoinsIcon, ready: false },
   { key: "cases", href: "/manage/cases", icon: HeartHandshakeIcon, ready: false },
   { key: "expenses", href: "/manage/expenses", icon: ReceiptIcon, ready: false },

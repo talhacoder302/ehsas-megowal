@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { locales } from "@/i18n/config";
+import { pastDateKeySchema } from "@/lib/dates";
+import { MEMBER_STATUSES } from "@/lib/member-status";
 import { fromUrduDigits } from "@/lib/money";
 import { ROLES } from "@/lib/roles";
 
@@ -34,6 +36,16 @@ export function formatMobile(mobile: string): string {
 /** "03001234567" -> "923001234567" for wa.me links. */
 export function mobileToInternational(mobile: string): string {
   return MOBILE_PATTERN.test(mobile) ? `92${mobile.slice(1)}` : mobile;
+}
+
+/**
+ * For search boxes: the digits to look for in mobile numbers, or null when the
+ * query is not a phone number (e.g. "EP-011" must not match "0300-1110001").
+ */
+export function mobileSearchDigits(query: string): string | null {
+  if (!/^[\d۰-۹٠-٩\s+()-]+$/.test(query)) return null;
+  const digits = normalizeMobile(query);
+  return digits.length >= 3 ? digits : null;
 }
 
 export const mobileSchema = z
@@ -104,3 +116,29 @@ export type SetPasswordInput = z.input<typeof setPasswordSchema>;
 
 export const languageSchema = z.enum(locales);
 export { objectIdSchema };
+
+/** Empty is allowed (some members have no phone); otherwise it must be a valid mobile. */
+export const optionalMobileSchema = z
+  .string()
+  .transform((v) => (v.trim() === "" ? "" : normalizeMobile(v)))
+  .pipe(z.union([z.literal(""), z.string().regex(MOBILE_PATTERN, "mobileFormat")]));
+
+export const memberFormSchema = z.object({
+  name: z.string().trim().min(2, "nameRequired").max(80, "nameTooLong"),
+  fatherName: z.string().trim().min(2, "fatherNameRequired").max(80, "nameTooLong"),
+  mobile: optionalMobileSchema,
+  mohalla: z.string().trim().min(2, "mohallaRequired").max(60, "mohallaTooLong"),
+  address: z.string().trim().max(200, "addressTooLong"),
+  joinDate: pastDateKeySchema,
+  notes: z.string().trim().max(1000, "notesTooLong"),
+});
+export type MemberFormInput = z.input<typeof memberFormSchema>;
+export type MemberFormValues = z.output<typeof memberFormSchema>;
+
+export const memberStatusChangeSchema = z.object({
+  status: z.enum(MEMBER_STATUSES, "statusRequired"),
+  date: pastDateKeySchema,
+  reason: z.string().trim().min(3, "reasonRequired").max(300, "reasonTooLong"),
+});
+export type MemberStatusChangeInput = z.input<typeof memberStatusChangeSchema>;
+export type MemberStatusChangeValues = z.output<typeof memberStatusChangeSchema>;
