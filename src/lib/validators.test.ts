@@ -5,6 +5,9 @@ import {
   mobileSchema,
   mobileToInternational,
   normalizeMobile,
+  memberFormSchema,
+  memberStatusChangeSchema,
+  mobileSearchDigits,
   userFormSchema,
 } from "./validators";
 
@@ -84,5 +87,69 @@ describe("userFormSchema", () => {
     const result = userFormSchema.parse({ ...base, role: "head", memberId: "" });
     expect(result.memberId).toBeNull();
     expect(result.mobile).toBe("03001110003");
+  });
+});
+
+describe("memberFormSchema", () => {
+  const valid = {
+    name: "  Muhammad Riaz ",
+    fatherName: "Noor Muhammad",
+    mobile: "+92 300 1110003",
+    mohalla: "Mohalla Arain",
+    address: "",
+    joinDate: "2023-03-01",
+    notes: "",
+  };
+
+  it("trims text and normalises the mobile", () => {
+    const parsed = memberFormSchema.parse(valid);
+    expect(parsed.name).toBe("Muhammad Riaz");
+    expect(parsed.mobile).toBe("03001110003");
+  });
+
+  it("allows a member without a phone", () => {
+    expect(memberFormSchema.parse({ ...valid, mobile: "  " }).mobile).toBe("");
+  });
+
+  it("rejects a wrong mobile, missing father name and mohalla, and a future join date", () => {
+    const result = memberFormSchema.safeParse({
+      ...valid,
+      mobile: "12345",
+      fatherName: "",
+      mohalla: " ",
+      joinDate: "2999-01-01",
+    });
+    expect(result.success).toBe(false);
+    const messages = Object.fromEntries(result.error?.issues.map((i) => [i.path[0], i.message]) ?? []);
+    expect(messages).toEqual({
+      mobile: "mobileFormat",
+      fatherName: "fatherNameRequired",
+      mohalla: "mohallaRequired",
+      joinDate: "dateInFuture",
+    });
+  });
+});
+
+describe("memberStatusChangeSchema", () => {
+  it("needs a known status, a date and a reason", () => {
+    expect(memberStatusChangeSchema.safeParse({ status: "left", date: "2025-06-10", reason: "Moved to Lahore" }).success).toBe(true);
+
+    const result = memberStatusChangeSchema.safeParse({ status: "gone", date: "", reason: " " });
+    const messages = result.error?.issues.map((i) => i.message);
+    expect(messages).toEqual(["statusRequired", "dateRequired", "reasonRequired"]);
+  });
+});
+
+describe("mobileSearchDigits", () => {
+  it("returns digits for phone-like queries", () => {
+    expect(mobileSearchDigits("0300-111")).toBe("0300111");
+    expect(mobileSearchDigits("+92 300 1110003")).toBe("03001110003");
+    expect(mobileSearchDigits("۱۱۱۰")).toBe("1110");
+  });
+
+  it("ignores queries that are not phone numbers or too short", () => {
+    expect(mobileSearchDigits("EP-011")).toBeNull();
+    expect(mobileSearchDigits("riaz")).toBeNull();
+    expect(mobileSearchDigits("03")).toBeNull();
   });
 });
