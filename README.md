@@ -43,7 +43,7 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
    npm run seed
    ```
 
-   The seed prints the logins it creates. Demo users (2 heads and 1 member) must change their password at first login. On the live site use `npm run seed -- --no-demo` to create only the settings and the admin.
+   The seed prints the logins it creates and adds 35 demo members (a few marked left, deceased or exempt). Demo users (2 heads and 1 member) must change their password at first login. On the live site use `npm run seed -- --no-demo` to create only the settings and the admin.
 
 4. Start the dev server and open http://localhost:3000:
 
@@ -69,6 +69,9 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
 - `/login` log in with the admin mobile and password from `.env.local` (any format works: `0300-1234567`, `+92 300 1234567`)
 - `/manage` management area with sidebar (menu button on phones); the admin also sees **Users**
 - `/manage/users` add users, link them to members, reset passwords (share on WhatsApp), disable and enable
+- `/manage/members` search members by name, father's name, mobile or member number, filter by status, and download the list as Excel
+- `/manage/members/new` add a member (member numbers like EP-036 are given automatically)
+- open a member to edit them, change their status (left, deceased, exempt) with a reason and date, see their activity, and create a login that is shared on WhatsApp in Roman Urdu
 - `/member` member area with bottom navigation, Urdu by default
 - `/manage/profile` and `/member/profile` change password and language
 - 5 wrong passwords for one mobile lock it for 15 minutes
