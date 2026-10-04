@@ -2,7 +2,7 @@ import "server-only";
 import { mongo, Types } from "mongoose";
 import type { Locale } from "@/i18n/config";
 import { AppError } from "@/lib/errors";
-import { requireRole, requireUser } from "@/lib/permissions";
+import { requirePermission, requireRole, requireUser } from "@/lib/permissions";
 import type { Role } from "@/lib/roles";
 import {
   changePasswordSchema,
@@ -235,6 +235,50 @@ export async function resetUserPassword(userId: string): Promise<{ user: UserLis
 
   await logActivity({ actorId: actor.id, action: "user.password_reset", entity: "User", entityId: user._id });
   return { user: await listItemFor(updated), tempPassword };
+}
+
+// ---------------------------------------------------------------------------
+// Heads and admin: a login for a member record
+// ---------------------------------------------------------------------------
+
+export type MemberLoginResult = { name: string; mobile: string; tempPassword: string };
+
+/**
+ * Creates a member-role login with the member's own mobile and a temporary
+ * password. Heads may do this (not only the admin) because it only ever makes
+ * a read-only member login tied to that one member.
+ */
+export async function createMemberLogin(memberId: string): Promise<MemberLoginResult> {
+  const actor = await requirePermission("members.manage");
+  const id = objectIdSchema.parse(memberId);
+  const member = await Member.findById(id).select("name mobile status").lean();
+  if (!member) throw new AppError("memberNotFound");
+  if (member.status === "deceased") throw new AppError("memberDeceased");
+  if (!member.mobile) throw new AppError("memberNoMobile");
+  if (await User.exists({ memberId: member._id })) throw new AppError("memberHasLogin");
+  await assertMobileFree(member.mobile);
+
+  const tempPassword = generateTempPassword();
+  const created = await User.create({
+    name: member.name,
+    mobile: member.mobile,
+    role: "member",
+    memberId: member._id,
+    // Member screens are in Urdu by default.
+    language: "ur",
+    passwordHash: await hashPassword(tempPassword),
+    mustChangePassword: true,
+    status: "active",
+  }).catch(mapDuplicateKey);
+
+  await logActivity({
+    actorId: actor.id,
+    action: "user.created",
+    entity: "User",
+    entityId: created._id,
+    meta: { source: "member", name: member.name, mobile: member.mobile, role: "member", memberId: id },
+  });
+  return { name: member.name, mobile: member.mobile, tempPassword };
 }
 
 // ---------------------------------------------------------------------------

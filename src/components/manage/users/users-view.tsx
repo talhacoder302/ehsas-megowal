@@ -21,10 +21,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { resetPasswordAction, setUserStatusAction, type TempPasswordResult } from "@/app/manage/users/actions";
 import { formatDate } from "@/lib/dates";
 import { ROLES, type Role } from "@/lib/roles";
-import { formatMobile, normalizeMobile } from "@/lib/validators";
+import { formatMobile, mobileSearchDigits } from "@/lib/validators";
 import type { MemberLinkOption } from "@/server/members";
 import type { UserListItem } from "@/server/users";
-import { TempPasswordDialog } from "./temp-password-dialog";
+import { TempPasswordDialog } from "@/components/manage/temp-password-dialog";
 import { UserFormDialog } from "./user-form-dialog";
 
 type RoleFilter = "all" | Role;
@@ -50,13 +50,13 @@ export function UsersView({ users, memberOptions, currentUserId }: UsersViewProp
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const qMobile = normalizeMobile(q);
+    const qMobile = mobileSearchDigits(q);
     return users.filter((u) => {
       if (roleFilter !== "all" && u.role !== roleFilter) return false;
       if (!q) return true;
       return (
         u.name.toLowerCase().includes(q) ||
-        (qMobile.length > 0 && u.mobile.includes(qMobile)) ||
+        (qMobile !== null && u.mobile.includes(qMobile)) ||
         (u.memberNo?.toLowerCase().includes(q) ?? false)
       );
     });
@@ -269,7 +269,10 @@ export function UsersView({ users, memberOptions, currentUserId }: UsersViewProp
         onDone={(user) => toast.success(user.status === "active" ? t("users.enabled") : t("users.disabled"))}
       />
 
-      <TempPasswordDialog result={tempResult} onClose={() => setTempResult(null)} />
+      <TempPasswordDialog
+        result={tempResult && { ...tempResult, name: tempResult.user.name, mobile: tempResult.user.mobile }}
+        onClose={() => setTempResult(null)}
+      />
     </div>
   );
 }

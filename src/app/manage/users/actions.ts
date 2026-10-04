@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { getServerEnv } from "@/lib/env";
 import type { ActionResult } from "@/lib/errors";
-import { formatMobile, mobileToInternational } from "@/lib/validators";
+import { formatMobile } from "@/lib/validators";
+import { whatsappLink } from "@/lib/whatsapp";
 import { runAction } from "@/server/action";
 import {
   createUser,
@@ -29,10 +30,7 @@ async function withShareLink(result: { user: UserListItem; tempPassword: string 
     password: result.tempPassword,
     url: `${getServerEnv().NEXT_PUBLIC_APP_URL}/login`,
   });
-  return {
-    ...result,
-    whatsappUrl: `https://wa.me/${mobileToInternational(result.user.mobile)}?text=${encodeURIComponent(text)}`,
-  };
+  return { ...result, whatsappUrl: whatsappLink(result.user.mobile, text) };
 }
 
 function refresh() {

@@ -12,17 +12,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { TempPasswordResult } from "@/app/manage/users/actions";
 import { formatMobile } from "@/lib/validators";
 
+export type TempPasswordShare = {
+  name: string;
+  mobile: string;
+  tempPassword: string;
+  /** wa.me link with the login details. */
+  whatsappUrl: string;
+};
+
 /** Shows a new temporary password once, with copy and WhatsApp share. */
-export function TempPasswordDialog({ result, onClose }: { result: TempPasswordResult | null; onClose: () => void }) {
+export function TempPasswordDialog({ result, onClose }: { result: TempPasswordShare | null; onClose: () => void }) {
   const t = useTranslations();
   const [copied, setCopied] = useState(false);
 
   async function copy() {
     if (!result) return;
-    await navigator.clipboard.writeText(`${formatMobile(result.user.mobile)}\n${result.tempPassword}`);
+    await navigator.clipboard.writeText(`${formatMobile(result.mobile)}\n${result.tempPassword}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -32,14 +39,14 @@ export function TempPasswordDialog({ result, onClose }: { result: TempPasswordRe
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t("users.tempTitle")}</DialogTitle>
-          <DialogDescription>{t("users.tempBody", { name: result?.user.name ?? "" })}</DialogDescription>
+          <DialogDescription>{t("users.tempBody", { name: result?.name ?? "" })}</DialogDescription>
         </DialogHeader>
 
         {result ? (
           <dl className="grid gap-3 rounded-lg border bg-muted/40 p-4">
             <div className="flex items-center justify-between gap-4">
               <dt className="text-sm text-muted-foreground">{t("users.tempMobile")}</dt>
-              <dd dir="ltr" className="font-mono text-base">{formatMobile(result.user.mobile)}</dd>
+              <dd dir="ltr" className="font-mono text-base">{formatMobile(result.mobile)}</dd>
             </div>
             <div className="flex items-center justify-between gap-4">
               <dt className="text-sm text-muted-foreground">{t("users.tempPassword")}</dt>
