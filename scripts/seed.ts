@@ -2,8 +2,9 @@
  * Seeds the database. Safe to run again: existing records are kept and
  * existing passwords are never changed.
  *
- *   npm run seed              settings, admin, 2 heads and demo members
- *   npm run seed -- --no-demo settings and admin only (for production)
+ *   npm run seed              settings, admin, 2 heads, demo members, rates,
+ *                             cash account and three months of bills and payments
+ *   npm run seed -- --no-demo settings, admin, the Rs. 500 rate and a cash account (for production)
  *
  * Needs SEED_ADMIN_MOBILE and SEED_ADMIN_PASSWORD in .env.local.
  * SEED_DEMO_PASSWORD (optional) gives all demo users the same temporary password.
@@ -11,14 +12,18 @@
 import { config } from "dotenv";
 import { z } from "zod";
 import { disconnectDB } from "@/lib/db";
-import { parseDateKey } from "@/lib/dates";
+import { currentMonth, parseDateKey, shiftMonth } from "@/lib/dates";
 import { getServerEnv } from "@/lib/env";
 import { formatMobile, mobileSchema, newPasswordSchema } from "@/lib/validators";
 import {
+  ensureAccount,
   ensureDefaultSettings,
   ensureMembers,
+  ensureRates,
   ensureUser,
+  seedDemoContributions,
   syncModelIndexes,
+  userIdByMobile,
   type SeedMember,
 } from "@/server/bootstrap";
 
@@ -171,7 +176,17 @@ async function main() {
   });
   printLogin("admin", seedEnv.SEED_ADMIN_MOBILE, admin, false);
 
-  if (!withDemo) return;
+  const thisMonth = currentMonth();
+  const CASH = { name: "Cash in hand", type: "cash_in_hand" } as const;
+
+  if (!withDemo) {
+    // The real rate today; older rates can be added in Settings.
+    const ratesAdded = await ensureRates([{ amount: 500, effectiveFrom: thisMonth, note: "Monthly contribution" }]);
+    console.log(`- rates: Rs. 500 from ${thisMonth} (${ratesAdded} new)`);
+    const account = await ensureAccount({ ...CASH, holderUserId: null });
+    console.log(`- account: ${CASH.name} (${account.created ? "new" : "already there"})`);
+    return;
+  }
 
   const members = await ensureMembers(demoMembers);
   const added = members.filter((m) => m.created).length;
@@ -198,6 +213,25 @@ async function main() {
     });
     printLogin(`${demo.label} (${members[demo.member].memberNo} ${seed.name})`, seed.mobile, result, true);
   }
+
+  const ratesAdded = await ensureRates([
+    { amount: 300, effectiveFrom: "2023-01", note: "Rate from the paper register" },
+    { amount: 500, effectiveFrom: thisMonth, note: "Raised in the monthly meeting" },
+  ]);
+  console.log(`- rates: Rs. 300 from 2023-01, Rs. 500 from ${thisMonth} (${ratesAdded} new)`);
+
+  const [head1, head2] = await Promise.all([userIdByMobile(demoMembers[0].mobile), userIdByMobile(demoMembers[1].mobile)]);
+  if (!head1 || !head2) throw new Error("Demo heads are missing.");
+  const account = await ensureAccount({ ...CASH, holderUserId: head1 });
+  console.log(`- account: ${CASH.name}, kept by ${demoMembers[0].name} (${account.created ? "new" : "already there"})`);
+
+  const months: [string, string, string] = [shiftMonth(thisMonth, -2), shiftMonth(thisMonth, -1), thisMonth];
+  const demo = await seedDemoContributions({ months, accountId: account.id, heads: [head1, head2] });
+  console.log(
+    demo.skipped
+      ? "- contributions: payments already exist, demo history skipped"
+      : `- contributions: ${demo.bills} bills for ${months.join(", ")}, ${demo.payments} payments (${demo.cancelled} cancelled), ${demo.waived} bill waived`,
+  );
 }
 
 main()
