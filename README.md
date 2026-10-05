@@ -43,7 +43,7 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
    npm run seed
    ```
 
-   The seed prints the logins it creates and adds 35 demo members (a few marked left, deceased or exempt). Demo users (2 heads and 1 member) must change their password at first login. On the live site use `npm run seed -- --no-demo` to create only the settings and the admin.
+   The seed prints the logins it creates and adds 35 demo members (a few marked left, deceased or exempt), contribution rates (Rs. 300 from 2023, Rs. 500 from the current month), a "Cash in hand" account kept by the first head, and three months of bills and payments. Demo users (2 heads and 1 member) must change their password at first login. On the live site use `npm run seed -- --no-demo`: it creates the settings, the admin, the Rs. 500 rate from the current month and a "Cash in hand" account.
 
 4. Start the dev server and open http://localhost:3000:
 
@@ -72,6 +72,11 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
 - `/manage/members` search members by name, father's name, mobile or member number, filter by status, and download the list as Excel
 - `/manage/members/new` add a member (member numbers like EP-036 are given automatically)
 - open a member to edit them, change their status (left, deceased, exempt) with a reason and date, see their activity, and create a login that is shared on WhatsApp in Roman Urdu
+- `/manage/pending` pick a month, see billed / collected / pending / collection %, press **Generate bills** (pressing again never makes duplicates), and send a polite WhatsApp reminder to anyone who owes
+- `/manage/payments/new` find a member, tick months (or type an amount) and save: old dues are paid first, then the oldest months, then advance months
+- after saving, the receipt opens with **Send receipt on WhatsApp** and PDF downloads in English and Urdu; the receipt link (`/receipt/...`) opens without logging in
+- cancel a payment from its receipt (the admin, or the head who did not receive it) and waive a bill from the member's Contributions tab, both with a reason
+- `/manage/accounts` balances of cash, bank and mobile wallet accounts; `/manage/settings` (admin) contribution rates and their history
 - `/member` member area with bottom navigation, Urdu by default
 - `/manage/profile` and `/member/profile` change password and language
 - 5 wrong passwords for one mobile lock it for 15 minutes
@@ -98,4 +103,5 @@ src/lib             env, db, permissions, money and date helpers
 src/components      ui (shadcn), shared, manage, member
 src/i18n            next-intl config and messages (en.json, ur.json)
 scripts             seed and utility scripts
+assets/fonts        Noto Naskh Arabic UI for Urdu receipt PDFs (SIL Open Font License)
 ```
