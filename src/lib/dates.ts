@@ -113,6 +113,15 @@ export function formatMonth(month: MonthKey, locale: Locale = "en"): string {
   }).format(monthRange(month).start);
 }
 
+/** "Oct 2026" / "اکتوبر 2026" */
+export function formatMonthShort(month: MonthKey, locale: Locale = "en"): string {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    month: locale === "ur" ? "long" : "short",
+    year: "numeric",
+    timeZone: TIME_ZONE,
+  }).format(monthRange(month).start);
+}
+
 /** "3 Oct 2026" style date in Pakistan time. */
 export function formatDate(date: Date | number | string, locale: Locale = "en"): string {
   return new Intl.DateTimeFormat(intlLocale(locale), {
@@ -121,6 +130,11 @@ export function formatDate(date: Date | number | string, locale: Locale = "en"):
     year: "numeric",
     timeZone: TIME_ZONE,
   }).format(new Date(date));
+}
+
+/** "03/10/2026" in Pakistan time. For places that cannot mix scripts, like the Urdu PDF. */
+export function formatDateNumeric(date: Date | number | string): string {
+  return format(toPakistanTime(date), "dd/MM/yyyy");
 }
 
 /** "3 Oct 2026, 4:05 pm" style date and time in Pakistan time. */

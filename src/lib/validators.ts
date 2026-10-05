@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { locales } from "@/i18n/config";
-import { pastDateKeySchema } from "@/lib/dates";
+import { ACCOUNT_TYPES, PAYMENT_METHODS } from "@/lib/contributions";
+import { MONTH_PATTERN, pastDateKeySchema } from "@/lib/dates";
 import { MEMBER_STATUSES } from "@/lib/member-status";
-import { fromUrduDigits } from "@/lib/money";
+import { fromUrduDigits, parseRupees } from "@/lib/money";
 import { ROLES } from "@/lib/roles";
 
 // Error messages are keys in the "validation" namespace of the i18n messages.
@@ -142,3 +143,57 @@ export const memberStatusChangeSchema = z.object({
 });
 export type MemberStatusChangeInput = z.input<typeof memberStatusChangeSchema>;
 export type MemberStatusChangeValues = z.output<typeof memberStatusChangeSchema>;
+
+// ---------------------------------------------------------------------------
+// Contributions
+// ---------------------------------------------------------------------------
+
+export const monthKeySchema = z.string().trim().regex(MONTH_PATTERN, "monthInvalid");
+
+/** Whole rupees typed as text ("12,500", "Rs. 500", Urdu digits) or given as a number. */
+function rupeesInput(options: { min: number }) {
+  return z
+    .union([z.number(), z.string()])
+    .transform((v, ctx) => {
+      const value = typeof v === "number" ? v : v.trim() === "" ? null : parseRupees(v);
+      if (value === null || !Number.isSafeInteger(value)) {
+        ctx.addIssue({ code: "custom", message: typeof v === "string" && v.trim() === "" ? "amountRequired" : "amountInvalid" });
+        return z.NEVER;
+      }
+      return value;
+    })
+    .pipe(z.number().min(options.min, options.min > 0 ? "amountTooSmall" : "amountInvalid").max(100_000_000, "amountTooLarge"));
+}
+
+export const reasonSchema = z.string().trim().min(3, "reasonRequired").max(300, "reasonTooLong");
+
+export const rateFormSchema = z.object({
+  amount: rupeesInput({ min: 1 }),
+  effectiveFrom: monthKeySchema,
+  note: z.string().trim().max(200, "notesTooLong"),
+});
+export type RateFormInput = z.input<typeof rateFormSchema>;
+export type RateFormValues = z.output<typeof rateFormSchema>;
+
+export const accountFormSchema = z.object({
+  name: z.string().trim().min(2, "nameRequired").max(60, "nameTooLong"),
+  type: z.enum(ACCOUNT_TYPES, "accountTypeRequired"),
+  holderUserId: z.union([objectIdSchema, z.literal("")]).transform((v) => v || null),
+  openingBalance: rupeesInput({ min: 0 }),
+});
+export type AccountFormInput = z.input<typeof accountFormSchema>;
+export type AccountFormValues = z.output<typeof accountFormSchema>;
+
+export const paymentFormSchema = z.object({
+  memberId: objectIdSchema,
+  amount: rupeesInput({ min: 1 }),
+  accountId: z.string().regex(/^[0-9a-f]{24}$/i, "accountRequired"),
+  method: z.enum(PAYMENT_METHODS, "methodRequired"),
+  date: pastDateKeySchema,
+  note: z.string().trim().max(300, "notesTooLong"),
+});
+export type PaymentFormInput = z.input<typeof paymentFormSchema>;
+export type PaymentFormValues = z.output<typeof paymentFormSchema>;
+
+export const reasonFormSchema = z.object({ reason: reasonSchema });
+export type ReasonFormInput = z.input<typeof reasonFormSchema>;

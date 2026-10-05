@@ -6,12 +6,14 @@ export type ProgramSettings = {
   programName: string;
   villageName: string;
   memberNoPrefix: string;
+  receiptPrefix: string;
 };
 
 const DEFAULTS: ProgramSettings = {
   programName: "Ehsas Program",
   villageName: "Megowal",
   memberNoPrefix: DEFAULT_MEMBER_NO_PREFIX,
+  receiptPrefix: "R-",
 };
 
 /**
@@ -20,10 +22,11 @@ const DEFAULTS: ProgramSettings = {
  */
 export async function readSettings(): Promise<ProgramSettings> {
   await connectDB();
-  const doc = await Settings.findOne({ key: "main" }).select("programName villageName memberNoPrefix").lean();
+  const doc = await Settings.findOne({ key: "main" }).select("programName villageName memberNoPrefix receiptPrefix").lean();
   return {
     programName: doc?.programName || DEFAULTS.programName,
     villageName: doc?.villageName || DEFAULTS.villageName,
     memberNoPrefix: doc?.memberNoPrefix || DEFAULTS.memberNoPrefix,
+    receiptPrefix: doc?.receiptPrefix || DEFAULTS.receiptPrefix,
   };
 }
