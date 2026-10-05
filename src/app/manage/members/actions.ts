@@ -5,6 +5,7 @@ import { getServerEnv } from "@/lib/env";
 import type { ActionResult } from "@/lib/errors";
 import { memberLoginMessage, whatsappLink } from "@/lib/whatsapp";
 import { runAction } from "@/server/action";
+import { waiveBill } from "@/server/bills";
 import { changeMemberStatus, createMember, updateMember } from "@/server/members";
 import { readSettings } from "@/server/settings";
 import { createMemberLogin } from "@/server/users";
@@ -62,5 +63,13 @@ export async function createMemberLoginAction(memberId: string): Promise<ActionR
     refresh(memberId);
     revalidatePath("/manage/users");
     return { ...login, whatsappUrl: whatsappLink(login.mobile, text) };
+  });
+}
+
+export async function waiveBillAction(billId: string, input: unknown): Promise<ActionResult<null>> {
+  return runAction(async () => {
+    await waiveBill(billId, input);
+    revalidatePath("/manage", "layout");
+    return null;
   });
 }

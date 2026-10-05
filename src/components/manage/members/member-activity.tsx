@@ -2,8 +2,9 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { HistoryIcon } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { localeNames, isLocale } from "@/i18n/config";
-import { formatDate, formatDateTime, parseDateKey } from "@/lib/dates";
+import { formatDate, formatDateTime, formatMonthShort, isMonthKey, parseDateKey } from "@/lib/dates";
 import { MEMBER_STATUSES } from "@/lib/member-status";
+import { formatRupees } from "@/lib/money";
 import { isRole } from "@/lib/roles";
 import { formatMobile } from "@/lib/validators";
 import type { MemberActivityItem } from "@/server/members";
@@ -58,6 +59,21 @@ export async function MemberActivity({ items }: { items: MemberActivityItem[] })
                 {t("members.activity.from", { date: showDate(item.statusChange.date) })}
               </span>
               <span className="text-muted-foreground">{item.statusChange.reason}</span>
+            </div>
+          ) : null}
+
+          {item.money ? (
+            <div className="flex flex-col gap-0.5">
+              <span>
+                {[
+                  item.money.receiptNumber,
+                  item.money.amount !== null ? formatRupees(item.money.amount, locale) : null,
+                  item.money.months.map((m) => (isMonthKey(m) ? formatMonthShort(m, locale) : m)).join(", ") || null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </span>
+              {item.money.reason ? <span className="text-muted-foreground">{item.money.reason}</span> : null}
             </div>
           ) : null}
 

@@ -1,18 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
-import { ArrowLeftIcon, PencilIcon, WalletIcon } from "lucide-react";
+import { getLocale, getTranslations } from "next-intl/server";
+import { ArrowLeftIcon, PencilIcon } from "lucide-react";
 import { ChangeStatusButton } from "@/components/manage/members/change-status-button";
 import { MemberActivity } from "@/components/manage/members/member-activity";
+import { MemberLedgerView } from "@/components/manage/members/member-ledger";
 import { MemberProfile } from "@/components/manage/members/member-profile";
 import { MemberStatusBadge } from "@/components/manage/members/member-status-badge";
-import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { dateKey } from "@/lib/dates";
+import { formatRupees } from "@/lib/money";
 import { can } from "@/lib/permissions";
 import { requirePageUser } from "@/server/auth/guards";
+import { getMemberLedger } from "@/server/ledger";
 import { getMemberDetail, listMemberActivity } from "@/server/members";
 
 const TABS = ["profile", "contributions", "activity"] as const;
@@ -34,12 +36,14 @@ export default async function MemberPage({ params, searchParams }: Props) {
   const [{ memberId }, query] = await Promise.all([params, searchParams]);
   const me = await requirePageUser(`/manage/members/${memberId}`);
 
-  const [t, member, activity] = await Promise.all([
+  const [t, locale, member, activity, ledger] = await Promise.all([
     getTranslations("members"),
+    getLocale(),
     getMemberDetail(memberId),
     listMemberActivity(memberId),
+    getMemberLedger(memberId),
   ]);
-  if (!member) notFound();
+  if (!member || !ledger) notFound();
 
   const canManage = can(me.role, "members.manage");
   const tab: Tab = TABS.find((x) => x === query.tab) ?? "profile";
@@ -68,6 +72,12 @@ export default async function MemberPage({ params, searchParams }: Props) {
           <h1 className="text-2xl font-semibold">{member.name}</h1>
           <p className="text-sm text-muted-foreground">
             {t("sonOf", { name: member.fatherName })} · {member.mohalla}
+          </p>
+          <p className="text-sm">
+            {t("dueNow")}:{" "}
+            <span className={ledger.dueNow > 0 ? "font-semibold text-destructive" : "font-semibold"}>
+              {formatRupees(ledger.dueNow, locale === "ur" ? "ur" : "en")}
+            </span>
           </p>
         </div>
         {canManage ? (
@@ -100,7 +110,7 @@ export default async function MemberPage({ params, searchParams }: Props) {
           <MemberProfile member={member} canManage={canManage} isAdmin={me.role === "admin"} />
         </TabsContent>
         <TabsContent value="contributions">
-          <EmptyState icon={WalletIcon} title={t("contributions.emptyTitle")} description={t("contributions.emptyBody")} />
+          <MemberLedgerView ledger={ledger} memberId={member.id} />
         </TabsContent>
         <TabsContent value="activity">
           <MemberActivity items={activity} />

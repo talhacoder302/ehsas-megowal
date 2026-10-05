@@ -1,6 +1,6 @@
 import "server-only";
 import { isValidObjectId, Types } from "mongoose";
-import { dateKey, parseDateKey, type DateKey } from "@/lib/dates";
+import { currentMonth, dateKey, parseDateKey, type DateKey } from "@/lib/dates";
 import { AppError } from "@/lib/errors";
 import type { MemberStatus } from "@/lib/member-status";
 import { requirePermission, requireRole } from "@/lib/permissions";
@@ -12,6 +12,7 @@ import {
 } from "@/lib/validators";
 import { ActivityLog, Member, User, type MemberDoc, type UserStatus } from "@/models";
 import { logActivity } from "./activity-log";
+import { billDuesByMember } from "./contributions-core";
 import { nextMemberNo } from "./sequence";
 
 export type MemberListItem = {
@@ -26,7 +27,7 @@ export type MemberListItem = {
   status: MemberStatus;
   statusChangedAt: string | null;
   hasLogin: boolean;
-  /** Unpaid amount. Filled in by the contributions module; null until then. */
+  /** Owed now: opening due plus unpaid bills up to the current month. */
   pendingAmount: number | null;
 };
 
@@ -67,6 +68,8 @@ export type MemberActivityItem = {
   changes: { field: string; from: string; to: string }[];
   /** For "member.status_changed". */
   statusChange: { from: string; to: string; date: string; reason: string } | null;
+  /** For payments and waived bills. */
+  money: { receiptNumber: string | null; amount: number | null; months: string[]; reason: string | null } | null;
 };
 
 export type MemberLinkOption = {
@@ -85,9 +88,9 @@ const MEMBER_NO_ORDER = { locale: "en", numericOrdering: true } as const;
 // "muhammad ali" matches "Muhammad Ali".
 const CASE_INSENSITIVE = { locale: "en", strength: 2 } as const;
 
-const LIST_FIELDS = "memberNo name fatherName mobile mohalla joinDate status statusChangedAt";
+const LIST_FIELDS = "memberNo name fatherName mobile mohalla joinDate status statusChangedAt openingDue";
 
-function toListItem(m: LeanMember, linkedMemberIds: Set<string>): MemberListItem {
+function toListItem(m: LeanMember, linkedMemberIds: Set<string>, billDues: Map<string, { due: number }>): MemberListItem {
   const id = m._id.toString();
   return {
     id,
@@ -100,7 +103,7 @@ function toListItem(m: LeanMember, linkedMemberIds: Set<string>): MemberListItem
     status: m.status,
     statusChangedAt: m.statusChangedAt ? m.statusChangedAt.toISOString() : null,
     hasLogin: linkedMemberIds.has(id),
-    pendingAmount: null,
+    pendingAmount: m.openingDue + (billDues.get(id)?.due ?? 0),
   };
 }
 
@@ -147,7 +150,8 @@ export async function listMembers(): Promise<MemberListItem[]> {
     Member.find().select(LIST_FIELDS).sort({ memberNo: 1 }).collation(MEMBER_NO_ORDER).lean<LeanMember[]>(),
     linkedMemberIdSet(),
   ]);
-  return members.map((m) => toListItem(m, linked));
+  const dues = await billDuesByMember(currentMonth());
+  return members.map((m) => toListItem(m, linked, dues));
 }
 
 /** null when the id is malformed or no member has it. */
@@ -165,7 +169,7 @@ export async function getMemberDetail(memberId: string): Promise<MemberDetail | 
   const names = await userNames(history.map((h) => h.changedBy));
 
   return {
-    ...toListItem(member, new Set(user ? [member._id.toString()] : [])),
+    ...toListItem(member, new Set(user ? [member._id.toString()] : []), await billDuesByMember(currentMonth(), member._id)),
     address: member.address,
     notes: member.notes,
     statusReason: member.statusReason,
@@ -198,6 +202,8 @@ function asText(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 
+const MONEY_ACTIONS = new Set(["payment.received", "payment.cancelled", "bill.waived"]);
+
 /** Changes to this member and to their login, newest first. */
 export async function listMemberActivity(memberId: string): Promise<MemberActivityItem[]> {
   await requirePermission("members.read");
@@ -227,6 +233,18 @@ export async function listMemberActivity(memberId: string): Promise<MemberActivi
         row.action === "member.status_changed"
           ? { from: asText(meta.from), to: asText(meta.to), date: asText(meta.date), reason: asText(meta.reason) }
           : null,
+      money: MONEY_ACTIONS.has(row.action)
+        ? {
+            receiptNumber: typeof meta.receiptNumber === "string" ? meta.receiptNumber : null,
+            amount: typeof meta.amount === "number" ? meta.amount : null,
+            months: Array.isArray(meta.months)
+              ? meta.months.filter((m): m is string => typeof m === "string")
+              : typeof meta.month === "string"
+                ? [meta.month]
+                : [],
+            reason: typeof meta.reason === "string" ? meta.reason : null,
+          }
+        : null,
     };
   });
 }
@@ -407,8 +425,9 @@ export async function listMembersForExport(status: MemberStatus | null): Promise
       .lean<LeanMember[]>(),
     linkedMemberIdSet(),
   ]);
+  const dues = await billDuesByMember(currentMonth());
   return members.map((m) => ({
-    ...toListItem(m, linked),
+    ...toListItem(m, linked, dues),
     address: m.address,
     notes: m.notes,
     statusReason: m.statusReason,

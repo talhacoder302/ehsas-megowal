@@ -27,6 +27,7 @@ export async function buildMembersWorkbook(status: MemberStatus | null, locale: 
     t("statusDate"),
     t("statusReason"),
     t("login"),
+    t("pending"),
     t("notes"),
   ];
   // Dates go in as YYYY-MM-DD text so Excel never shifts them by time zone.
@@ -42,11 +43,13 @@ export async function buildMembersWorkbook(status: MemberStatus | null, locale: 
     m.statusChangedAt ? dateKey(m.statusChangedAt) : "",
     m.statusReason,
     m.hasLogin ? t("yes") : t("no"),
+    // A real number so it can be summed in Excel.
+    m.pendingAmount ?? 0,
     m.notes,
   ]);
 
   const sheet = XLSX.utils.aoa_to_sheet([header, ...rows]);
-  sheet["!cols"] = [10, 24, 24, 14, 22, 30, 12, 12, 12, 30, 10, 40].map((wch) => ({ wch }));
+  sheet["!cols"] = [10, 24, 24, 14, 22, 30, 12, 12, 12, 30, 10, 10, 40].map((wch) => ({ wch }));
   sheet["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: header.length - 1 } }) };
 
   const book = XLSX.utils.book_new();
