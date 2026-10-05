@@ -3,6 +3,7 @@ import {
   FileChartColumnIcon,
   HandCoinsIcon,
   HeartHandshakeIcon,
+  HourglassIcon,
   LayoutDashboardIcon,
   ReceiptIcon,
   SettingsIcon,
@@ -28,13 +29,14 @@ export type ManageNavItem = {
 export const manageNavItems: readonly ManageNavItem[] = [
   { key: "dashboard", href: "/manage", icon: LayoutDashboardIcon, ready: true },
   { key: "members", href: "/manage/members", icon: UsersIcon, ready: true },
-  { key: "payments", href: "/manage/payments", icon: HandCoinsIcon, ready: false },
+  { key: "payments", href: "/manage/payments", icon: HandCoinsIcon, ready: true },
+  { key: "pending", href: "/manage/pending", icon: HourglassIcon, ready: true },
   { key: "cases", href: "/manage/cases", icon: HeartHandshakeIcon, ready: false },
   { key: "expenses", href: "/manage/expenses", icon: ReceiptIcon, ready: false },
-  { key: "accounts", href: "/manage/accounts", icon: WalletIcon, ready: false },
+  { key: "accounts", href: "/manage/accounts", icon: WalletIcon, ready: true },
   { key: "reports", href: "/manage/reports", icon: FileChartColumnIcon, ready: false },
   { key: "users", href: "/manage/users", icon: ShieldCheckIcon, ready: true, adminOnly: true },
-  { key: "settings", href: "/manage/settings", icon: SettingsIcon, ready: false, adminOnly: true },
+  { key: "settings", href: "/manage/settings", icon: SettingsIcon, ready: true, adminOnly: true },
   { key: "profile", href: "/manage/profile", icon: UserIcon, ready: true },
 ];
 
