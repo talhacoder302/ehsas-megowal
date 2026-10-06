@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
-import { ChevronRightIcon, CoinsIcon } from "lucide-react";
+import { ChevronRightIcon, CoinsIcon, UserCheckIcon } from "lucide-react";
 import { PageHeader } from "@/components/manage/page-header";
 import { can } from "@/lib/permissions";
 import { formatRupees } from "@/lib/money";
 import { requirePageUser } from "@/server/auth/guards";
 import { listRates } from "@/server/rates";
+import { readSettings } from "@/server/settings";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("settings");
@@ -18,7 +19,7 @@ export default async function SettingsPage() {
   const me = await requirePageUser("/manage/settings");
   if (!can(me.role, "settings.manage")) redirect("/manage");
 
-  const [t, locale, rates] = await Promise.all([getTranslations("settings"), getLocale(), listRates()]);
+  const [t, locale, rates, settings] = await Promise.all([getTranslations("settings"), getLocale(), listRates(), readSettings()]);
   const current = rates.find((r) => r.isCurrent);
 
   const sections = [
@@ -29,6 +30,14 @@ export default async function SettingsPage() {
       detail: current
         ? t("rates.currentShort", { amount: formatRupees(current.amount, locale === "ur" ? "ur" : "en") })
         : t("rates.noneShort"),
+    },
+    {
+      href: "/manage/settings/approvals",
+      icon: UserCheckIcon,
+      title: t("approvals.title"),
+      detail: settings.approval.enabled
+        ? t("approvals.onShort", { limit: formatRupees(settings.approval.limit, locale === "ur" ? "ur" : "en") })
+        : t("approvals.offShort"),
     },
   ];
 
