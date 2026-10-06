@@ -7,10 +7,13 @@ import {
   normalizeMobile,
   accountFormSchema,
   caseFormSchema,
+  disbursementFormSchema,
+  expenseFormSchema,
   memberFormSchema,
   memberStatusChangeSchema,
   mobileSearchDigits,
   paymentFormSchema,
+  transferFormSchema,
   userFormSchema,
 } from "./validators";
 
@@ -187,6 +190,21 @@ describe("form schemas accept their own output", () => {
         expectedDate: "",
         showNameToMembers: false,
       },
+    ],
+    [
+      "disbursementFormSchema",
+      disbursementFormSchema,
+      { amount: "20,000", date: "2024-01-05", accountId: "64b000000000000000000002", receivedByName: "Muhammad Akram", receiptPhotoKey: "", note: "" },
+    ],
+    [
+      "expenseFormSchema",
+      expenseFormSchema,
+      { category: "printing", description: "Receipt books", amount: "1,200", date: "2024-01-05", accountId: "64b000000000000000000002", receiptPhotoKey: "" },
+    ],
+    [
+      "transferFormSchema",
+      transferFormSchema,
+      { fromAccountId: "64b000000000000000000002", toAccountId: "64b000000000000000000003", amount: "10000", date: "2024-01-05", note: "" },
     ],
   ] as const)("%s", (_name, schema, input) => {
     const once = schema.parse(input);
