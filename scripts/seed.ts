@@ -3,7 +3,8 @@
  * existing passwords are never changed.
  *
  *   npm run seed              settings, admin, 2 heads, demo members, rates,
- *                             cash account, three months of bills and payments, 8 aid cases
+ *                             cash account, three months of bills and payments, 8 aid cases,
+ *                             aid payments, expenses and a bank transfer
  *   npm run seed -- --no-demo settings, admin, the Rs. 500 rate and a cash account (for production)
  *
  * Needs SEED_ADMIN_MOBILE and SEED_ADMIN_PASSWORD in .env.local.
@@ -23,6 +24,7 @@ import {
   ensureUser,
   seedDemoCases,
   seedDemoContributions,
+  seedDemoPayouts,
   syncModelIndexes,
   userIdByMobile,
   type SeedCase,
@@ -382,6 +384,13 @@ async function main() {
 
   const caseResult = await seedDemoCases(demoCases, [head1, head2]);
   console.log(caseResult.skipped ? "- aid cases: cases already exist, demo cases skipped" : `- aid cases: ${caseResult.created} demo cases`);
+
+  const payouts = await seedDemoPayouts({ cashAccountId: account.id, heads: [head1, head2] });
+  console.log(
+    payouts.skipped
+      ? "- payouts: already recorded, demo payouts skipped"
+      : `- payouts: ${payouts.disbursements} aid payments (${payouts.pending} waiting for approval), ${payouts.expenses} expenses, ${payouts.transfers} transfer to HBL Megowal`,
+  );
 }
 
 main()

@@ -13,9 +13,12 @@ import {
   ContributionBill,
   ContributionRate,
   DEFAULT_MEMBER_NO_PREFIX,
+  Disbursement,
+  Expense,
   Income,
   Member,
   Settings,
+  Transfer,
   User,
   type SettingsDoc,
 } from "@/models";
@@ -333,6 +336,116 @@ export async function seedDemoContributions(input: {
   }
 
   return { skipped: false, bills, payments, cancelled, waived };
+}
+
+// ---------------------------------------------------------------------------
+// Money going out (Module 5)
+// ---------------------------------------------------------------------------
+
+export type DemoPayoutsResult = { skipped: boolean; disbursements: number; pending: number; expenses: number; transfers: number };
+
+const DEMO_OPENING_BALANCE = 185000;
+const DEMO_APPROVAL_LIMIT = 25000;
+
+/**
+ * Demo payouts on the seeded cases, a few expenses and a cash-to-bank
+ * transfer. Runs only once (skipped when any disbursement or expense exists).
+ * Gives the cash account its paper-register opening balance first so no
+ * balance goes below zero, and turns on second-head approval above Rs. 25,000
+ * if the settings are still at their defaults.
+ */
+export async function seedDemoPayouts(input: { cashAccountId: string; heads: [string, string] }): Promise<DemoPayoutsResult> {
+  await connectDB();
+  if ((await Disbursement.exists({})) || (await Expense.exists({}))) {
+    return { skipped: true, disbursements: 0, pending: 0, expenses: 0, transfers: 0 };
+  }
+  const [head1, head2] = input.heads.map((id) => new Types.ObjectId(id));
+  const cash = new Types.ObjectId(input.cashAccountId);
+  const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  await Account.updateOne({ _id: cash, openingBalance: 0 }, { $set: { openingBalance: DEMO_OPENING_BALANCE } });
+  await Settings.updateOne(
+    { key: "main", secondHeadApprovalEnabled: false, secondHeadApprovalLimit: 0 },
+    { $set: { secondHeadApprovalEnabled: true, secondHeadApprovalLimit: DEMO_APPROVAL_LIMIT } },
+  );
+  const bank = await ensureAccount({ name: "HBL Megowal", type: "bank", holderUserId: null });
+
+  const caseIds = new Map(
+    (await AidCase.find({ caseNo: { $in: ["C-0001", "C-0002", "C-0005", "C-0008"] } }).select("caseNo").lean()).map((c) => [c.caseNo, c._id]),
+  );
+  type Payout = { caseNo: string; amount: number; daysAgo: number; receivedByName: string; note: string; by: Types.ObjectId; status: "not_required" | "approved" | "pending" };
+  const payouts: Payout[] = [
+    { caseNo: "C-0001", amount: 20000, daysAgo: 2, receivedByName: "Muhammad Akram (walid)", note: "Jahez ke bartan aur bistar", by: head1, status: "not_required" },
+    { caseNo: "C-0001", amount: 30000, daysAgo: 0, receivedByName: "Muhammad Akram (walid)", note: "Baraat ke khane ki advance", by: head1, status: "pending" },
+    { caseNo: "C-0002", amount: 15000, daysAgo: 18, receivedByName: "Ghulam Qadir (walid)", note: "Pehli qist kapron ke liye", by: head2, status: "not_required" },
+    { caseNo: "C-0005", amount: 30000, daysAgo: 45, receivedByName: "Bashiran Bibi", note: "Kafan dafan aur teen din ka khana", by: head1, status: "approved" },
+    { caseNo: "C-0008", amount: 5000, daysAgo: 21, receivedByName: "Haji Rasheed Karyana Store", note: "Pehle mahine ka rashan", by: head2, status: "not_required" },
+    { caseNo: "C-0008", amount: 5000, daysAgo: 14, receivedByName: "Haji Rasheed Karyana Store", note: "Doosre mahine ka rashan", by: head2, status: "not_required" },
+    { caseNo: "C-0008", amount: 5000, daysAgo: 8, receivedByName: "Haji Rasheed Karyana Store", note: "Teesre mahine ka rashan", by: head2, status: "not_required" },
+  ];
+
+  let disbursements = 0;
+  let pending = 0;
+  for (const p of payouts) {
+    const caseId = caseIds.get(p.caseNo);
+    if (!caseId) continue;
+    const approver = p.by.equals(head1) ? head2 : head1;
+    const d = await Disbursement.create({
+      caseId,
+      amount: p.amount,
+      date: daysAgo(p.daysAgo),
+      accountId: cash,
+      paidBy: p.by,
+      receivedByName: p.receivedByName,
+      note: p.note,
+      approvalStatus: p.status,
+      approvedBy: p.status === "approved" ? approver : null,
+      approvedAt: p.status === "approved" ? daysAgo(p.daysAgo) : null,
+    });
+    await logActivity({
+      actorId: p.by.toString(),
+      action: "disbursement.created",
+      entity: "Disbursement",
+      entityId: d._id,
+      meta: { source: "seed", caseNo: p.caseNo, amount: p.amount, approvalStatus: p.status },
+    });
+    disbursements += 1;
+    if (p.status === "pending") pending += 1;
+  }
+
+  const expenses = [
+    { category: "stationery", description: "Register aur pen", amount: 450, daysAgo: 30, by: head1 },
+    { category: "printing", description: "Raseed bookein chhapwain", amount: 1200, daysAgo: 25, by: head2 },
+    { category: "transport", description: "Hospital tak rickshaw ka kiraya (C-0003 ki report)", amount: 600, daysAgo: 12, by: head1 },
+  ] as const;
+  for (const e of expenses) {
+    const doc = await Expense.create({ ...e, date: daysAgo(e.daysAgo), accountId: cash, createdBy: e.by });
+    await logActivity({
+      actorId: e.by.toString(),
+      action: "expense.created",
+      entity: "Expense",
+      entityId: doc._id,
+      meta: { source: "seed", category: e.category, amount: e.amount },
+    });
+  }
+
+  const transfer = await Transfer.create({
+    fromAccountId: cash,
+    toAccountId: new Types.ObjectId(bank.id),
+    amount: 10000,
+    date: daysAgo(5),
+    note: "Naqdi HBL Megowal mein jama karwai",
+    createdBy: head1,
+  });
+  await logActivity({
+    actorId: head1.toString(),
+    action: "transfer.created",
+    entity: "Transfer",
+    entityId: transfer._id,
+    meta: { source: "seed", amount: 10000 },
+  });
+
+  return { skipped: false, disbursements, pending, expenses: expenses.length, transfers: 1 };
 }
 
 // ---------------------------------------------------------------------------
