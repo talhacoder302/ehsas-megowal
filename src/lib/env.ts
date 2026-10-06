@@ -31,6 +31,8 @@ const serverSchema = z.object({
   R2_SECRET_ACCESS_KEY: optional,
   R2_BUCKET: optional,
   R2_PUBLIC_URL: optional,
+  // Only for local testing against an S3-compatible server; normally built from the account id.
+  R2_ENDPOINT: optional,
 
   RESEND_API_KEY: optional,
   EMAIL_FROM: optional,
@@ -44,6 +46,7 @@ export type R2Config = {
   secretAccessKey: string;
   bucket: string;
   publicUrl: string | undefined;
+  endpoint: string;
 };
 
 export type EmailConfig = {
@@ -73,7 +76,8 @@ function resolveR2(env: RawServerEnv): R2Config | null {
       accessKeyId: R2_ACCESS_KEY_ID,
       secretAccessKey: R2_SECRET_ACCESS_KEY,
       bucket: R2_BUCKET,
-      publicUrl: env.R2_PUBLIC_URL,
+      publicUrl: env.R2_PUBLIC_URL?.replace(/\/+$/, ""),
+      endpoint: env.R2_ENDPOINT ?? `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
     };
   }
   if (required.some(Boolean)) warn("R2 is partly configured, photo uploads are disabled.");

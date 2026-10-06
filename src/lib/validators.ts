@@ -5,6 +5,8 @@ import { ACCOUNT_TYPES, PAYMENT_METHODS } from "@/lib/contributions";
 import { MONTH_PATTERN, parseDateKey, pastDateKeySchema } from "@/lib/dates";
 import { MEMBER_STATUSES } from "@/lib/member-status";
 import { fromUrduDigits, parseRupees } from "@/lib/money";
+import { EXPENSE_CATEGORIES } from "@/lib/payouts";
+import { optionalReceiptKeySchema } from "@/lib/uploads";
 import { ROLES } from "@/lib/roles";
 
 // Error messages are keys in the "validation" namespace of the i18n messages.
@@ -242,6 +244,59 @@ export const caseStatusChangeSchema = z
   });
 export type CaseStatusChangeInput = z.input<typeof caseStatusChangeSchema>;
 export type CaseStatusChangeValues = z.output<typeof caseStatusChangeSchema>;
+
+// ---------------------------------------------------------------------------
+// Money going out
+// ---------------------------------------------------------------------------
+
+const accountIdSchema = z.string().regex(/^[0-9a-f]{24}$/i, "accountRequired");
+
+export const disbursementFormSchema = z.object({
+  amount: rupeesInput({ min: 1 }),
+  date: pastDateKeySchema,
+  accountId: accountIdSchema,
+  receivedByName: z.string().trim().min(2, "receivedByRequired").max(80, "nameTooLong"),
+  receiptPhotoKey: optionalReceiptKeySchema("disbursement"),
+  note: z.string().trim().max(300, "notesTooLong"),
+});
+export type DisbursementFormInput = z.input<typeof disbursementFormSchema>;
+export type DisbursementFormValues = z.output<typeof disbursementFormSchema>;
+
+export const approvedAmountChangeSchema = z.object({
+  approvedAmount: rupeesInput({ min: 1 }),
+  reason: reasonSchema,
+});
+export type ApprovedAmountChangeInput = z.input<typeof approvedAmountChangeSchema>;
+export type ApprovedAmountChangeValues = z.output<typeof approvedAmountChangeSchema>;
+
+export const expenseFormSchema = z.object({
+  category: z.enum(EXPENSE_CATEGORIES, "categoryRequired"),
+  description: z.string().trim().min(3, "descriptionRequired").max(300, "descriptionTooLong"),
+  amount: rupeesInput({ min: 1 }),
+  date: pastDateKeySchema,
+  accountId: accountIdSchema,
+  receiptPhotoKey: optionalReceiptKeySchema("expense"),
+});
+export type ExpenseFormInput = z.input<typeof expenseFormSchema>;
+export type ExpenseFormValues = z.output<typeof expenseFormSchema>;
+
+export const transferFormSchema = z
+  .object({
+    fromAccountId: accountIdSchema,
+    toAccountId: accountIdSchema,
+    amount: rupeesInput({ min: 1 }),
+    date: pastDateKeySchema,
+    note: z.string().trim().max(300, "notesTooLong"),
+  })
+  .refine((v) => v.fromAccountId !== v.toAccountId, { message: "sameAccount", path: ["toAccountId"] });
+export type TransferFormInput = z.input<typeof transferFormSchema>;
+export type TransferFormValues = z.output<typeof transferFormSchema>;
+
+export const approvalSettingsSchema = z.object({
+  enabled: z.boolean(),
+  limit: rupeesInput({ min: 0 }),
+});
+export type ApprovalSettingsInput = z.input<typeof approvalSettingsSchema>;
 
 export const caseNoteSchema = z.object({ text: z.string().trim().min(2, "noteRequired").max(1000, "notesTooLong") });
 export type CaseNoteInput = z.input<typeof caseNoteSchema>;
