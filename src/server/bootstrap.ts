@@ -1,6 +1,7 @@
 import "server-only";
 import { Types } from "mongoose";
 import type { Locale } from "@/i18n/config";
+import type { CaseCategory, CaseStatus } from "@/lib/cases";
 import { amountThrough, type AccountType } from "@/lib/contributions";
 import { dateKey, parseDateKey, todayKey, type MonthKey } from "@/lib/dates";
 import { connectDB } from "@/lib/db";
@@ -8,6 +9,7 @@ import type { MemberStatus } from "@/lib/member-status";
 import type { Role } from "@/lib/roles";
 import {
   Account,
+  AidCase,
   ContributionBill,
   ContributionRate,
   DEFAULT_MEMBER_NO_PREFIX,
@@ -20,7 +22,7 @@ import {
 import { logActivity } from "./activity-log";
 import { applyPayment, cancelIncome, createBillsForMonth, memberPayables } from "./contributions-core";
 import { generateTempPassword, hashPassword } from "./passwords";
-import { nextMemberNo } from "./sequence";
+import { nextCaseNo, nextMemberNo } from "./sequence";
 
 // System-level setup used only by scripts (seed, migrations). Never call these
 // from Server Actions or route handlers; they do not check a session.
@@ -331,4 +333,83 @@ export async function seedDemoContributions(input: {
   }
 
   return { skipped: false, bills, payments, cancelled, waived };
+}
+
+// ---------------------------------------------------------------------------
+// Aid cases (Module 4)
+// ---------------------------------------------------------------------------
+
+type SeedCaseStep = { status: CaseStatus; daysAgo: number; reason: string; approvedAmount?: number };
+
+export type SeedCase = {
+  category: CaseCategory;
+  beneficiaryName: string;
+  guardianName: string;
+  mohalla: string;
+  contactMobile: string;
+  recommendedBy: string;
+  description: string;
+  estimatedAmount: number;
+  /** Days from today; negative is in the past. */
+  expectedInDays: number | null;
+  showNameToMembers: boolean;
+  /** Oldest first; the first step is the case being opened. */
+  steps: SeedCaseStep[];
+  notes?: { daysAgo: number; text: string }[];
+};
+
+/**
+ * Demo aid cases with a realistic history. Runs only once: skipped when any
+ * case exists. Dates are relative to today so the highlights stay meaningful.
+ */
+export async function seedDemoCases(cases: SeedCase[], heads: [string, string]): Promise<{ skipped: boolean; created: number }> {
+  await connectDB();
+  if (await AidCase.exists({})) return { skipped: true, created: 0 };
+
+  const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  let created = 0;
+  for (const [i, seed] of cases.entries()) {
+    const caseNo = await nextCaseNo();
+    const history = seed.steps.map((step, j) => ({
+      status: step.status,
+      reason: step.reason,
+      approvedAmount: step.approvedAmount ?? null,
+      changedBy: new Types.ObjectId(heads[(i + j) % 2]),
+      changedAt: daysAgo(step.daysAgo),
+    }));
+    const notes = (seed.notes ?? []).map((n) => ({ text: n.text, createdBy: new Types.ObjectId(heads[0]), createdAt: daysAgo(n.daysAgo) }));
+    const approved = [...seed.steps].reverse().find((s) => s.approvedAmount !== undefined)?.approvedAmount ?? null;
+    const lastUpdateAt = new Date(Math.max(...history.map((h) => h.changedAt.getTime()), ...notes.map((n) => n.createdAt.getTime())));
+
+    const doc = await AidCase.create({
+      caseNo,
+      category: seed.category,
+      beneficiaryName: seed.beneficiaryName,
+      guardianName: seed.guardianName,
+      mohalla: seed.mohalla,
+      contactMobile: seed.contactMobile,
+      recommendedBy: seed.recommendedBy,
+      description: seed.description,
+      estimatedAmount: seed.estimatedAmount,
+      approvedAmount: approved,
+      expectedDate: seed.expectedInDays === null ? null : daysAgo(-seed.expectedInDays),
+      status: seed.steps[seed.steps.length - 1].status,
+      statusHistory: history,
+      notes,
+      showNameToMembers: seed.showNameToMembers,
+      lastUpdateAt,
+      createdBy: new Types.ObjectId(heads[i % 2]),
+    });
+    // Mongoose keeps createdAt immutable; the opened date should match the history.
+    await AidCase.collection.updateOne({ _id: doc._id }, { $set: { createdAt: history[0].changedAt } });
+    await logActivity({
+      actorId: heads[i % 2],
+      action: "case.created",
+      entity: "AidCase",
+      entityId: doc._id,
+      meta: { source: "seed", caseNo, category: seed.category, estimatedAmount: seed.estimatedAmount },
+    });
+    created += 1;
+  }
+  return { skipped: false, created };
 }

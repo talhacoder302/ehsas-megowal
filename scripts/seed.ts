@@ -3,7 +3,7 @@
  * existing passwords are never changed.
  *
  *   npm run seed              settings, admin, 2 heads, demo members, rates,
- *                             cash account and three months of bills and payments
+ *                             cash account, three months of bills and payments, 8 aid cases
  *   npm run seed -- --no-demo settings, admin, the Rs. 500 rate and a cash account (for production)
  *
  * Needs SEED_ADMIN_MOBILE and SEED_ADMIN_PASSWORD in .env.local.
@@ -21,9 +21,11 @@ import {
   ensureMembers,
   ensureRates,
   ensureUser,
+  seedDemoCases,
   seedDemoContributions,
   syncModelIndexes,
   userIdByMobile,
+  type SeedCase,
   type SeedMember,
 } from "@/server/bootstrap";
 
@@ -138,6 +140,151 @@ const demoMembers: SeedMember[] = [
   { name: "Umar Farooq", fatherName: "Muhammad Ramzan", mobile: "03427418526", mohalla: DARBAR, joinDate: day("2026-04-01") },
 ];
 
+
+// 8 demo aid cases across categories and statuses. Reasons are written the way
+// the heads write them, in Roman Urdu. Names are fictional.
+const demoCases: SeedCase[] = [
+  {
+    category: "wedding",
+    beneficiaryName: "Shazia Bibi",
+    guardianName: "Muhammad Akram (walid)",
+    mohalla: ARAIN,
+    contactMobile: "03012345678",
+    recommendedBy: "Muhammad Riaz (EP-003)",
+    description: "Beti ki shadi 15 November ko hai. Jahez ka zaroori saman aur baraat ke khane mein madad chahiye.",
+    estimatedAmount: 75000,
+    expectedInDays: 40,
+    showNameToMembers: false,
+    steps: [
+      { status: "requested", daysAgo: 30, reason: "" },
+      { status: "verifying", daysAgo: 27, reason: "Ghar ja kar halaat dekhe, khandan waqai mustahiq hai" },
+      { status: "approved", daysAgo: 20, reason: "Committee ne jahez aur khane ke liye manzoori de di", approvedAmount: 60000 },
+      { status: "in_progress", daysAgo: 3, reason: "Larki walon se tareekh confirm ho gayi, pehli qist jald di jayegi" },
+    ],
+  },
+  {
+    category: "wedding",
+    beneficiaryName: "Rukhsana Bibi",
+    guardianName: "Ghulam Qadir (walid)",
+    mohalla: KUMHARAN,
+    contactMobile: "03023456789",
+    recommendedBy: "Abdul Ghafoor (EP-002)",
+    description: "Do betiyon mein se bari beti ki rukhsati. Walid mazdoori karte hain, aamdani bohat kam hai.",
+    estimatedAmount: 60000,
+    expectedInDays: 20,
+    showNameToMembers: false,
+    steps: [
+      { status: "requested", daysAgo: 40, reason: "" },
+      { status: "verifying", daysAgo: 36, reason: "Masjid ke imam sahib se tasdeeq karwai" },
+      { status: "approved", daysAgo: 30, reason: "Manzoor, lekin raqam tareekh pakki hone par di jayegi", approvedAmount: 50000 },
+      { status: "in_progress", daysAgo: 18, reason: "Kapron ke liye pehli qist de di gayi" },
+      { status: "on_hold", daysAgo: 10, reason: "Larki walon se tareekh confirm nahi hui" },
+    ],
+  },
+  {
+    category: "medical",
+    beneficiaryName: "Allah Ditta",
+    guardianName: "Muhammad Boota (beta)",
+    mohalla: DARBAR,
+    contactMobile: "03034567890",
+    recommendedBy: "Muhammad Boota (EP-017)",
+    description: "Buzurg hain, gurde mein pathri ka operation DHQ hospital mein hona hai. Operation aur dawaiyon ka kharcha.",
+    estimatedAmount: 40000,
+    expectedInDays: 10,
+    showNameToMembers: false,
+    steps: [
+      { status: "requested", daysAgo: 14, reason: "" },
+      { status: "verifying", daysAgo: 12, reason: "Hospital ka bill abhi nahi aaya, report ka intezar hai" },
+    ],
+  },
+  {
+    category: "medical",
+    beneficiaryName: "Hamza",
+    guardianName: "Naveed Akhtar (walid)",
+    mohalla: RAJPUTAN,
+    contactMobile: "03045678901",
+    recommendedBy: "Naveed Akhtar (EP-030)",
+    description: "Paanch saal ke bache ko taifoid hai, ilaj aur dawaiyon ka kharcha.",
+    estimatedAmount: 25000,
+    expectedInDays: null,
+    showNameToMembers: false,
+    steps: [
+      { status: "requested", daysAgo: 6, reason: "" },
+      { status: "verifying", daysAgo: 5, reason: "Doctor ki parchi aur lab report dekh li" },
+      { status: "approved", daysAgo: 2, reason: "Dawaiyon aur check-up ke liye manzoor", approvedAmount: 20000 },
+    ],
+  },
+  {
+    category: "funeral",
+    beneficiaryName: "Bashiran Bibi",
+    guardianName: "Marhoom Fazal Din (shohar)",
+    mohalla: MASJID,
+    contactMobile: "03056789012",
+    recommendedBy: "Hafiz Abdul Qayyum (EP-031)",
+    description: "Shohar ka achanak inteqal ho gaya. Kafan dafan aur teen din ke khane ka intezam.",
+    estimatedAmount: 30000,
+    expectedInDays: -45,
+    showNameToMembers: true,
+    steps: [
+      { status: "requested", daysAgo: 46, reason: "" },
+      { status: "verifying", daysAgo: 46, reason: "Janaze ka intezam foran zaroori tha, dono heads ne mauqa dekha" },
+      { status: "approved", daysAgo: 46, reason: "Kafan dafan aur khane ke liye poori raqam manzoor", approvedAmount: 30000 },
+      { status: "in_progress", daysAgo: 45, reason: "Raqam ghar walon ko de di gayi" },
+      { status: "completed", daysAgo: 42, reason: "Saare intezamat mukammal, ghar walon ne shukriya ada kiya" },
+    ],
+  },
+  {
+    category: "education",
+    beneficiaryName: "Ayesha",
+    guardianName: "Mehboob Alam (walid)",
+    mohalla: CHAUDHRIAN,
+    contactMobile: "03067890123",
+    recommendedBy: "Mehboob Alam (EP-027)",
+    description: "Matric ki class, saal bhar ki school fees aur kitabein. Parhai mein bohat achi hai.",
+    estimatedAmount: 18000,
+    expectedInDays: 14,
+    showNameToMembers: false,
+    steps: [{ status: "requested", daysAgo: 2, reason: "" }],
+  },
+  {
+    category: "house_repair",
+    beneficiaryName: "Sardar Ali",
+    guardianName: "",
+    mohalla: KUMHARAN,
+    contactMobile: "03078901234",
+    recommendedBy: "Javed Iqbal (EP-024)",
+    description: "Barish mein chhat tapakti hai, ek kamre ki chhat dobara dalni hai.",
+    estimatedAmount: 120000,
+    expectedInDays: null,
+    showNameToMembers: false,
+    steps: [
+      { status: "requested", daysAgo: 35, reason: "" },
+      { status: "verifying", daysAgo: 30, reason: "Mistri se kharche ka andaza liya" },
+      { status: "rejected", daysAgo: 20, reason: "Ghar kiraye ka hai, malik khud marammat karwa raha hai" },
+    ],
+  },
+  {
+    category: "ration",
+    beneficiaryName: "Zubaida Bibi",
+    guardianName: "",
+    mohalla: ARAIN,
+    contactMobile: "",
+    recommendedBy: "Abdul Sattar (EP-025)",
+    description: "Bewa hain, teen chhote bachay. Teen mahine ka rashan (atta, ghee, cheeni, daal).",
+    estimatedAmount: 15000,
+    expectedInDays: null,
+    showNameToMembers: false,
+    steps: [
+      { status: "requested", daysAgo: 25, reason: "" },
+      { status: "verifying", daysAgo: 24, reason: "Mohalle walon se halaat ki tasdeeq ho gayi" },
+      { status: "approved", daysAgo: 22, reason: "Teen mahine ke rashan ke liye manzoor", approvedAmount: 15000 },
+      { status: "in_progress", daysAgo: 21, reason: "Pehle mahine ka rashan de diya" },
+      { status: "completed", daysAgo: 8, reason: "Teeno mahine ka rashan pohncha diya gaya" },
+    ],
+    notes: [{ daysAgo: 8, text: "Agle saal phir zaroorat pare to dobara dekh lein." }],
+  },
+];
+
 function printLogin(label: string, mobile: string, result: { created: boolean; password: string | null }, temporary: boolean) {
   if (!result.created) {
     console.log(`- ${label}: ${formatMobile(mobile)} (already exists, password unchanged)`);
@@ -232,6 +379,9 @@ async function main() {
       ? "- contributions: payments already exist, demo history skipped"
       : `- contributions: ${demo.bills} bills for ${months.join(", ")}, ${demo.payments} payments (${demo.cancelled} cancelled), ${demo.waived} bill waived`,
   );
+
+  const caseResult = await seedDemoCases(demoCases, [head1, head2]);
+  console.log(caseResult.skipped ? "- aid cases: cases already exist, demo cases skipped" : `- aid cases: ${caseResult.created} demo cases`);
 }
 
 main()
