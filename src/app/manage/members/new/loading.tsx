@@ -1,5 +1,5 @@
-import { MemberFormSkeleton } from "@/components/manage/members/member-form-skeleton";
+import { FormPageSkeleton } from "@/components/manage/form-page-skeleton";
 
 export default function NewMemberLoading() {
-  return <MemberFormSkeleton />;
+  return <FormPageSkeleton />;
 }

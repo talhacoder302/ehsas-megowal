@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function MemberFormSkeleton() {
+export function FormPageSkeleton() {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
       <Skeleton className="h-4 w-28" />

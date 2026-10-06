@@ -1,5 +1,5 @@
 import { FormPageSkeleton } from "@/components/manage/form-page-skeleton";
 
-export default function EditMemberLoading() {
+export default function CaseFormLoading() {
   return <FormPageSkeleton />;
 }

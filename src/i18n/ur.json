@@ -437,6 +437,123 @@
     "emptyTitle": "ابھی کوئی بل یا ادائیگی نہیں",
     "emptyBody": "ذمہ داران کے مہینے کے بل بنانے پر بل، اور رقم وصول ہونے پر ادائیگیاں یہاں نظر آئیں گی۔"
   },
+  "caseCategory": {
+    "wedding": "شادی",
+    "funeral": "فوتگی",
+    "medical": "علاج",
+    "education": "تعلیمی فیس",
+    "house_repair": "مکان کی مرمت",
+    "ration": "راشن",
+    "other": "دیگر ضرورت"
+  },
+  "caseStatus": {
+    "requested": "درخواست",
+    "verifying": "تصدیق جاری",
+    "approved": "منظور",
+    "in_progress": "جاری",
+    "on_hold": "رکا ہوا",
+    "completed": "مکمل",
+    "rejected": "نامنظور"
+  },
+  "cases": {
+    "title": "امدادی کیس",
+    "subtitle": "{open, plural, =0 {کوئی کھلا کیس نہیں} one {# کھلا کیس} other {# کھلے کیس}}",
+    "subtitleAttention": "{open, plural, one {# کھلا کیس} other {# کھلے کیس}} · {attention} توجہ طلب",
+    "add": "نیا کیس",
+    "tabs": {
+      "open": "کھلے",
+      "completed": "مکمل",
+      "rejected": "نامنظور"
+    },
+    "searchPlaceholder": "کیس نمبر، نام یا محلہ",
+    "allCategories": "تمام اقسام",
+    "from": "سے",
+    "to": "تک",
+    "clearFilters": "فلٹر ہٹائیں",
+    "emptyTitle": "ابھی کوئی امدادی کیس نہیں",
+    "emptyBody": "جب گاؤں کا کوئی خاندان مدد مانگے تو کیس کھولیں۔",
+    "noMatchTitle": "یہاں کوئی کیس نہیں",
+    "noMatchBody": "کوئی اور ٹیب دیکھیں یا فلٹر ہٹائیں۔",
+    "estimated": "اندازاً",
+    "approved": "منظور",
+    "onHoldFlag": "رکا ہوا",
+    "staleFlag": "{days} دن سے کوئی اپڈیٹ نہیں",
+    "lastUpdate": "اپڈیٹ {date}",
+    "created": "کیس {caseNo} کھل گیا۔",
+    "updated": "کیس محفوظ ہو گیا۔",
+    "infoTitle": "کیس کی تفصیل",
+    "opened": "کھولا گیا",
+    "openedBy": "{date}، {name}",
+    "namesShown": "ممبران اس کیس کا نام اور تفصیل دیکھ سکتے ہیں۔",
+    "namesHidden": "نام اور تفصیل ممبران سے چھپی ہوئی ہے۔",
+    "money": {
+      "estimated": "اندازاً رقم",
+      "approved": "منظور شدہ",
+      "paid": "اب تک ادا",
+      "remaining": "باقی"
+    },
+    "form": {
+      "createTitle": "نیا امدادی کیس",
+      "createSubtitle": "کیس نمبر خود بخود لگ جائے گا۔",
+      "editTitle": "کیس میں ترمیم",
+      "category": "مدد کی قسم",
+      "beneficiaryName": "مستحق کا نام",
+      "guardianName": "سرپرست کا نام",
+      "guardianHint": "والد، شوہر یا جو خاندان کی دیکھ بھال کرتا ہو۔",
+      "mohalla": "محلہ",
+      "contactMobile": "رابطہ نمبر",
+      "recommendedBy": "سفارش کنندہ",
+      "recommendedByHint": "وہ ممبر یا شخص جو کیس لایا۔",
+      "description": "کیا ضرورت ہے",
+      "descriptionPlaceholder": "مثلاً: 20 نومبر کو بیٹی کی شادی ہے، جہیز اور کھانے میں مدد چاہیے۔",
+      "estimatedAmount": "اندازاً رقم (روپے)",
+      "expectedDate": "متوقع تاریخ",
+      "expectedDateHint": "اختیاری۔ شادی کی تاریخ، آپریشن کی تاریخ، فیس کی آخری تاریخ…",
+      "showNameToMembers": "ممبران کو نام دکھائیں",
+      "showNameHint": "خاندان کی عزت کے لیے یہ عام طور پر بند رہتا ہے۔ صرف خاندان کی رضامندی سے آن کریں۔",
+      "create": "کیس کھولیں"
+    },
+    "status": {
+      "change": "اسٹیٹس تبدیل کریں",
+      "title": "{caseNo} کا اسٹیٹس تبدیل کریں",
+      "current": "موجودہ: {status}",
+      "newStatus": "نیا اسٹیٹس",
+      "approvedAmount": "منظور شدہ رقم (روپے)",
+      "approvedAmountHint": "اس کیس کے لیے فنڈ کتنی رقم دے گا۔",
+      "reason": "وجہ",
+      "reasonPlaceholder": "مثلاً: لڑکی والوں سے تاریخ کنفرم ہو گئی",
+      "membersSeeReason": "ممبران یہ وجہ اپنی کیس فہرست میں پڑھ سکتے ہیں۔ یہاں خاندان کا نام نہ لکھیں۔",
+      "save": "اسٹیٹس محفوظ کریں",
+      "changed": "اسٹیٹس {status} ہو گیا۔"
+    },
+    "timeline": {
+      "title": "اسٹیٹس کی تاریخ",
+      "created": "کیس کھولا گیا۔",
+      "approvedAmount": "{amount} منظور",
+      "by": "از {name}"
+    },
+    "notes": {
+      "title": "نوٹ",
+      "placeholder": "ذمہ داران کے لیے نوٹ لکھیں (ممبران نوٹ نہیں دیکھتے)",
+      "add": "نوٹ شامل کریں",
+      "empty": "ابھی کوئی نوٹ نہیں۔"
+    },
+    "disbursements": {
+      "title": "اس کیس کی ادائیگیاں",
+      "emptyTitle": "ابھی کوئی ادائیگی نہیں",
+      "emptyBody": "ادائیگیاں درج ہونے کے بعد اس کیس کے لیے دی گئی رقم یہاں نظر آئے گی۔"
+    }
+  },
+  "memberCases": {
+    "title": "امدادی کیس",
+    "subtitle": "فنڈ کی رقم کہاں مدد کر رہی ہے",
+    "privacy": "خاندانوں کی عزت کے لیے ان کے نام راز میں رکھے جاتے ہیں۔ نام صرف خاندان کی رضامندی سے دکھایا جاتا ہے۔",
+    "open": "جاری",
+    "closed": "بند",
+    "lastUpdate": "آخری اپڈیٹ {date}:",
+    "emptyTitle": "یہاں کوئی کیس نہیں",
+    "emptyBody": "جن کیسوں میں فنڈ مدد کر رہا ہے وہ یہاں نظر آئیں گے۔"
+  },
   "accounts": {
     "title": "کھاتے",
     "subtitle": "فنڈ کی رقم کہاں رکھی ہے",
@@ -520,7 +637,12 @@
     "amountTooLarge": "یہ رقم بہت زیادہ ہے۔",
     "accountTypeRequired": "براہ کرم کھاتے کی قسم منتخب کریں۔",
     "accountRequired": "براہ کرم کھاتہ منتخب کریں۔",
-    "methodRequired": "براہ کرم ادائیگی کا طریقہ منتخب کریں۔"
+    "methodRequired": "براہ کرم ادائیگی کا طریقہ منتخب کریں۔",
+    "categoryRequired": "براہ کرم مدد کی قسم منتخب کریں۔",
+    "descriptionRequired": "براہ کرم ضرورت لکھیں (کم از کم چند الفاظ)۔",
+    "descriptionTooLong": "تفصیل بہت لمبی ہے۔",
+    "approvedAmountRequired": "براہ کرم منظور شدہ رقم درج کریں۔",
+    "noteRequired": "براہ کرم نوٹ لکھیں۔"
   },
   "serverErrors": {
     "unauthenticated": "آپ کا سیشن ختم ہو گیا ہے۔ دوبارہ لاگ اِن کریں۔",
@@ -557,7 +679,9 @@
     "billAlreadyWaived": "یہ بل پہلے ہی معاف ہے۔",
     "billHasPayments": "اس بل کی کچھ ادائیگی ہو چکی ہے، اس لیے معاف نہیں ہو سکتا۔",
     "alreadyCancelled": "یہ وصولی پہلے ہی منسوخ ہے۔",
-    "cannotCancelOwnPayment": "یہ رقم آپ نے خود وصول کی ہے۔ اسے دوسرے ذمہ دار یا ایڈمن ہی منسوخ کر سکتے ہیں۔"
+    "cannotCancelOwnPayment": "یہ رقم آپ نے خود وصول کی ہے۔ اسے دوسرے ذمہ دار یا ایڈمن ہی منسوخ کر سکتے ہیں۔",
+    "caseStatusNotAllowed": "کیس موجودہ اسٹیٹس سے اس اسٹیٹس پر نہیں جا سکتا۔",
+    "caseChangedMeanwhile": "ابھی کسی اور نے یہ کیس تبدیل کیا ہے۔ دوبارہ دیکھ کر کوشش کریں۔"
   },
   "manage": {
     "areaName": "انتظامیہ",

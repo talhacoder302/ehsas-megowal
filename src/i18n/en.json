@@ -437,6 +437,123 @@
     "emptyTitle": "No bills or payments yet",
     "emptyBody": "Bills appear when the heads generate a month, and payments when money is received."
   },
+  "caseCategory": {
+    "wedding": "Wedding",
+    "funeral": "Funeral (fotgi)",
+    "medical": "Medical",
+    "education": "School fees",
+    "house_repair": "House repair",
+    "ration": "Ration",
+    "other": "Other need"
+  },
+  "caseStatus": {
+    "requested": "Requested",
+    "verifying": "Verifying",
+    "approved": "Approved",
+    "in_progress": "In progress",
+    "on_hold": "On hold",
+    "completed": "Completed",
+    "rejected": "Rejected"
+  },
+  "cases": {
+    "title": "Aid cases",
+    "subtitle": "{open, plural, =0 {No open cases} one {# open case} other {# open cases}}",
+    "subtitleAttention": "{open, plural, one {# open case} other {# open cases}} · {attention} need attention",
+    "add": "New case",
+    "tabs": {
+      "open": "Open",
+      "completed": "Completed",
+      "rejected": "Rejected"
+    },
+    "searchPlaceholder": "Case no., name or mohalla",
+    "allCategories": "All categories",
+    "from": "From",
+    "to": "To",
+    "clearFilters": "Clear filters",
+    "emptyTitle": "No aid cases yet",
+    "emptyBody": "Open a case when a family in the village asks for help.",
+    "noMatchTitle": "No cases here",
+    "noMatchBody": "Try another tab or clear the filters.",
+    "estimated": "Estimated",
+    "approved": "Approved",
+    "onHoldFlag": "On hold",
+    "staleFlag": "No update for {days} days",
+    "lastUpdate": "Updated {date}",
+    "created": "Case {caseNo} opened.",
+    "updated": "Case saved.",
+    "infoTitle": "Case details",
+    "opened": "Opened",
+    "openedBy": "{date} by {name}",
+    "namesShown": "Members can see the name and details of this case.",
+    "namesHidden": "Name and details are hidden from members.",
+    "money": {
+      "estimated": "Estimated",
+      "approved": "Approved",
+      "paid": "Paid so far",
+      "remaining": "Remaining"
+    },
+    "form": {
+      "createTitle": "New aid case",
+      "createSubtitle": "The case number is given automatically.",
+      "editTitle": "Edit case",
+      "category": "Type of help",
+      "beneficiaryName": "Beneficiary name",
+      "guardianName": "Guardian name",
+      "guardianHint": "Father, husband or whoever looks after the family.",
+      "mohalla": "Mohalla",
+      "contactMobile": "Contact number",
+      "recommendedBy": "Recommended by",
+      "recommendedByHint": "The member or person who brought the case.",
+      "description": "What is needed",
+      "descriptionPlaceholder": "For example: daughter's wedding on 20 Nov, needs help with dowry and food.",
+      "estimatedAmount": "Estimated amount (Rs.)",
+      "expectedDate": "Expected date",
+      "expectedDateHint": "Optional. Wedding date, operation date, fee deadline…",
+      "showNameToMembers": "Show name to members",
+      "showNameHint": "Off by default to protect the family's dignity. Turn on only if the family agrees.",
+      "create": "Open case"
+    },
+    "status": {
+      "change": "Change status",
+      "title": "Change status of {caseNo}",
+      "current": "Now: {status}",
+      "newStatus": "New status",
+      "approvedAmount": "Approved amount (Rs.)",
+      "approvedAmountHint": "How much the fund will give for this case.",
+      "reason": "Reason",
+      "reasonPlaceholder": "For example: Larki walon se tareekh confirm ho gayi",
+      "membersSeeReason": "Members can read this reason in their case list. Do not write the family's name here.",
+      "save": "Save status",
+      "changed": "Status changed to {status}."
+    },
+    "timeline": {
+      "title": "Status history",
+      "created": "Case opened.",
+      "approvedAmount": "Approved {amount}",
+      "by": "by {name}"
+    },
+    "notes": {
+      "title": "Notes",
+      "placeholder": "Write a note for the heads (members do not see notes)",
+      "add": "Add note",
+      "empty": "No notes yet."
+    },
+    "disbursements": {
+      "title": "Payments to this case",
+      "emptyTitle": "No payments yet",
+      "emptyBody": "Money paid out for this case will be listed here once disbursements are recorded."
+    }
+  },
+  "memberCases": {
+    "title": "Aid cases",
+    "subtitle": "Where the fund's money is helping",
+    "privacy": "Families' names are kept private to protect their dignity. A name is shown only when the family has agreed.",
+    "open": "Open",
+    "closed": "Closed",
+    "lastUpdate": "Last update {date}:",
+    "emptyTitle": "No cases here",
+    "emptyBody": "Cases the fund is helping with will show here."
+  },
   "accounts": {
     "title": "Accounts",
     "subtitle": "Where the fund's money is kept",
@@ -520,7 +637,12 @@
     "amountTooLarge": "This amount is too large.",
     "accountTypeRequired": "Please choose the account type.",
     "accountRequired": "Please choose an account.",
-    "methodRequired": "Please choose how it was paid."
+    "methodRequired": "Please choose how it was paid.",
+    "categoryRequired": "Please choose the type of help.",
+    "descriptionRequired": "Please describe what is needed (at least a few words).",
+    "descriptionTooLong": "The description is too long.",
+    "approvedAmountRequired": "Please enter the approved amount.",
+    "noteRequired": "Please write the note."
   },
   "serverErrors": {
     "unauthenticated": "Your session has ended. Please log in again.",
@@ -557,7 +679,9 @@
     "billAlreadyWaived": "This bill is already waived.",
     "billHasPayments": "This bill has payments against it, so it cannot be waived.",
     "alreadyCancelled": "This payment is already cancelled.",
-    "cannotCancelOwnPayment": "You received this payment yourself. The other head or the admin has to cancel it."
+    "cannotCancelOwnPayment": "You received this payment yourself. The other head or the admin has to cancel it.",
+    "caseStatusNotAllowed": "The case cannot move to this status from where it is now.",
+    "caseChangedMeanwhile": "Someone else changed this case just now. Please check and try again."
   },
   "manage": {
     "areaName": "Management",
