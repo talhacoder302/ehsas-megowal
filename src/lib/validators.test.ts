@@ -5,9 +5,12 @@ import {
   mobileSchema,
   mobileToInternational,
   normalizeMobile,
+  accountFormSchema,
+  caseFormSchema,
   memberFormSchema,
   memberStatusChangeSchema,
   mobileSearchDigits,
+  paymentFormSchema,
   userFormSchema,
 } from "./validators";
 
@@ -151,5 +154,42 @@ describe("mobileSearchDigits", () => {
     expect(mobileSearchDigits("EP-011")).toBeNull();
     expect(mobileSearchDigits("riaz")).toBeNull();
     expect(mobileSearchDigits("03")).toBeNull();
+  });
+});
+
+describe("form schemas accept their own output", () => {
+  // Forms send the parsed values to Server Actions, which parse them again.
+  it.each([
+    ["userFormSchema", userFormSchema, { name: "Ali", mobile: "0300-1234567", role: "head", memberId: "", language: "en" }],
+    [
+      "memberFormSchema",
+      memberFormSchema,
+      { name: "Ali Raza", fatherName: "Raza Khan", mobile: "", mohalla: "Mohalla Arain", address: "", joinDate: "2024-01-01", notes: "" },
+    ],
+    ["accountFormSchema", accountFormSchema, { name: "Cash", type: "cash_in_hand", holderUserId: "", openingBalance: "1,000" }],
+    [
+      "paymentFormSchema",
+      paymentFormSchema,
+      { memberId: "64b000000000000000000001", amount: "1,500", accountId: "64b000000000000000000002", method: "cash", date: "2024-01-05", note: "" },
+    ],
+    [
+      "caseFormSchema",
+      caseFormSchema,
+      {
+        category: "medical",
+        beneficiaryName: "Allah Ditta",
+        guardianName: "",
+        mohalla: "",
+        contactMobile: "+92 300 1234567",
+        recommendedBy: "",
+        description: "Operation ka kharcha",
+        estimatedAmount: "40,000",
+        expectedDate: "",
+        showNameToMembers: false,
+      },
+    ],
+  ] as const)("%s", (_name, schema, input) => {
+    const once = schema.parse(input);
+    expect(schema.parse(once)).toEqual(once);
   });
 });
