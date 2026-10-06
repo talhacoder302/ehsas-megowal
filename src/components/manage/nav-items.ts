@@ -32,7 +32,7 @@ export const manageNavItems: readonly ManageNavItem[] = [
   { key: "payments", href: "/manage/payments", icon: HandCoinsIcon, ready: true },
   { key: "pending", href: "/manage/pending", icon: HourglassIcon, ready: true },
   { key: "cases", href: "/manage/cases", icon: HeartHandshakeIcon, ready: true },
-  { key: "expenses", href: "/manage/expenses", icon: ReceiptIcon, ready: false },
+  { key: "expenses", href: "/manage/expenses", icon: ReceiptIcon, ready: true },
   { key: "accounts", href: "/manage/accounts", icon: WalletIcon, ready: true },
   { key: "reports", href: "/manage/reports", icon: FileChartColumnIcon, ready: false },
   { key: "users", href: "/manage/users", icon: ShieldCheckIcon, ready: true, adminOnly: true },
