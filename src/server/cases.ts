@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import {
   allowedNextStatuses,
   canMoveTo,
+  isOpenStatus,
   lastReason,
   redactCase,
   type CaseCategory,
@@ -11,9 +12,16 @@ import {
 import { dateKey, parseDateKey } from "@/lib/dates";
 import { AppError } from "@/lib/errors";
 import { canSeeBeneficiaryDetails, requirePermission, requireUser } from "@/lib/permissions";
-import { caseFormSchema, caseNoteSchema, caseStatusChangeSchema, type CaseFormValues } from "@/lib/validators";
+import {
+  approvedAmountChangeSchema,
+  caseFormSchema,
+  caseNoteSchema,
+  caseStatusChangeSchema,
+  type CaseFormValues,
+} from "@/lib/validators";
 import { AidCase, User, type AidCaseDoc } from "@/models";
 import { logActivity } from "./activity-log";
+import { payoutsByCase } from "./payout-totals";
 import { nextCaseNo } from "./sequence";
 
 export type CaseListItem = {
@@ -29,7 +37,7 @@ export type CaseListItem = {
   description: string | null;
   estimatedAmount: number;
   approvedAmount: number | null;
-  /** Paid out so far. Disbursements are recorded from Module 5; until then 0. */
+  /** Paid out so far (approved disbursements). */
   paidAmount: number;
   expectedDate: string | null;
   createdAt: string;
@@ -50,6 +58,8 @@ export type CaseTimelineEntry = {
 export type CaseNoteItem = { id: string; text: string; createdByName: string | null; createdAt: string };
 
 export type CaseDetail = CaseListItem & {
+  /** Disbursements waiting for a second head. */
+  pendingAmount: number;
   recommendedBy: string;
   createdByName: string | null;
   /** Newest first. */
@@ -62,7 +72,7 @@ export type CaseDetail = CaseListItem & {
 
 type LeanCase = AidCaseDoc & { createdAt?: Date };
 
-function toListItem(c: LeanCase, canSeeDetails: boolean): CaseListItem {
+function toListItem(c: LeanCase, canSeeDetails: boolean, paidAmount: number): CaseListItem {
   return redactCase(
     {
       id: c._id.toString(),
@@ -76,7 +86,7 @@ function toListItem(c: LeanCase, canSeeDetails: boolean): CaseListItem {
       description: c.description,
       estimatedAmount: c.estimatedAmount,
       approvedAmount: c.approvedAmount ?? null,
-      paidAmount: 0,
+      paidAmount,
       expectedDate: c.expectedDate ? c.expectedDate.toISOString() : null,
       createdAt: (c.createdAt ?? c._id.getTimestamp()).toISOString(),
       lastUpdateAt: c.lastUpdateAt.toISOString(),
@@ -124,7 +134,8 @@ function caseFields(values: CaseFormValues) {
 export async function listCases(): Promise<CaseListItem[]> {
   const me = await requirePermission("cases.viewNames");
   const cases = await AidCase.find().select("-notes").sort({ createdAt: -1 }).lean<LeanCase[]>();
-  return cases.map((c) => toListItem(c, canSeeBeneficiaryDetails(me, c)));
+  const payouts = await payoutsByCase();
+  return cases.map((c) => toListItem(c, canSeeBeneficiaryDetails(me, c), payouts.get(c._id.toString())?.paid ?? 0));
 }
 
 /** null when the id is malformed or no case has it. */
@@ -134,11 +145,16 @@ export async function getCase(caseId: string): Promise<CaseDetail | null> {
   const c = await AidCase.findById(caseId).lean<LeanCase>();
   if (!c) return null;
 
-  const names = await userNames([c.createdBy, ...c.statusHistory.map((h) => h.changedBy), ...c.notes.map((n) => n.createdBy)]);
+  const [names, payouts] = await Promise.all([
+    userNames([c.createdBy, ...c.statusHistory.map((h) => h.changedBy), ...c.notes.map((n) => n.createdBy)]),
+    payoutsByCase([c._id]),
+  ]);
+  const paid = payouts.get(c._id.toString()) ?? { paid: 0, pending: 0 };
   const nameOf = (id: Types.ObjectId | null | undefined) => (id ? (names.get(id.toString()) ?? null) : null);
 
   return {
-    ...toListItem(c, canSeeBeneficiaryDetails(me, c)),
+    ...toListItem(c, canSeeBeneficiaryDetails(me, c), paid.paid),
+    pendingAmount: paid.pending,
     recommendedBy: c.recommendedBy,
     createdByName: nameOf(c.createdBy),
     timeline: c.statusHistory
@@ -250,6 +266,49 @@ export async function changeCaseStatus(caseId: string, input: unknown): Promise<
   });
 }
 
+/**
+ * Raises or lowers the approved amount of an approved case, with a reason.
+ * It can never go below what is already paid or waiting for approval.
+ * Recorded in the status history so the change shows on the timeline.
+ */
+export async function changeApprovedAmount(caseId: string, input: unknown): Promise<void> {
+  const actor = await requirePermission("cases.manage");
+  const existing = await findCaseOrThrow(caseId);
+  const values = approvedAmountChangeSchema.parse(input);
+  if (existing.approvedAmount === null || existing.approvedAmount === undefined || !isOpenStatus(existing.status)) {
+    throw new AppError("caseNotApproved");
+  }
+  const payouts = (await payoutsByCase([existing._id])).get(existing._id.toString()) ?? { paid: 0, pending: 0 };
+  if (values.approvedAmount < payouts.paid + payouts.pending) throw new AppError("approvedBelowPaid");
+
+  const now = new Date();
+  const result = await AidCase.updateOne(
+    { _id: existing._id, status: existing.status, approvedAmount: existing.approvedAmount },
+    {
+      $set: { approvedAmount: values.approvedAmount, lastUpdateAt: now },
+      $push: {
+        statusHistory: {
+          status: existing.status,
+          reason: values.reason,
+          approvedAmount: values.approvedAmount,
+          changedBy: new Types.ObjectId(actor.id),
+          changedAt: now,
+        },
+      },
+    },
+    { runValidators: true },
+  );
+  if (result.modifiedCount === 0) throw new AppError("caseChangedMeanwhile");
+
+  await logActivity({
+    actorId: actor.id,
+    action: "case.approved_amount_changed",
+    entity: "AidCase",
+    entityId: existing._id,
+    meta: { caseNo: existing.caseNo, from: existing.approvedAmount, to: values.approvedAmount, reason: values.reason },
+  });
+}
+
 export async function addCaseNote(caseId: string, input: unknown): Promise<void> {
   const actor = await requirePermission("cases.manage");
   const existing = await findCaseOrThrow(caseId);
@@ -274,5 +333,6 @@ export async function addCaseNote(caseId: string, input: unknown): Promise<void>
 export async function listCasesForMember(): Promise<CaseListItem[]> {
   const me = await requireUser();
   const cases = await AidCase.find().select("-notes -recommendedBy -createdBy").sort({ createdAt: -1 }).lean<LeanCase[]>();
-  return cases.map((c) => toListItem(c, canSeeBeneficiaryDetails(me, c)));
+  const payouts = await payoutsByCase();
+  return cases.map((c) => toListItem(c, canSeeBeneficiaryDetails(me, c), payouts.get(c._id.toString())?.paid ?? 0));
 }

@@ -33,6 +33,10 @@ type CaseStatusButtonProps = {
   status: CaseStatus;
   nextStatuses: CaseStatus[];
   estimatedAmount: number;
+  /** Status picked when the dialog opens (must be one of nextStatuses). */
+  defaultStatus?: CaseStatus;
+  /** Button text instead of "Change status". */
+  label?: string;
 };
 
 export function CaseStatusButton(props: CaseStatusButtonProps) {
@@ -44,7 +48,7 @@ export function CaseStatusButton(props: CaseStatusButtonProps) {
     <>
       <Button size="lg" onClick={() => setOpen(true)}>
         <RefreshCwIcon />
-        {t("change")}
+        {props.label ?? t("change")}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[92svh] overflow-y-auto sm:max-w-md">
@@ -55,13 +59,25 @@ export function CaseStatusButton(props: CaseStatusButtonProps) {
   );
 }
 
-function StatusForm({ caseId, caseNo, status, nextStatuses, estimatedAmount, onDone }: CaseStatusButtonProps & { onDone: () => void }) {
+function StatusForm({
+  caseId,
+  caseNo,
+  status,
+  nextStatuses,
+  estimatedAmount,
+  defaultStatus,
+  onDone,
+}: CaseStatusButtonProps & { onDone: () => void }) {
   const t = useTranslations();
   const validation = useValidationMessage();
   const [serverError, setServerError] = useState<ServerErrorCode | null>(null);
   const form = useForm<CaseStatusChangeInput, unknown, CaseStatusChangeValues>({
     resolver: zodResolver(caseStatusChangeSchema),
-    defaultValues: { status: nextStatuses[0], reason: "", approvedAmount: String(estimatedAmount) },
+    defaultValues: {
+      status: defaultStatus && nextStatuses.includes(defaultStatus) ? defaultStatus : nextStatuses[0],
+      reason: "",
+      approvedAmount: String(estimatedAmount),
+    },
   });
   const chosen = useWatch({ control: form.control, name: "status" });
 

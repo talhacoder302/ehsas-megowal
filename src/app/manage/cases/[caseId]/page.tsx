@@ -2,24 +2,30 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
-import { CircleAlertIcon, EyeIcon, EyeOffIcon, HandCoinsIcon, MessageCircleIcon, PencilIcon, PhoneIcon } from "lucide-react";
+import { CircleAlertIcon, EyeIcon, EyeOffIcon, MessageCircleIcon, PartyPopperIcon, PencilIcon, PhoneIcon } from "lucide-react";
+import { ApprovedAmountButton } from "@/components/manage/cases/approved-amount-button";
+import { DisbursementsPanel } from "@/components/manage/cases/disbursements-panel";
 import { CaseNotes } from "@/components/manage/cases/case-notes";
 import { CaseStatusButton } from "@/components/manage/cases/case-status-button";
 import { CaseTimeline } from "@/components/manage/cases/case-timeline";
 import { PageHeader } from "@/components/manage/page-header";
 import { CaseCategoryLabel, CaseStatusBadge } from "@/components/shared/case-badges";
-import { EmptyState } from "@/components/shared/empty-state";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { daysSince, isStale, remainingAmount } from "@/lib/cases";
-import { formatDate } from "@/lib/dates";
+import { daysSince, isOpenStatus, isStale, remainingAmount } from "@/lib/cases";
+import { formatDate, todayKey } from "@/lib/dates";
 import { formatRupees } from "@/lib/money";
+import { isFullyPaid, PAYABLE_CASE_STATUSES, payableLeft } from "@/lib/payouts";
 import { can } from "@/lib/permissions";
 import { formatMobile } from "@/lib/validators";
 import { whatsappLink } from "@/lib/whatsapp";
 import { requirePageUser } from "@/server/auth/guards";
+import { listAccountOptions } from "@/server/accounts";
 import { getCase } from "@/server/cases";
+import { listCaseDisbursements } from "@/server/disbursements";
+import { readSettings } from "@/server/settings";
+import { uploadsEnabled } from "@/server/storage";
 
 type Props = { params: Promise<{ caseId: string }> };
 
@@ -33,18 +39,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CasePage({ params }: Props) {
   const { caseId } = await params;
   const me = await requirePageUser(`/manage/cases/${caseId}`);
-  const [t, locale, aidCase] = await Promise.all([getTranslations(), getLocale(), getCase(caseId)]);
+  const [t, locale, aidCase, disbursements, settings] = await Promise.all([
+    getTranslations(),
+    getLocale(),
+    getCase(caseId),
+    listCaseDisbursements(caseId),
+    readSettings(),
+  ]);
   if (!aidCase) notFound();
 
   const lang = locale === "ur" ? "ur" : "en";
   const canManage = can(me.role, "cases.manage");
+  const payable = (PAYABLE_CASE_STATUSES as readonly string[]).includes(aidCase.status);
+  const canPay = payable && can(me.role, "disbursements.record");
+  const accounts = canPay ? await listAccountOptions() : [];
+  const payout = { approvedAmount: aidCase.approvedAmount, paid: aidCase.paidAmount, pending: aidCase.pendingAmount };
+  const fullyPaid = payable && isFullyPaid(payout);
   const stale = isStale(aidCase.status, aidCase.lastUpdateAt);
   const notSet = <span className="text-muted-foreground">{t("members.notSet")}</span>;
 
   const money = [
     { label: t("cases.money.estimated"), value: aidCase.estimatedAmount },
     { label: t("cases.money.approved"), value: aidCase.approvedAmount },
-    { label: t("cases.money.paid"), value: aidCase.paidAmount },
+    { label: t("cases.money.paid"), value: aidCase.paidAmount, note: aidCase.pendingAmount > 0 ? t("disbursements.pendingNote", { amount: formatRupees(aidCase.pendingAmount, lang) }) : null },
     { label: t("cases.money.remaining"), value: remainingAmount(aidCase), strong: true },
   ];
 
@@ -111,6 +128,24 @@ export default async function CasePage({ params }: Props) {
         </Alert>
       ) : null}
 
+      {fullyPaid && canManage ? (
+        <Alert className="border-emerald-600/40 bg-emerald-600/10">
+          <PartyPopperIcon className="text-emerald-700" />
+          <AlertDescription className="flex flex-col gap-2">
+            <span>{aidCase.status === "in_progress" ? t("disbursements.fullyPaidComplete") : t("disbursements.fullyPaidStart")}</span>
+            <CaseStatusButton
+              caseId={aidCase.id}
+              caseNo={aidCase.caseNo}
+              status={aidCase.status}
+              nextStatuses={aidCase.nextStatuses}
+              estimatedAmount={aidCase.estimatedAmount}
+              defaultStatus={aidCase.status === "in_progress" ? "completed" : "in_progress"}
+              label={aidCase.status === "in_progress" ? t("disbursements.markCompleted") : t("disbursements.markInProgress")}
+            />
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {money.map((m) => (
           <div key={m.label} className={`flex flex-col gap-1 rounded-xl border p-3 ${m.strong ? "bg-primary/5" : "bg-card"}`}>
@@ -118,6 +153,7 @@ export default async function CasePage({ params }: Props) {
             <span className={`text-xl font-semibold ${m.value === null ? "text-muted-foreground" : ""}`}>
               {m.value === null ? "—" : formatRupees(m.value, lang)}
             </span>
+            {"note" in m && m.note ? <span className="text-xs text-amber-700 dark:text-amber-400">{m.note}</span> : null}
           </div>
         ))}
       </div>
@@ -179,8 +215,31 @@ export default async function CasePage({ params }: Props) {
             <CardHeader>
               <CardTitle>{t("cases.disbursements.title")}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <EmptyState icon={HandCoinsIcon} title={t("cases.disbursements.emptyTitle")} description={t("cases.disbursements.emptyBody")} />
+            <CardContent className="flex flex-col gap-3">
+              {canManage && aidCase.approvedAmount !== null && isOpenStatus(aidCase.status) ? (
+                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span className="text-muted-foreground">{t("disbursements.leftToPay", { amount: formatRupees(payableLeft(payout), lang) })}</span>
+                  <ApprovedAmountButton
+                    caseId={aidCase.id}
+                    approvedAmount={aidCase.approvedAmount}
+                    committed={aidCase.paidAmount + aidCase.pendingAmount}
+                  />
+                </div>
+              ) : null}
+              {!payable && isOpenStatus(aidCase.status) ? (
+                <p className="text-xs text-muted-foreground">{t("disbursements.notPayableYet")}</p>
+              ) : null}
+              <DisbursementsPanel
+                caseId={aidCase.id}
+                items={disbursements}
+                canAdd={canPay}
+                leftToPay={payableLeft(payout)}
+                accounts={accounts}
+                approval={settings.approval}
+                uploadsEnabled={uploadsEnabled()}
+                defaultReceiver={aidCase.guardianName || aidCase.beneficiaryName || ""}
+                today={todayKey()}
+              />
             </CardContent>
           </Card>
         </div>

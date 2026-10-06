@@ -1,5 +1,6 @@
 import "server-only";
 import { connectDB } from "@/lib/db";
+import type { ApprovalSettings } from "@/lib/payouts";
 import { DEFAULT_MEMBER_NO_PREFIX, Settings } from "@/models";
 
 export type ProgramSettings = {
@@ -9,6 +10,8 @@ export type ProgramSettings = {
   receiptPrefix: string;
   caseNoPrefix: string;
   showBeneficiaryNamesDefault: boolean;
+  /** Disbursements above the limit wait for a second head. */
+  approval: ApprovalSettings;
 };
 
 const DEFAULTS: ProgramSettings = {
@@ -18,6 +21,7 @@ const DEFAULTS: ProgramSettings = {
   receiptPrefix: "R-",
   caseNoPrefix: "C-",
   showBeneficiaryNamesDefault: false,
+  approval: { enabled: false, limit: 0 },
 };
 
 /**
@@ -26,7 +30,7 @@ const DEFAULTS: ProgramSettings = {
  */
 export async function readSettings(): Promise<ProgramSettings> {
   await connectDB();
-  const doc = await Settings.findOne({ key: "main" }).select("programName villageName memberNoPrefix receiptPrefix caseNoPrefix showBeneficiaryNamesDefault").lean();
+  const doc = await Settings.findOne({ key: "main" }).lean();
   return {
     programName: doc?.programName || DEFAULTS.programName,
     villageName: doc?.villageName || DEFAULTS.villageName,
@@ -34,5 +38,9 @@ export async function readSettings(): Promise<ProgramSettings> {
     receiptPrefix: doc?.receiptPrefix || DEFAULTS.receiptPrefix,
     caseNoPrefix: doc?.caseNoPrefix || DEFAULTS.caseNoPrefix,
     showBeneficiaryNamesDefault: doc?.showBeneficiaryNamesDefault ?? DEFAULTS.showBeneficiaryNamesDefault,
+    approval: {
+      enabled: doc?.secondHeadApprovalEnabled ?? DEFAULTS.approval.enabled,
+      limit: doc?.secondHeadApprovalLimit ?? DEFAULTS.approval.limit,
+    },
   };
 }
