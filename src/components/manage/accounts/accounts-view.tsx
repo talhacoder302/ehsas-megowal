@@ -28,7 +28,10 @@ import { ACCOUNT_TYPES, type AccountType } from "@/lib/contributions";
 import type { ServerErrorCode } from "@/lib/errors";
 import { formatRupees } from "@/lib/money";
 import { accountFormSchema, type AccountFormInput, type AccountFormValues } from "@/lib/validators";
-import type { AccountItem, StaffOption } from "@/server/accounts";
+import type { DateKey } from "@/lib/dates";
+import type { AccountItem, AccountOption, StaffOption } from "@/server/accounts";
+import type { TransferItem } from "@/server/expenses";
+import { TransfersSection } from "./transfers-section";
 
 const TYPE_ICONS: Record<AccountType, typeof WalletIcon> = {
   cash_in_hand: BanknoteIcon,
@@ -39,9 +42,29 @@ const TYPE_ICONS: Record<AccountType, typeof WalletIcon> = {
 // Radix Select does not allow an empty value, so "nobody" uses this sentinel.
 const NO_HOLDER = "none";
 
-export function AccountsView({ accounts, staff }: { accounts: AccountItem[]; staff: StaffOption[] }) {
+type AccountsViewProps = {
+  accounts: AccountItem[];
+  staff: StaffOption[];
+  transfers: TransferItem[];
+  options: AccountOption[];
+  today: DateKey;
+};
+
+export function AccountsView({ accounts, staff, transfers, options, today }: AccountsViewProps) {
   const t = useTranslations();
   const locale = useLocale() === "ur" ? "ur" : "en";
+  /** Lines that make up the balance; zero lines are left out except the opening balance. */
+  const breakdown = (a: AccountItem): [string, number, string][] =>
+    (
+      [
+        [t("accounts.opening"), a.openingBalance, ""],
+        [t("accounts.received"), a.income, "+ "],
+        [t("accounts.transfersIn"), a.transfersIn, "+ "],
+        [t("accounts.disbursed"), a.disbursed, "− "],
+        [t("accounts.expenses"), a.expenses, "− "],
+        [t("accounts.transfersOut"), a.transfersOut, "− "],
+      ] as [string, number, string][]
+    ).filter(([, amount], i) => i === 0 || amount > 0);
   const [adding, setAdding] = useState(false);
   const total = accounts.filter((a) => a.active).reduce((sum, a) => sum + a.balance, 0);
 
@@ -85,14 +108,17 @@ export function AccountsView({ accounts, staff }: { accounts: AccountItem[]; sta
                     {a.active ? null : <Badge variant="outline">{t("accounts.inactive")}</Badge>}
                   </div>
                   <div className="flex items-end justify-between gap-2">
-                    <div className="flex flex-col text-xs text-muted-foreground">
-                      <span>
-                        {t("accounts.opening")}: {formatRupees(a.openingBalance, locale)}
-                      </span>
-                      <span>
-                        {t("accounts.received")}: {formatRupees(a.received, locale)}
-                      </span>
-                    </div>
+                    <dl className="grid grid-cols-[auto_auto] gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                      {breakdown(a).map(([label, amount, sign]) => (
+                        <div key={label} className="contents">
+                          <dt>{label}</dt>
+                          <dd className="text-end">
+                            {sign}
+                            {formatRupees(amount, locale)}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
                     <div className="flex flex-col items-end">
                       <span className="text-xs text-muted-foreground">{t("accounts.balance")}</span>
                       <span className="text-xl font-semibold">{formatRupees(a.balance, locale)}</span>
@@ -105,6 +131,8 @@ export function AccountsView({ accounts, staff }: { accounts: AccountItem[]; sta
           <p className="text-xs text-muted-foreground">{t("accounts.balanceNote")}</p>
         </>
       )}
+
+      <TransfersSection transfers={transfers} options={options} today={today} />
 
       <Dialog open={adding} onOpenChange={setAdding}>
         <DialogContent className="max-h-[92svh] overflow-y-auto sm:max-w-md">

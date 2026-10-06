@@ -554,6 +554,108 @@
     "emptyTitle": "No cases here",
     "emptyBody": "Cases the fund is helping with will show here."
   },
+  "approvalStatus": {
+    "not_required": "Paid",
+    "pending": "Waiting for approval",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "expenseCategory": {
+    "stationery": "Stationery",
+    "printing": "Printing",
+    "transport": "Transport",
+    "bank_charges": "Bank charges",
+    "refreshments": "Refreshments",
+    "other": "Other"
+  },
+  "photo": {
+    "label": "Receipt photo (optional)",
+    "add": "Add receipt photo",
+    "hint": "Take a photo or pick one. It is made small before uploading.",
+    "compressing": "Making the photo smaller…",
+    "uploading": "Uploading…",
+    "uploaded": "Photo uploaded",
+    "preview": "Receipt photo",
+    "remove": "Remove photo",
+    "disabled": "Photo upload is not set up yet (Cloudflare R2 settings are missing). You can still save without a photo.",
+    "uploadFailed": "The photo could not be uploaded. Check the internet and try again, or save without it.",
+    "photoRead": "This file could not be read as a photo."
+  },
+  "disbursements": {
+    "add": "Pay out",
+    "amount": "Amount (Rs.)",
+    "fromAccount": "Paid from",
+    "receivedBy": "Received by",
+    "receivedByHint": "Who took the money: the family, a shopkeeper, the hospital…",
+    "leftToPay": "Left to pay: {amount}",
+    "nothingLeft": "The approved amount is fully paid or waiting for approval. Raise the approved amount to pay more.",
+    "notPayableYet": "Money can be paid out once the case is approved.",
+    "emptyBody": "Payments made to this family will be listed here with their receipt photos.",
+    "paidBy": "by {name}",
+    "approvedBy": "Approved by {name}",
+    "rejectedBecause": "Rejected by {name}: {reason}",
+    "viewPhoto": "Receipt photo",
+    "approve": "Approve",
+    "reject": "Reject",
+    "waitingOther": "Waiting for another head to approve",
+    "rejectTitle": "Reject this payment of {amount}?",
+    "rejectBody": "The payment stays in the records as rejected and no money leaves the account.",
+    "approvedToast": "Payment approved.",
+    "approvedFullyPaid": "Payment approved. The case is now fully paid.",
+    "rejectedToast": "Payment rejected.",
+    "willWait": "This is above {limit}, so it will wait until another head or the admin approves it. The account balance does not change until then.",
+    "save": "Save payment",
+    "saveForApproval": "Save for approval",
+    "saved": "Payment saved.",
+    "savedPending": "Saved. It now waits for another head to approve it.",
+    "pendingNote": "{amount} waiting for approval",
+    "changeApproved": "Change approved amount",
+    "changeApprovedBody": "Now approved: {amount}. The change and your reason are shown on the timeline.",
+    "notBelow": "Cannot be less than what is paid or waiting: {amount}.",
+    "changeReasonPlaceholder": "For example: hospital bill came higher than expected",
+    "approvedChanged": "Approved amount changed.",
+    "fullyPaidStart": "The approved amount has been paid in full. Move the case to in progress, then mark it completed.",
+    "fullyPaidComplete": "The approved amount has been paid in full. Mark the case completed?",
+    "markCompleted": "Mark completed",
+    "markInProgress": "Move to in progress",
+    "datePaid": "Date paid"
+  },
+  "expenses": {
+    "title": "Expenses",
+    "subtitle": "Program costs not tied to a case · {month}: {amount}",
+    "add": "Add expense",
+    "addHint": "Stationery, printing, transport and other running costs.",
+    "category": "Type",
+    "description": "What it was for",
+    "descriptionPlaceholder": "For example: receipt books printed",
+    "save": "Save expense",
+    "saved": "Expense saved.",
+    "emptyTitle": "No expenses yet",
+    "emptyBody": "Running costs like printing and transport will be listed here."
+  },
+  "transfers": {
+    "title": "Transfers",
+    "add": "Transfer money",
+    "addHint": "Move money between the fund's own accounts, for example cash deposited into the bank.",
+    "from": "From",
+    "to": "To",
+    "notePlaceholder": "For example: cash deposited at HBL Megowal",
+    "save": "Save transfer",
+    "saved": "Transfer saved.",
+    "empty": "No transfers yet.",
+    "needTwo": "Add a second account to move money between accounts.",
+    "date": "Date"
+  },
+  "dashboard": {
+    "waitingTitle": "Waiting for approval",
+    "nothingWaiting": "Nothing is waiting for approval.",
+    "approvalOn": "Payments above {limit} need a second head's approval.",
+    "approvalOff": "Second-head approval is off (admin can turn it on in Settings).",
+    "paidTo": "to {name}",
+    "enteredBy": "Entered by {name}",
+    "balancesTitle": "Money in hand",
+    "openAccounts": "Open accounts"
+  },
   "accounts": {
     "title": "Accounts",
     "subtitle": "Where the fund's money is kept",
@@ -565,7 +667,7 @@
     "opening": "Opening",
     "received": "Received",
     "balance": "Balance",
-    "balanceNote": "Balances include money received so far. Spending will be taken off once aid and expenses are recorded.",
+    "balanceNote": "Balance = opening + received − aid paid − expenses ± transfers. Payments waiting for approval are not taken off yet.",
     "created": "Account added.",
     "emptyTitle": "No accounts yet",
     "emptyBody": "Add an account (for example Cash in hand) before receiving payments.",
@@ -578,7 +680,11 @@
       "holderHint": "The head or admin who keeps this money.",
       "openingBalance": "Opening balance (Rs.)",
       "openingBalanceHint": "Money already in this account when it is added."
-    }
+    },
+    "disbursed": "Aid paid",
+    "expenses": "Expenses",
+    "transfersIn": "Transferred in",
+    "transfersOut": "Transferred out"
   },
   "settings": {
     "title": "Settings",
@@ -605,6 +711,17 @@
       "addedBy": "Added by {name} on {date}",
       "emptyTitle": "No rates yet",
       "emptyBody": "Add the monthly contribution rate before generating bills."
+    },
+    "approvals": {
+      "title": "Second-head approval",
+      "subtitle": "Large aid payments need a second person",
+      "onShort": "On, above {limit}",
+      "offShort": "Off",
+      "enabled": "Ask a second head to approve large payments",
+      "enabledHint": "Payments above the limit wait until another head (not the one who entered it) or the admin approves them.",
+      "limit": "Limit (Rs.)",
+      "limitHint": "Payments above this amount need approval.",
+      "saved": "Approval settings saved."
     }
   },
   "validation": {
@@ -642,7 +759,12 @@
     "descriptionRequired": "Please describe what is needed (at least a few words).",
     "descriptionTooLong": "The description is too long.",
     "approvedAmountRequired": "Please enter the approved amount.",
-    "noteRequired": "Please write the note."
+    "noteRequired": "Please write the note.",
+    "receivedByRequired": "Please write who received the money.",
+    "photoInvalid": "The photo is not valid. Please upload it again.",
+    "photoType": "Only JPG, PNG or WebP photos can be uploaded.",
+    "photoTooLarge": "The photo is too large even after making it smaller.",
+    "sameAccount": "Choose two different accounts."
   },
   "serverErrors": {
     "unauthenticated": "Your session has ended. Please log in again.",
@@ -681,7 +803,16 @@
     "alreadyCancelled": "This payment is already cancelled.",
     "cannotCancelOwnPayment": "You received this payment yourself. The other head or the admin has to cancel it.",
     "caseStatusNotAllowed": "The case cannot move to this status from where it is now.",
-    "caseChangedMeanwhile": "Someone else changed this case just now. Please check and try again."
+    "caseChangedMeanwhile": "Someone else changed this case just now. Please check and try again.",
+    "uploadsDisabled": "Photo upload is not set up on the server.",
+    "photoTooLarge": "The photo is too large even after making it smaller.",
+    "insufficientBalance": "There is not enough money in this account for this. Check the balance or choose another account.",
+    "caseNotPayable": "Money can only be paid out on cases that are approved or in progress.",
+    "exceedsApproved": "This is more than what is left of the approved amount. Change the approved amount first, with a reason.",
+    "alreadyDecided": "This payment has already been approved or rejected.",
+    "cannotApproveOwn": "You entered this payment, so another head or the admin has to approve it.",
+    "caseNotApproved": "Only an open, approved case has an approved amount to change.",
+    "approvedBelowPaid": "The approved amount cannot be less than what is already paid or waiting for approval."
   },
   "manage": {
     "areaName": "Management",

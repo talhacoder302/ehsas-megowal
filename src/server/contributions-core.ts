@@ -354,15 +354,6 @@ export async function cancelIncome(incomeId: string, actorId: string, reason: st
 // Totals
 // ---------------------------------------------------------------------------
 
-/** Money received into each account (cancelled payments left out). */
-export async function incomeByAccount(): Promise<Map<string, number>> {
-  const rows = await Income.aggregate<{ _id: Types.ObjectId; total: number }>([
-    { $match: { cancelled: false } },
-    { $group: { _id: "$accountId", total: { $sum: "$amount" } } },
-  ]);
-  return new Map(rows.map((r) => [r._id.toString(), r.total]));
-}
-
 /** Unpaid bill amounts up to `month` for each member, or one member (opening due not included). */
 export async function billDuesByMember(
   month: MonthKey,

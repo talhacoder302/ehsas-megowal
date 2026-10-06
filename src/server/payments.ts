@@ -7,7 +7,7 @@ import { AppError } from "@/lib/errors";
 import { requirePermission } from "@/lib/permissions";
 import { paymentFormSchema, reasonFormSchema } from "@/lib/validators";
 import { Account, Income, Member, User, type IncomeDoc } from "@/models";
-import { listAccountOptions, type AccountOption } from "./accounts";
+import { assertBalanceCovers, listAccountOptions, type AccountOption } from "./accounts";
 import { logActivity } from "./activity-log";
 import { applyPayment, cancelIncome, memberPayables, type PayableMember } from "./contributions-core";
 import { readSettings } from "./settings";
@@ -128,12 +128,14 @@ export async function cancelPayment(incomeId: string, input: unknown): Promise<v
   const { reason } = reasonFormSchema.parse(input);
   if (!Types.ObjectId.isValid(incomeId)) throw new AppError("notFound");
 
-  const income = await Income.findById(incomeId).select("receivedBy cancelled").lean();
+  const income = await Income.findById(incomeId).select("receivedBy cancelled accountId amount").lean();
   if (!income) throw new AppError("notFound");
   if (income.cancelled) throw new AppError("alreadyCancelled");
   if (!canCancelPayment(actor, { receivedBy: income.receivedBy.toString(), cancelled: income.cancelled })) {
     throw new AppError("cannotCancelOwnPayment");
   }
+  // Cancelling takes the money back out of the account; it must still be there.
+  await assertBalanceCovers(income.accountId.toString(), income.amount);
 
   const cancelled = await cancelIncome(incomeId, actor.id, reason);
   if (!cancelled) throw new AppError("alreadyCancelled");
