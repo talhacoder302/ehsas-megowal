@@ -1,5 +1,6 @@
 import "server-only";
 import { Counter, DEFAULT_MEMBER_NO_PREFIX } from "@/models";
+import { formatCaseNo } from "@/lib/cases";
 import { readSettings } from "./settings";
 
 /** Atomically returns the next number for a sequence ("member", "receipt", "case"). Starts at 1. */
@@ -22,4 +23,10 @@ export function formatMemberNo(seq: number, prefix: string = DEFAULT_MEMBER_NO_P
 export async function nextMemberNo(): Promise<string> {
   const { memberNoPrefix } = await readSettings();
   return formatMemberNo(await nextSequence("member"), memberNoPrefix);
+}
+
+/** Takes the next aid case number, using the prefix from Settings (e.g. C-0014). */
+export async function nextCaseNo(): Promise<string> {
+  const { caseNoPrefix } = await readSettings();
+  return formatCaseNo(await nextSequence("case"), caseNoPrefix);
 }

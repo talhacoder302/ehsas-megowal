@@ -1,6 +1,7 @@
 // Every model is exported here so scripts can register all of them at once.
 export { Account, type AccountDoc } from "./Account";
 export { ActivityLog, type ActivityLogDoc } from "./ActivityLog";
+export { AidCase, type AidCaseDoc } from "./AidCase";
 export { BILL_ORIGINS, ContributionBill, type ContributionBillDoc } from "./ContributionBill";
 export { ContributionRate, type ContributionRateDoc } from "./ContributionRate";
 export { Counter } from "./Counter";

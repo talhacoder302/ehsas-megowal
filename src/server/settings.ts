@@ -7,6 +7,8 @@ export type ProgramSettings = {
   villageName: string;
   memberNoPrefix: string;
   receiptPrefix: string;
+  caseNoPrefix: string;
+  showBeneficiaryNamesDefault: boolean;
 };
 
 const DEFAULTS: ProgramSettings = {
@@ -14,6 +16,8 @@ const DEFAULTS: ProgramSettings = {
   villageName: "Megowal",
   memberNoPrefix: DEFAULT_MEMBER_NO_PREFIX,
   receiptPrefix: "R-",
+  caseNoPrefix: "C-",
+  showBeneficiaryNamesDefault: false,
 };
 
 /**
@@ -22,11 +26,13 @@ const DEFAULTS: ProgramSettings = {
  */
 export async function readSettings(): Promise<ProgramSettings> {
   await connectDB();
-  const doc = await Settings.findOne({ key: "main" }).select("programName villageName memberNoPrefix receiptPrefix").lean();
+  const doc = await Settings.findOne({ key: "main" }).select("programName villageName memberNoPrefix receiptPrefix caseNoPrefix showBeneficiaryNamesDefault").lean();
   return {
     programName: doc?.programName || DEFAULTS.programName,
     villageName: doc?.villageName || DEFAULTS.villageName,
     memberNoPrefix: doc?.memberNoPrefix || DEFAULTS.memberNoPrefix,
     receiptPrefix: doc?.receiptPrefix || DEFAULTS.receiptPrefix,
+    caseNoPrefix: doc?.caseNoPrefix || DEFAULTS.caseNoPrefix,
+    showBeneficiaryNamesDefault: doc?.showBeneficiaryNamesDefault ?? DEFAULTS.showBeneficiaryNamesDefault,
   };
 }

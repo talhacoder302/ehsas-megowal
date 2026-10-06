@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { locales } from "@/i18n/config";
+import { CASE_CATEGORIES, CASE_STATUSES } from "@/lib/cases";
 import { ACCOUNT_TYPES, PAYMENT_METHODS } from "@/lib/contributions";
-import { MONTH_PATTERN, pastDateKeySchema } from "@/lib/dates";
+import { MONTH_PATTERN, parseDateKey, pastDateKeySchema } from "@/lib/dates";
 import { MEMBER_STATUSES } from "@/lib/member-status";
 import { fromUrduDigits, parseRupees } from "@/lib/money";
 import { ROLES } from "@/lib/roles";
@@ -77,7 +78,7 @@ export const userFormSchema = z
     name: z.string().trim().min(2, "nameRequired").max(80, "nameTooLong"),
     mobile: mobileSchema,
     role: z.enum(ROLES, "roleRequired"),
-    memberId: z.union([objectIdSchema, z.literal("")]).transform((v) => v || null),
+    memberId: z.union([objectIdSchema, z.literal(""), z.null()]).transform((v) => v || null),
     language: z.enum(locales),
   })
   .refine((v) => v.role !== "member" || v.memberId !== null, {
@@ -178,7 +179,7 @@ export type RateFormValues = z.output<typeof rateFormSchema>;
 export const accountFormSchema = z.object({
   name: z.string().trim().min(2, "nameRequired").max(60, "nameTooLong"),
   type: z.enum(ACCOUNT_TYPES, "accountTypeRequired"),
-  holderUserId: z.union([objectIdSchema, z.literal("")]).transform((v) => v || null),
+  holderUserId: z.union([objectIdSchema, z.literal(""), z.null()]).transform((v) => v || null),
   openingBalance: rupeesInput({ min: 0 }),
 });
 export type AccountFormInput = z.input<typeof accountFormSchema>;
@@ -196,4 +197,52 @@ export type PaymentFormInput = z.input<typeof paymentFormSchema>;
 export type PaymentFormValues = z.output<typeof paymentFormSchema>;
 
 export const reasonFormSchema = z.object({ reason: reasonSchema });
+
+// ---------------------------------------------------------------------------
+// Aid cases
+// ---------------------------------------------------------------------------
+
+/** Empty, or a real "YYYY-MM-DD" day (past or future). */
+const optionalDateKeySchema = z
+  .string()
+  .trim()
+  .refine((v) => v === "" || parseDateKey(v) !== null, "dateInvalid");
+
+export const caseFormSchema = z.object({
+  category: z.enum(CASE_CATEGORIES, "categoryRequired"),
+  beneficiaryName: z.string().trim().min(2, "nameRequired").max(80, "nameTooLong"),
+  guardianName: z.string().trim().max(80, "nameTooLong"),
+  mohalla: z.string().trim().max(60, "mohallaTooLong"),
+  contactMobile: optionalMobileSchema,
+  recommendedBy: z.string().trim().max(80, "nameTooLong"),
+  description: z.string().trim().min(10, "descriptionRequired").max(2000, "descriptionTooLong"),
+  estimatedAmount: rupeesInput({ min: 1 }),
+  expectedDate: optionalDateKeySchema,
+  showNameToMembers: z.boolean(),
+});
+export type CaseFormInput = z.input<typeof caseFormSchema>;
+export type CaseFormValues = z.output<typeof caseFormSchema>;
+
+export const caseStatusChangeSchema = z
+  .object({
+    status: z.enum(CASE_STATUSES, "statusRequired"),
+    reason: reasonSchema,
+    /** Only read when approving. null is what this schema itself outputs, so its output can be parsed again on the server. */
+    approvedAmount: z.union([z.number(), z.string(), z.null()]),
+  })
+  .transform((v, ctx) => {
+    if (v.status !== "approved") return { status: v.status, reason: v.reason, approvedAmount: null };
+    const amount =
+      typeof v.approvedAmount === "number" ? v.approvedAmount : v.approvedAmount === null ? null : parseRupees(v.approvedAmount);
+    if (amount === null || amount < 1) {
+      ctx.addIssue({ code: "custom", path: ["approvedAmount"], message: "approvedAmountRequired" });
+      return z.NEVER;
+    }
+    return { status: v.status, reason: v.reason, approvedAmount: amount };
+  });
+export type CaseStatusChangeInput = z.input<typeof caseStatusChangeSchema>;
+export type CaseStatusChangeValues = z.output<typeof caseStatusChangeSchema>;
+
+export const caseNoteSchema = z.object({ text: z.string().trim().min(2, "noteRequired").max(1000, "notesTooLong") });
+export type CaseNoteInput = z.input<typeof caseNoteSchema>;
 export type ReasonFormInput = z.input<typeof reasonFormSchema>;
