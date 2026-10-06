@@ -19,7 +19,7 @@ type MemberNavItem = {
 const items: readonly MemberNavItem[] = [
   { key: "home", href: "/member", icon: HouseIcon, ready: true },
   { key: "payments", href: "/member/payments", icon: HandCoinsIcon, ready: false },
-  { key: "cases", href: "/member/cases", icon: HeartHandshakeIcon, ready: false },
+  { key: "cases", href: "/member/cases", icon: HeartHandshakeIcon, ready: true },
   { key: "reports", href: "/member/reports", icon: FileChartColumnIcon, ready: false },
   { key: "profile", href: "/member/profile", icon: UserIcon, ready: true },
 ];
