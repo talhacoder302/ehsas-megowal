@@ -43,7 +43,7 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
    npm run seed
    ```
 
-   The seed prints the logins it creates and adds 35 demo members (a few marked left, deceased or exempt), contribution rates (Rs. 300 from 2023, Rs. 500 from the current month), a "Cash in hand" account kept by the first head, and three months of bills and payments. Demo users (2 heads and 1 member) must change their password at first login. On the live site use `npm run seed -- --no-demo`: it creates the settings, the admin, the Rs. 500 rate from the current month and a "Cash in hand" account.
+   The seed prints the logins it creates and adds 35 demo members (a few marked left, deceased or exempt), contribution rates (Rs. 300 from 2023, Rs. 500 from the current month), a "Cash in hand" account kept by the first head, three months of bills and payments, and 8 aid cases in different stages. Demo users (2 heads and 1 member) must change their password at first login. On the live site use `npm run seed -- --no-demo`: it creates the settings, the admin, the Rs. 500 rate from the current month and a "Cash in hand" account.
 
 4. Start the dev server and open http://localhost:3000:
 
@@ -77,6 +77,9 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
 - after saving, the receipt opens with **Send receipt on WhatsApp** and PDF downloads in English and Urdu; the receipt link (`/receipt/...`) opens without logging in
 - cancel a payment from its receipt (the admin, or the head who did not receive it) and waive a bill from the member's Contributions tab, both with a reason
 - `/manage/accounts` balances of cash, bank and mobile wallet accounts; `/manage/settings` (admin) contribution rates and their history
+- `/manage/cases` aid cases in Open / Completed / Rejected tabs with category and date filters; cases on hold or with no update for over 7 days are highlighted with their last reason
+- open a case to move it through requested → verifying → approved → in progress → completed (or on hold / rejected); every change needs a reason, and approving needs an amount
+- `/member/cases` the members' view of the same cases, without the family's name, contact or mohalla unless the case allows it
 - `/member` member area with bottom navigation, Urdu by default
 - `/manage/profile` and `/member/profile` change password and language
 - 5 wrong passwords for one mobile lock it for 15 minutes
