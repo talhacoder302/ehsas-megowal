@@ -31,7 +31,7 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
    | `AUTH_SECRET` | yes | At least 32 characters. Generate with `npx auth secret`. |
    | `AUTH_URL`, `AUTH_TRUST_HOST` | production | Set `AUTH_TRUST_HOST=true` when running behind Hostinger's proxy. |
    | `NEXT_PUBLIC_APP_URL` | no | Public URL of the app, defaults to `http://localhost:3000`. |
-   | `R2_*` | no | Cloudflare R2 for receipt photos. Uploads are turned off if any is missing. |
+   | `R2_*` | no | Cloudflare R2 for receipt photos (see below). Uploads are turned off if any is missing; records can still be saved without a photo. |
    | `RESEND_API_KEY`, `EMAIL_FROM` | no | Email through Resend. Email is turned off if missing. |
    | `SEED_ADMIN_MOBILE`, `SEED_ADMIN_PASSWORD` | for seeding | The first admin login created by `npm run seed`. Password at least 8 characters. |
    | `SEED_ADMIN_NAME` | no | Admin display name, defaults to "Admin". |
@@ -43,7 +43,7 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
    npm run seed
    ```
 
-   The seed prints the logins it creates and adds 35 demo members (a few marked left, deceased or exempt), contribution rates (Rs. 300 from 2023, Rs. 500 from the current month), a "Cash in hand" account kept by the first head, three months of bills and payments, and 8 aid cases in different stages. Demo users (2 heads and 1 member) must change their password at first login. On the live site use `npm run seed -- --no-demo`: it creates the settings, the admin, the Rs. 500 rate from the current month and a "Cash in hand" account.
+   The seed prints the logins it creates and adds 35 demo members (a few marked left, deceased or exempt), contribution rates (Rs. 300 from 2023, Rs. 500 from the current month), a "Cash in hand" account kept by the first head, three months of bills and payments, 8 aid cases in different stages, aid payments (one waiting for a second head), expenses and a cash-to-bank transfer. It also turns on second-head approval above Rs. 25,000 and gives the cash account a paper-register opening balance. Demo users (2 heads and 1 member) must change their password at first login. On the live site use `npm run seed -- --no-demo`: it creates the settings, the admin, the Rs. 500 rate from the current month and a "Cash in hand" account.
 
 4. Start the dev server and open http://localhost:3000:
 
@@ -80,10 +80,28 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
 - `/manage/cases` aid cases in Open / Completed / Rejected tabs with category and date filters; cases on hold or with no update for over 7 days are highlighted with their last reason
 - open a case to move it through requested → verifying → approved → in progress → completed (or on hold / rejected); every change needs a reason, and approving needs an amount
 - `/member/cases` the members' view of the same cases, without the family's name, contact or mohalla unless the case allows it
+- on an approved or in-progress case, **Pay out** with a receipt photo; it cannot go over the approved amount (change the approved amount with a reason first) or take an account below zero
+- `/manage` dashboard: payments above the limit wait in **Waiting for approval** until a different head or the admin approves them; account balances
+- `/manage/expenses` running costs with receipt photos; `/manage/accounts` balance breakdown and **Transfer money** between accounts
+- `/manage/settings/approvals` (admin) turn second-head approval on and set the limit
 - `/member` member area with bottom navigation, Urdu by default
 - `/manage/profile` and `/member/profile` change password and language
 - 5 wrong passwords for one mobile lock it for 15 minutes
 - `/api/health` returns `{"status":"ok","db":"up"}` when the database is reachable
+
+## Receipt photos (Cloudflare R2)
+
+Photos are compressed in the browser (about 150 KB) and uploaded straight to R2, so the app server never handles the file.
+
+1. In Cloudflare, create an R2 bucket (for example `ehsas-receipts`) and an R2 API token with Object Read & Write on it.
+2. Set `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and `R2_BUCKET`. `R2_PUBLIC_URL` is optional: leave it empty to keep photos private (the app makes one-hour links), or set it to the bucket's public URL.
+3. In the bucket settings add a CORS rule so browsers may upload:
+
+   ```json
+   [{ "AllowedOrigins": ["https://your-site.example"], "AllowedMethods": ["PUT", "GET"], "AllowedHeaders": ["content-type"], "MaxAgeSeconds": 3600 }]
+   ```
+
+Leave `R2_ENDPOINT` empty; it only exists for testing with a local S3-compatible server.
 
 ## Deploying to Hostinger (Node.js hosting)
 
