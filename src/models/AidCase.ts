@@ -50,6 +50,11 @@ const aidCaseSchema = new Schema(
     showNameToMembers: { type: Boolean, required: true, default: false },
     // Last status change or note; used to highlight cases nobody has updated.
     lastUpdateAt: { type: Date, required: true, default: Date.now },
+    // Old completed cases imported from the paper register (Module 8). Their aid
+    // was paid before the app; it counts in the case's paid amount but never in
+    // account balances or monthly totals (the opening balances already include it).
+    importedFromRegister: { type: Boolean, required: true, default: false },
+    registerPaidAmount: { type: Number, required: true, min: 0, default: 0, validate: wholeRupees },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true, collection: "aid_cases" },

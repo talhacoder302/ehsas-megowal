@@ -1,4 +1,5 @@
 import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import { MONTH_PATTERN } from "@/lib/dates";
 
 const wholeRupees = {
   validator: Number.isSafeInteger,
@@ -20,6 +21,12 @@ const settingsSchema = new Schema(
     secondHeadApprovalEnabled: { type: Boolean, required: true, default: false },
     secondHeadApprovalLimit: { type: Number, required: true, min: 0, default: 0, validate: wholeRupees },
     showBeneficiaryNamesDefault: { type: Boolean, required: true, default: false },
+    // Opening setup (Module 8): when the fund started on paper and the first month kept in the app.
+    // Months before firstMonth live only as opening dues, opening balances and imported register history.
+    programStartDate: { type: Date, default: null },
+    firstMonth: { type: String, default: null, match: MONTH_PATTERN },
+    setupCompletedAt: { type: Date, default: null },
+    setupCompletedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true, collection: "settings" },
 );

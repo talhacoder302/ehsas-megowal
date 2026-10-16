@@ -1,5 +1,6 @@
 import "server-only";
 import { Types } from "mongoose";
+import { NOT_FROM_REGISTER } from "@/lib/contributions";
 import { lastReason, OPEN_STATUSES, type CaseCategory, type CaseStatus } from "@/lib/cases";
 import type { ClosingFigures } from "@/lib/closing";
 import { compareMonths, currentMonth, isMonthKey, monthRange, shiftMonth, TIME_ZONE, type MonthKey } from "@/lib/dates";
@@ -20,7 +21,7 @@ import {
   type ReportVersion,
 } from "@/lib/reports";
 import { AidCase, ContributionBill, Disbursement, Expense, Income, Member, MonthClosing } from "@/models";
-import { computeMonthFigures, firstEntryMonth, lockedThrough } from "./closing-core";
+import { booksStartMonth, computeMonthFigures, lockedThrough } from "./closing-core";
 import { payoutsByCase } from "./payout-totals";
 import { readSettings } from "./settings";
 
@@ -66,7 +67,7 @@ async function defaultReportMonth(months: MonthKey[]): Promise<MonthKey> {
 /** Months with a report (newest first) and the month to show. */
 export async function resolveReportMonth(requested: unknown): Promise<{ month: MonthKey; months: MonthKey[] }> {
   await requirePermission("reports.view");
-  const months = reportMonths(await firstEntryMonth(), currentMonth());
+  const months = reportMonths(await booksStartMonth(), currentMonth());
   const month = isMonthKey(requested) && months.includes(requested) ? requested : await defaultReportMonth(months);
   return { month, months };
 }
@@ -89,7 +90,7 @@ export async function getMonthlyReport(monthInput: unknown, requestedVersion?: u
     MonthClosing.findOne({ month, status: "closed" }).lean(),
     Member.find().select("joinDate status statusHistory").lean(),
     ContributionBill.find({ month }).select("memberId status").lean(),
-    Income.find({ date: inMonth, cancelled: false }).select("amount").lean(),
+    Income.find({ date: inMonth, cancelled: false, ...NOT_FROM_REGISTER }).select("amount").lean(),
     Disbursement.find({ date: inMonth, approvalStatus: { $in: [...COUNTED_APPROVAL_STATUSES] } }).select("caseId amount").lean(),
     Expense.find({ date: inMonth }).select("category amount").lean(),
     AidCase.find({ status: { $in: [...OPEN_STATUSES] } })
@@ -164,7 +165,7 @@ export async function getCollectionVsAid(end: MonthKey = currentMonth(), count =
   const byMonth = { $dateToString: { format: "%Y-%m", date: "$date", timezone: TIME_ZONE } };
   const [income, aid] = await Promise.all([
     Income.aggregate<{ _id: MonthKey; total: number }>([
-      { $match: { cancelled: false, date: range } },
+      { $match: { cancelled: false, ...NOT_FROM_REGISTER, date: range } },
       { $group: { _id: byMonth, total: { $sum: "$amount" } } },
     ]),
     Disbursement.aggregate<{ _id: MonthKey; total: number }>([

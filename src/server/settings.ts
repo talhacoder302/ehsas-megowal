@@ -1,4 +1,5 @@
 import "server-only";
+import type { MonthKey } from "@/lib/dates";
 import { connectDB } from "@/lib/db";
 import type { ApprovalSettings } from "@/lib/payouts";
 import { DEFAULT_MEMBER_NO_PREFIX, Settings } from "@/models";
@@ -14,6 +15,8 @@ export type ProgramSettings = {
   approval: ApprovalSettings;
   /** Kept aside for emergencies; not free to promise to new cases. */
   emergencyReserve: number;
+  /** Opening setup: when the fund started on paper and the first month kept in the app. */
+  setup: { programStartDate: string | null; firstMonth: MonthKey | null; completedAt: string | null };
 };
 
 const DEFAULTS: ProgramSettings = {
@@ -25,6 +28,7 @@ const DEFAULTS: ProgramSettings = {
   showBeneficiaryNamesDefault: false,
   approval: { enabled: false, limit: 0 },
   emergencyReserve: 0,
+  setup: { programStartDate: null, firstMonth: null, completedAt: null },
 };
 
 /**
@@ -46,5 +50,10 @@ export async function readSettings(): Promise<ProgramSettings> {
       limit: doc?.secondHeadApprovalLimit ?? DEFAULTS.approval.limit,
     },
     emergencyReserve: doc?.emergencyReserveAmount ?? DEFAULTS.emergencyReserve,
+    setup: {
+      programStartDate: doc?.programStartDate ? doc.programStartDate.toISOString() : null,
+      firstMonth: doc?.firstMonth ?? null,
+      completedAt: doc?.setupCompletedAt ? doc.setupCompletedAt.toISOString() : null,
+    },
   };
 }

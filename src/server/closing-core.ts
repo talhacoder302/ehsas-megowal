@@ -4,6 +4,7 @@ import { buildClosingFigures, closeBlock, committedAmount, isMonthLocked, type C
 import { currentMonth, monthKey, monthRange, shiftMonth, type MonthKey } from "@/lib/dates";
 import { connectDB } from "@/lib/db";
 import { AppError, type ServerErrorCode } from "@/lib/errors";
+import { NOT_FROM_REGISTER } from "@/lib/contributions";
 import { COUNTED_APPROVAL_STATUSES } from "@/lib/payouts";
 import { Account, AidCase, Disbursement, Expense, Income, MonthClosing, Transfer, type MonthClosingDoc } from "@/models";
 import { accountBalance, movementsByAccount, NO_MOVEMENTS } from "./account-totals";
@@ -36,13 +37,22 @@ export async function assertDateOpen(date: Date): Promise<void> {
 export async function firstEntryMonth(): Promise<MonthKey | null> {
   await connectDB();
   const oldest = await Promise.all([
-    Income.findOne().sort({ date: 1 }).select("date").lean(),
+    Income.findOne(NOT_FROM_REGISTER).sort({ date: 1 }).select("date").lean(),
     Disbursement.findOne().sort({ date: 1 }).select("date").lean(),
     Expense.findOne().sort({ date: 1 }).select("date").lean(),
     Transfer.findOne().sort({ date: 1 }).select("date").lean(),
   ]);
   const dates = oldest.flatMap((row) => (row ? [row.date.getTime()] : []));
   return dates.length ? monthKey(Math.min(...dates)) : null;
+}
+
+/**
+ * The first month of the books: the first month set in the opening setup, or
+ * (before setup) the month of the oldest money entry. null when neither exists.
+ */
+export async function booksStartMonth(): Promise<MonthKey | null> {
+  const { setup } = await readSettings();
+  return setup.firstMonth ?? (await firstEntryMonth());
 }
 
 /** Aid payments dated up to the end of `month` that still wait for a second head. */
@@ -139,7 +149,7 @@ export const CLOSE_BLOCK_ERRORS: Record<CloseBlock, ServerErrorCode> = {
 
 /** Why `month` cannot be closed now, or null. */
 export async function closeBlockFor(month: MonthKey): Promise<CloseBlock | null> {
-  const [locked, first, pending] = await Promise.all([lockedThrough(), firstEntryMonth(), pendingApprovalsThrough(month)]);
+  const [locked, first, pending] = await Promise.all([lockedThrough(), booksStartMonth(), pendingApprovalsThrough(month)]);
   return closeBlock(month, { lockedThrough: locked, firstEntryMonth: first, current: currentMonth(), pendingApprovals: pending });
 }
 

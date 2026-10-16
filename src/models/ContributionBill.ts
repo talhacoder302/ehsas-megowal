@@ -4,7 +4,8 @@ import { MONTH_PATTERN } from "@/lib/dates";
 
 const wholeRupees = { validator: Number.isSafeInteger, message: "{PATH} must be whole rupees" };
 
-export const BILL_ORIGINS = ["generated", "payment", "seed"] as const;
+// "register": imported from the paper register (always fully paid, before the first app month).
+export const BILL_ORIGINS = ["generated", "payment", "seed", "register"] as const;
 
 // One bill per member per month. The unique index makes bill generation
 // idempotent: generating again (or paying in advance) never adds a second bill.

@@ -13,7 +13,7 @@ import {
   closeMonthCore,
   committedAt,
   computeMonthFigures,
-  firstEntryMonth,
+  booksStartMonth,
   lockedThrough,
   pendingApprovalsThrough,
   type AccountBalanceAt,
@@ -61,7 +61,7 @@ export async function getClosingView(requested?: string): Promise<ClosingView> {
   const current = currentMonth();
   const [locked, first, closings] = await Promise.all([
     lockedThrough(),
-    firstEntryMonth(),
+    booksStartMonth(),
     MonthClosing.find().select("month status").sort({ month: 1 }).lean(),
   ]);
   const nextToClose = nextMonthToClose({ lockedThrough: locked, firstEntryMonth: first, current });
@@ -205,7 +205,7 @@ export async function getBudget(): Promise<Budget> {
     committedAt(now),
     readSettings(),
     lockedThrough(),
-    firstEntryMonth(),
+    booksStartMonth(),
   ]);
   const balance = accounts.reduce(
     (sum, a) =>

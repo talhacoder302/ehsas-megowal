@@ -7,6 +7,7 @@ import { monthKeySchema, reasonFormSchema } from "@/lib/validators";
 import { ContributionBill } from "@/models";
 import { logActivity } from "./activity-log";
 import { createBillsForMonth, type BillRunResult } from "./contributions-core";
+import { readSettings } from "./settings";
 
 /**
  * "Generate bills for month": one bill per billable member at that month's
@@ -16,6 +17,9 @@ export async function generateBills(input: unknown): Promise<BillRunResult> {
   const actor = await requirePermission("bills.manage");
   const month = monthKeySchema.parse(input);
   if (month > currentMonth()) throw new AppError("monthInFuture");
+  // Months before the first app month are covered by opening dues from the paper register.
+  const { firstMonth } = (await readSettings()).setup;
+  if (firstMonth && month < firstMonth) throw new AppError("beforeFirstMonth");
 
   const result = await createBillsForMonth(month, actor.id);
   await logActivity({
