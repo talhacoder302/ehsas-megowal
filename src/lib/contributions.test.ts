@@ -218,11 +218,11 @@ describe("canCancelPayment", () => {
 describe("buildLedger", () => {
   it("runs the balance in date order, ignoring waived bills and cancelled payments", () => {
     const rows = buildLedger([
-      { kind: "payment", id: "p2", date: "2026-10-12T05:00:00.000Z", createdAt: "2026-10-12T05:00:00.000Z", amount: 300, receiptNumber: "R-0002", monthsCovered: ["2026-09"], openingDuePaid: 0, cancelled: true, cancelReason: "twice" },
+      { kind: "payment", id: "p2", date: "2026-10-12T05:00:00.000Z", createdAt: "2026-10-12T05:00:00.000Z", amount: 300, receiptNumber: "R-0002", publicToken: "tok2", monthsCovered: ["2026-09"], openingDuePaid: 0, cancelled: true, cancelReason: "twice" },
       { kind: "bill", id: "b9", date: "2026-08-31T19:00:00.000Z", month: "2026-09", amount: 300, paidAmount: 300, status: "paid", waivedReason: "" },
       { kind: "opening", id: "opening", date: "2023-01-01T00:00:00.000Z", amount: 1000 },
       { kind: "bill", id: "b8", date: "2026-07-31T19:00:00.000Z", month: "2026-08", amount: 300, paidAmount: 0, status: "waived", waivedReason: "hospital" },
-      { kind: "payment", id: "p1", date: "2026-09-10T05:00:00.000Z", createdAt: "2026-09-10T05:00:00.000Z", amount: 1300, receiptNumber: "R-0001", monthsCovered: ["2026-09"], openingDuePaid: 1000, cancelled: false, cancelReason: "" },
+      { kind: "payment", id: "p1", date: "2026-09-10T05:00:00.000Z", createdAt: "2026-09-10T05:00:00.000Z", amount: 1300, receiptNumber: "R-0001", publicToken: "tok1", monthsCovered: ["2026-09"], openingDuePaid: 1000, cancelled: false, cancelReason: "" },
     ]);
     expect(rows.map((r) => [r.id, r.effect, r.balance])).toEqual([
       ["opening", 1000, 1000],

@@ -5,7 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { ArrowLeftIcon, PencilIcon } from "lucide-react";
 import { ChangeStatusButton } from "@/components/manage/members/change-status-button";
 import { MemberActivity } from "@/components/manage/members/member-activity";
-import { MemberLedgerView } from "@/components/manage/members/member-ledger";
+import { MemberLedgerView } from "@/components/shared/member-ledger";
 import { MemberProfile } from "@/components/manage/members/member-profile";
 import { MemberStatusBadge } from "@/components/manage/members/member-status-badge";
 import { Button } from "@/components/ui/button";

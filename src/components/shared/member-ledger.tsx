@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { HandCoinsIcon, WalletIcon } from "lucide-react";
+import { FileDownIcon, HandCoinsIcon, ReceiptTextIcon, WalletIcon } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ReasonDialog } from "@/components/shared/reason-dialog";
@@ -25,8 +25,14 @@ const BILL_BADGE: Record<BillStatus, string> = {
 
 type WaiveTarget = { id: string; month: string; amount: number } | null;
 
-export function MemberLedgerView({ ledger, memberId }: { ledger: MemberLedger; memberId: string }) {
+/**
+ * A member's bills and payments with a running balance. In the member portal
+ * (`memberArea`) staff tools are hidden and each payment links to its receipt.
+ */
+export function MemberLedgerView({ ledger, memberId, memberArea = false }: { ledger: MemberLedger; memberId: string; memberArea?: boolean }) {
   const t = useTranslations();
+  const canReceive = ledger.canReceive && !memberArea;
+  const canWaive = ledger.canWaive && !memberArea;
   const locale = useLocale() === "ur" ? "ur" : "en";
   const [waive, setWaive] = useState<WaiveTarget>(null);
   // Newest first; the balance still runs oldest to newest.
@@ -64,7 +70,7 @@ export function MemberLedgerView({ ledger, memberId }: { ledger: MemberLedger; m
         </div>
       </div>
 
-      {ledger.canReceive ? (
+      {canReceive ? (
         <Button asChild size="lg" className="self-start">
           <Link href={`/manage/payments/new?member=${memberId}`}>
             <HandCoinsIcon />
@@ -84,7 +90,7 @@ export function MemberLedgerView({ ledger, memberId }: { ledger: MemberLedger; m
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 flex-col gap-0.5">
                     <div className="flex flex-wrap items-center gap-2">
-                      {row.kind === "payment" && ledger.canReceive ? (
+                      {row.kind === "payment" && canReceive ? (
                         <Link href={`/manage/payments/${row.id}`} className="font-medium hover:underline">
                           {title(row)}
                         </Link>
@@ -137,7 +143,23 @@ export function MemberLedgerView({ ledger, memberId }: { ledger: MemberLedger; m
                     <span className="text-xs text-muted-foreground">{balanceText(row.balance)}</span>
                   </div>
                 </div>
-                {ledger.canWaive && row.kind === "bill" && row.status === "unpaid" ? (
+                {row.kind === "payment" && !row.cancelled && !canReceive ? (
+                  <div className="flex gap-2">
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/receipt/${row.publicToken}`}>
+                        <ReceiptTextIcon />
+                        {t("memberPayments.receipt")}
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="sm">
+                      <a href={`/receipt/${row.publicToken}/pdf?lang=${locale}`} target="_blank" rel="noopener noreferrer">
+                        <FileDownIcon />
+                        {t("memberPayments.pdf")}
+                      </a>
+                    </Button>
+                  </div>
+                ) : null}
+                {canWaive && row.kind === "bill" && row.status === "unpaid" ? (
                   <Button
                     type="button"
                     variant="ghost"

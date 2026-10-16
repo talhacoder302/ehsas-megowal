@@ -62,6 +62,7 @@ export async function getMemberLedger(memberId: string): Promise<MemberLedger | 
       createdAt: (i.createdAt ?? i._id.getTimestamp()).toISOString(),
       amount: i.amount,
       receiptNumber: i.receiptNumber,
+      publicToken: i.publicToken,
       monthsCovered: i.monthsCovered,
       openingDuePaid: i.openingDuePaid,
       cancelled: i.cancelled,

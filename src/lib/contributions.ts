@@ -217,6 +217,8 @@ export type LedgerInput =
       createdAt: string;
       amount: number;
       receiptNumber: string;
+      /** Token of the public receipt link (/receipt/<token>). */
+      publicToken: string;
       monthsCovered: MonthKey[];
       openingDuePaid: number;
       cancelled: boolean;
