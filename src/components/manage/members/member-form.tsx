@@ -37,6 +37,7 @@ export function MemberForm({ member, mohallas }: MemberFormProps) {
       name: "",
       fatherName: "",
       mobile: "",
+      email: "",
       mohalla: "",
       address: "",
       joinDate: todayKey(),
@@ -142,6 +143,32 @@ export function MemberForm({ member, mohallas }: MemberFormProps) {
             )}
           />
         </div>
+
+        <Controller
+          name="email"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="member-email">{t("members.form.email")}</FieldLabel>
+              <Input
+                {...field}
+                id="member-email"
+                type="email"
+                inputMode="email"
+                dir="ltr"
+                placeholder="name@example.com"
+                autoComplete="off"
+                className="h-10"
+                aria-invalid={fieldState.invalid}
+              />
+              {fieldState.error ? (
+                <FieldError>{validation(fieldState.error.message)}</FieldError>
+              ) : (
+                <FieldDescription>{t("members.form.emailHint")}</FieldDescription>
+              )}
+            </Field>
+          )}
+        />
 
         <Controller
           name="mohalla"

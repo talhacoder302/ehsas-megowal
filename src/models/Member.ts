@@ -25,6 +25,8 @@ const memberSchema = new Schema(
     name: { type: String, required: true, trim: true },
     fatherName: { type: String, trim: true, default: "" },
     mobile: { type: String, trim: true, default: "" },
+    // Optional; used to email the monthly report when Resend is set up.
+    email: { type: String, trim: true, lowercase: true, default: "" },
     mohalla: { type: String, trim: true, default: "" },
     address: { type: String, trim: true, default: "" },
     joinDate: { type: Date, required: true },

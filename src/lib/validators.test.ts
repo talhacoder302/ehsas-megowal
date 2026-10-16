@@ -11,6 +11,7 @@ import {
   disbursementFormSchema,
   expenseFormSchema,
   fundSettingsSchema,
+  optionalEmailSchema,
   memberFormSchema,
   memberStatusChangeSchema,
   mobileSearchDigits,
@@ -103,6 +104,7 @@ describe("memberFormSchema", () => {
     name: "  Muhammad Riaz ",
     fatherName: "Noor Muhammad",
     mobile: "+92 300 1110003",
+    email: "",
     mohalla: "Mohalla Arain",
     address: "",
     joinDate: "2023-03-01",
@@ -169,7 +171,7 @@ describe("form schemas accept their own output", () => {
     [
       "memberFormSchema",
       memberFormSchema,
-      { name: "Ali Raza", fatherName: "Raza Khan", mobile: "", mohalla: "Mohalla Arain", address: "", joinDate: "2024-01-01", notes: "" },
+      { name: "Ali Raza", fatherName: "Raza Khan", mobile: "", email: " Ali@Example.com ", mohalla: "Mohalla Arain", address: "", joinDate: "2024-01-01", notes: "" },
     ],
     ["accountFormSchema", accountFormSchema, { name: "Cash", type: "cash_in_hand", holderUserId: "", openingBalance: "1,000" }],
     [
@@ -236,5 +238,16 @@ describe("cashCountFormSchema", () => {
     expect(result.success).toBe(false);
     expect(result.error?.issues[0]).toMatchObject({ path: ["note"], message: "countNoteRequired" });
     expect(cashCountFormSchema.safeParse({ ...base, countedAmount: "120000", note: "200 kam" }).success).toBe(true);
+  });
+});
+
+describe("optionalEmailSchema", () => {
+  it("allows no email and stores addresses in lower case", () => {
+    expect(optionalEmailSchema.parse("  ")).toBe("");
+    expect(optionalEmailSchema.parse(" Riaz.Megowal@Example.com ")).toBe("riaz.megowal@example.com");
+  });
+
+  it("rejects something that is not an email", () => {
+    expect(optionalEmailSchema.safeParse("riaz at gmail").error?.issues[0].message).toBe("emailInvalid");
   });
 });

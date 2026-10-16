@@ -28,6 +28,16 @@ export async function MemberProfile({ member, canManage, isAdmin }: MemberProfil
       label: t("members.fields.mobile"),
       value: member.mobile ? <span dir="ltr" className="font-mono">{formatMobile(member.mobile)}</span> : notSet,
     },
+    {
+      label: t("members.fields.email"),
+      value: member.email ? (
+        <span dir="ltr" lang="en" className="break-all">
+          {member.email}
+        </span>
+      ) : (
+        notSet
+      ),
+    },
     { label: t("members.fields.mohalla"), value: member.mohalla || notSet },
     { label: t("members.fields.address"), value: member.address || notSet },
     { label: t("members.fields.joinDate"), value: formatDate(member.joinDate, locale) },

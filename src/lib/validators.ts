@@ -127,10 +127,19 @@ export const optionalMobileSchema = z
   .transform((v) => (v.trim() === "" ? "" : normalizeMobile(v)))
   .pipe(z.union([z.literal(""), z.string().regex(MOBILE_PATTERN, "mobileFormat")]));
 
+/** Empty, or an email address (stored in lower case). */
+export const optionalEmailSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .max(120, "emailInvalid")
+  .refine((v) => v === "" || z.email().safeParse(v).success, "emailInvalid");
+
 export const memberFormSchema = z.object({
   name: z.string().trim().min(2, "nameRequired").max(80, "nameTooLong"),
   fatherName: z.string().trim().min(2, "fatherNameRequired").max(80, "nameTooLong"),
   mobile: optionalMobileSchema,
+  email: optionalEmailSchema,
   mohalla: z.string().trim().min(2, "mohallaRequired").max(60, "mohallaTooLong"),
   address: z.string().trim().max(200, "addressTooLong"),
   joinDate: pastDateKeySchema,

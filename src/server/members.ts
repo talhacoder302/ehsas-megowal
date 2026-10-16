@@ -49,6 +49,7 @@ export type MemberLogin = {
 };
 
 export type MemberDetail = MemberListItem & {
+  email: string;
   address: string;
   notes: string;
   statusReason: string;
@@ -170,6 +171,7 @@ export async function getMemberDetail(memberId: string): Promise<MemberDetail | 
 
   return {
     ...toListItem(member, new Set(user ? [member._id.toString()] : []), await billDuesByMember(currentMonth(), member._id)),
+    email: member.email ?? "",
     address: member.address,
     notes: member.notes,
     statusReason: member.statusReason,
@@ -295,6 +297,7 @@ export async function createMember(input: unknown): Promise<{ id: string; member
     name: values.name,
     fatherName: values.fatherName,
     mobile: values.mobile,
+    email: values.email,
     mohalla: values.mohalla,
     address: values.address,
     joinDate: toDate(values.joinDate),
@@ -329,6 +332,7 @@ export async function updateMember(memberId: string, input: unknown): Promise<vo
     name: member.name,
     fatherName: member.fatherName,
     mobile: member.mobile,
+    email: member.email ?? "",
     mohalla: member.mohalla,
     address: member.address,
     joinDate: dateKey(member.joinDate),

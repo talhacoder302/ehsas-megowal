@@ -43,6 +43,7 @@ export default async function EditMemberPage({ params }: Props) {
             name: member.name,
             fatherName: member.fatherName,
             mobile: member.mobile ? formatMobile(member.mobile) : "",
+            email: member.email,
             mohalla: member.mohalla,
             address: member.address,
             joinDate: dateKey(member.joinDate),
