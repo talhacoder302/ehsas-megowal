@@ -7,8 +7,10 @@ import {
   normalizeMobile,
   accountFormSchema,
   caseFormSchema,
+  cashCountFormSchema,
   disbursementFormSchema,
   expenseFormSchema,
+  fundSettingsSchema,
   memberFormSchema,
   memberStatusChangeSchema,
   mobileSearchDigits,
@@ -206,8 +208,33 @@ describe("form schemas accept their own output", () => {
       transferFormSchema,
       { fromAccountId: "64b000000000000000000002", toAccountId: "64b000000000000000000003", amount: "10000", date: "2024-01-05", note: "" },
     ],
+    [
+      "fundSettingsSchema",
+      fundSettingsSchema,
+      { emergencyReserve: "20,000", approvalEnabled: true, approvalLimit: "25000", showBeneficiaryNamesDefault: false },
+    ],
+    [
+      "cashCountFormSchema",
+      cashCountFormSchema,
+      { accountId: "64b000000000000000000002", systemBalance: 120200, countedAmount: "1,20,000", note: "Khula wapas dena tha" },
+    ],
   ] as const)("%s", (_name, schema, input) => {
     const once = schema.parse(input);
     expect(schema.parse(once)).toEqual(once);
+  });
+});
+
+describe("cashCountFormSchema", () => {
+  const base = { accountId: "64b000000000000000000002", systemBalance: 120200, note: "" };
+
+  it("needs no note when the count matches", () => {
+    expect(cashCountFormSchema.parse({ ...base, countedAmount: "120,200" }).countedAmount).toBe(120200);
+  });
+
+  it("needs a note when the count does not match", () => {
+    const result = cashCountFormSchema.safeParse({ ...base, countedAmount: "120000" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]).toMatchObject({ path: ["note"], message: "countNoteRequired" });
+    expect(cashCountFormSchema.safeParse({ ...base, countedAmount: "120000", note: "200 kam" }).success).toBe(true);
   });
 });

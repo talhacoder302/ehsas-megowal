@@ -292,11 +292,34 @@ export const transferFormSchema = z
 export type TransferFormInput = z.input<typeof transferFormSchema>;
 export type TransferFormValues = z.output<typeof transferFormSchema>;
 
-export const approvalSettingsSchema = z.object({
-  enabled: z.boolean(),
-  limit: rupeesInput({ min: 0 }),
+// ---------------------------------------------------------------------------
+// Keeping the books
+// ---------------------------------------------------------------------------
+
+/** Admin: the fund rules on the Settings screen. */
+export const fundSettingsSchema = z.object({
+  emergencyReserve: rupeesInput({ min: 0 }),
+  approvalEnabled: z.boolean(),
+  approvalLimit: rupeesInput({ min: 0 }),
+  showBeneficiaryNamesDefault: z.boolean(),
 });
-export type ApprovalSettingsInput = z.input<typeof approvalSettingsSchema>;
+export type FundSettingsInput = z.input<typeof fundSettingsSchema>;
+export type FundSettingsValues = z.output<typeof fundSettingsSchema>;
+
+/**
+ * A head's count of the money in an account. `systemBalance` is the balance
+ * the head was shown; the server refuses the count if it has changed since.
+ */
+export const cashCountFormSchema = z
+  .object({
+    accountId: accountIdSchema,
+    systemBalance: z.number().int(),
+    countedAmount: rupeesInput({ min: 0 }),
+    note: z.string().trim().max(300, "notesTooLong"),
+  })
+  .refine((v) => v.countedAmount === v.systemBalance || v.note.length >= 3, { message: "countNoteRequired", path: ["note"] });
+export type CashCountFormInput = z.input<typeof cashCountFormSchema>;
+export type CashCountFormValues = z.output<typeof cashCountFormSchema>;
 
 export const caseNoteSchema = z.object({ text: z.string().trim().min(2, "noteRequired").max(1000, "notesTooLong") });
 export type CaseNoteInput = z.input<typeof caseNoteSchema>;
