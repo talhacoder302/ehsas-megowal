@@ -26,6 +26,7 @@ export const PERMISSIONS = [
   "cash.count",
   "months.close",
   "activity.view",
+  "reports.send",
   // shared
   "reports.view",
   // members
@@ -50,6 +51,7 @@ const HEAD_PERMISSIONS: readonly Permission[] = [
   "cash.count",
   "months.close",
   "activity.view",
+  "reports.send",
   "reports.view",
   "own.read",
 ];

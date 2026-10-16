@@ -7,6 +7,11 @@ export function whatsappLink(mobile: string, text: string): string {
   return `https://wa.me/${mobileToInternational(mobile)}?text=${encodeURIComponent(text)}`;
 }
 
+/** wa.me link without a number: WhatsApp asks which chat or group to send `text` to. */
+export function whatsappShareLink(text: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
 export type MemberLoginMessage = {
   name: string;
   programName: string;
@@ -78,6 +83,44 @@ export function receiptMessage(m: ReceiptMessage): string {
     "",
     `Raseed yahan dekhein: ${m.receiptUrl}`,
     "Shukriya",
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
+}
+
+const LONG_MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+/** "October 2026" for Roman Urdu messages. */
+export function romanMonthLong(month: MonthKey): string {
+  const [year, mon] = month.split("-");
+  return `${LONG_MONTH_NAMES[Number(mon) - 1]} ${year}`;
+}
+
+export type ReportMessage = {
+  programName: string;
+  villageName: string;
+  month: MonthKey;
+  collection: number;
+  paidMembers: number;
+  activeMembers: number;
+  /** Aid given plus general expenses. */
+  spent: number;
+  balance: number;
+  /** The month is not closed yet, so the figures may still change. */
+  provisional: boolean;
+  reportUrl: string;
+};
+
+/** Short monthly summary for the village WhatsApp group, in Roman Urdu. */
+export function reportMessage(m: ReportMessage): string {
+  return [
+    `Assalam-o-Alaikum! ${m.programName} ${m.villageName}: ${romanMonthLong(m.month)} ki report`,
+    "",
+    `${romanMonthLong(m.month).split(" ")[0]} ki collection ${formatRupees(m.collection)} (${m.paidMembers} / ${m.activeMembers} members), kharcha ${formatRupees(m.spent)}, balance ${formatRupees(m.balance)}.`,
+    m.provisional ? "Yeh mahina abhi band nahi hua, raqam mein tabdeeli ho sakti hai." : null,
+    "",
+    `Poori report: ${m.reportUrl}`,
+    "JazakAllah",
   ]
     .filter((line) => line !== null)
     .join("\n");

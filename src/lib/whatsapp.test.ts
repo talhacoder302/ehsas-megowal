@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { memberLoginMessage, receiptMessage, reminderMessage, romanMonthList, whatsappLink } from "./whatsapp";
+import { memberLoginMessage, receiptMessage, reminderMessage, reportMessage, romanMonthList, romanMonthLong, whatsappLink, whatsappShareLink } from "./whatsapp";
 
 describe("whatsappLink", () => {
   it("opens a chat with the international number and encoded text", () => {
@@ -72,5 +72,37 @@ describe("reminderMessage", () => {
     expect(romanMonthList(["2026-06", "2026-07", "2026-08", "2026-09", "2026-10"])).toBe(
       "Jun 2026 se Oct 2026 tak (5 mahine)",
     );
+  });
+});
+
+describe("reportMessage", () => {
+  const base = {
+    programName: "Ehsas Program",
+    villageName: "Megowal",
+    month: "2026-10",
+    collection: 14500,
+    paidMembers: 28,
+    activeMembers: 32,
+    spent: 31650,
+    balance: 167850,
+    provisional: false,
+    reportUrl: "https://ehsas.example.com/reports/2026-10",
+  };
+
+  it("gives collection, spending and balance with the report link", () => {
+    const text = reportMessage(base);
+    expect(text).toContain("October 2026 ki report");
+    expect(text).toContain("October ki collection Rs. 14,500 (28 / 32 members), kharcha Rs. 31,650, balance Rs. 167,850.");
+    expect(text).toContain("Poori report: https://ehsas.example.com/reports/2026-10");
+    expect(text).not.toContain("band nahi hua");
+  });
+
+  it("warns when the month is not closed yet", () => {
+    expect(reportMessage({ ...base, provisional: true })).toContain("Yeh mahina abhi band nahi hua");
+  });
+
+  it("uses full English month names and lets WhatsApp pick the chat", () => {
+    expect(romanMonthLong("2026-09")).toBe("September 2026");
+    expect(whatsappShareLink("Salam & report")).toBe("https://wa.me/?text=Salam%20%26%20report");
   });
 });
