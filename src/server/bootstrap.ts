@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 import type { Locale } from "@/i18n/config";
 import type { CaseCategory, CaseStatus } from "@/lib/cases";
 import { amountThrough, type AccountType } from "@/lib/contributions";
-import { dateKey, parseDateKey, todayKey, type MonthKey } from "@/lib/dates";
+import { dateKey, parseDateKey, shiftMonth, todayKey, type MonthKey } from "@/lib/dates";
 import { connectDB } from "@/lib/db";
 import type { MemberStatus } from "@/lib/member-status";
 import type { Role } from "@/lib/roles";
@@ -29,6 +29,7 @@ import { logActivity } from "./activity-log";
 import { closeBlockFor, closeMonthCore, firstEntryMonth } from "./closing-core";
 import { applyPayment, cancelIncome, createBillsForMonth, memberPayables } from "./contributions-core";
 import { generateTempPassword, hashPassword } from "./passwords";
+import { createRegisterCases, createRegisterPayments } from "./setup-core";
 import { nextCaseNo, nextMemberNo } from "./sequence";
 
 // System-level setup used only by scripts (seed, migrations). Never call these
@@ -454,6 +455,62 @@ export async function seedDemoPayouts(input: { cashAccountId: string; heads: [st
   });
 
   return { skipped: false, disbursements, pending, expenses: expenses.length, transfers: 1 };
+}
+
+// ---------------------------------------------------------------------------
+// Moving from paper registers (Module 8)
+// ---------------------------------------------------------------------------
+
+export type DemoRegisterResult = { skipped: boolean; payments: number; cases: number };
+
+/**
+ * Demo opening setup: program start 2023-01-01, `firstMonth` as the first app
+ * month, three months of register payments (Rs. 300) for the first six
+ * members (a few months missing) and one old completed funeral case. Runs only
+ * while no month is closed and nothing has been imported yet.
+ */
+export async function seedDemoRegister(input: { firstMonth: MonthKey; heads: [string, string] }): Promise<DemoRegisterResult> {
+  await connectDB();
+  const imported = (await ContributionBill.exists({ origin: "register" })) || (await AidCase.exists({ importedFromRegister: true }));
+  if (imported || (await MonthClosing.exists({}))) return { skipped: true, payments: 0, cases: 0 };
+  const [head1] = input.heads;
+
+  await Settings.updateOne(
+    { key: "main", firstMonth: null },
+    { $set: { programStartDate: parseDateKey("2023-01-01"), firstMonth: input.firstMonth, setupCompletedAt: new Date(), setupCompletedBy: new Types.ObjectId(head1) } },
+  );
+
+  const members = await Member.find({ memberNo: { $in: ["EP-001", "EP-002", "EP-003", "EP-004", "EP-005", "EP-006"] } })
+    .select("memberNo")
+    .sort({ memberNo: 1 })
+    .lean();
+  const months = [shiftMonth(input.firstMonth, -3), shiftMonth(input.firstMonth, -2), shiftMonth(input.firstMonth, -1)];
+  const rows = members.flatMap((m, i) =>
+    months
+      // Some members skipped a month on paper; that is in their opening due.
+      .filter((_, j) => !(i % 3 === 2 && j === 1))
+      .map((month) => ({ memberId: m._id, memberNo: m.memberNo, month, amount: 300, date: `${month}-05` })),
+  );
+  const payments = await createRegisterPayments(rows, head1);
+
+  const cases = await createRegisterCases(
+    [
+      {
+        beneficiaryName: "Naseem Bibi",
+        category: "funeral",
+        guardianName: "Muhammad Rafiq (beta)",
+        mohalla: "Mohalla Kumharan",
+        description: "Shohar ke inteqal par kafan dafan aur teen din ka khana (register se)",
+        totalPaid: 25000,
+        date: `${shiftMonth(input.firstMonth, -5)}-12`,
+        showNameToMembers: false,
+      },
+    ],
+    head1,
+  );
+  await logActivity({ actorId: head1, action: "import.history", entity: "Income", meta: { source: "seed", ...payments } });
+  await logActivity({ actorId: head1, action: "import.cases", entity: "AidCase", meta: { source: "seed", ...cases } });
+  return { skipped: false, payments: payments.created, cases: cases.created };
 }
 
 // ---------------------------------------------------------------------------
