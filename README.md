@@ -43,7 +43,7 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
    npm run seed
    ```
 
-   The seed prints the logins it creates and adds 35 demo members (a few marked left, deceased or exempt), contribution rates (Rs. 300 from 2023, Rs. 500 from the current month), a "Cash in hand" account kept by the first head, three months of bills and payments, 8 aid cases in different stages, aid payments (one waiting for a second head), expenses and a cash-to-bank transfer. It also turns on second-head approval above Rs. 25,000 and gives the cash account a paper-register opening balance. Demo users (2 heads and 1 member) must change their password at first login. On the live site use `npm run seed -- --no-demo`: it creates the settings, the admin, the Rs. 500 rate from the current month and a "Cash in hand" account.
+   The seed prints the logins it creates and adds 35 demo members (a few marked left, deceased or exempt), contribution rates (Rs. 300 from 2023, Rs. 500 from the current month), a "Cash in hand" account kept by the first head, three months of bills and payments, 8 aid cases in different stages, aid payments (one waiting for a second head), expenses, a cash-to-bank transfer and three cash counts (one Rs. 200 short), and closes the oldest demo month. It also turns on second-head approval above Rs. 25,000, sets a Rs. 20,000 emergency reserve and gives the cash account a paper-register opening balance. Demo users (2 heads and 1 member) must change their password at first login. On the live site use `npm run seed -- --no-demo`: it creates the settings, the admin, the Rs. 500 rate from the current month and a "Cash in hand" account.
 
 4. Start the dev server and open http://localhost:3000:
 
@@ -83,7 +83,11 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
 - on an approved or in-progress case, **Pay out** with a receipt photo; it cannot go over the approved amount (change the approved amount with a reason first) or take an account below zero
 - `/manage` dashboard: payments above the limit wait in **Waiting for approval** until a different head or the admin approves them; account balances
 - `/manage/expenses` running costs with receipt photos; `/manage/accounts` balance breakdown and **Transfer money** between accounts
-- `/manage/settings/approvals` (admin) turn second-head approval on and set the limit
+- `/manage/settings/fund` (admin) emergency reserve, second-head approval and its limit, and whether new cases show the beneficiary's name to members
+- `/manage` dashboard **Budget** card: money in all accounts, minus what is promised to open cases and the emergency reserve, gives what is free to spend; a reminder appears when a finished month is not closed
+- `/manage/cash-count` pick an account, count the money and enter it; the difference shows straight away and a note is needed when it does not match; past counts are kept
+- `/manage/closing` pick a month to see opening balance, income, aid paid, expenses, closing balance, committed money, reserve and free balance; **Close** it once it has ended (months close in order, and not while aid payments in it wait for approval)
+- a closed month is locked: payments, aid payments, expenses and transfers dated in it (or earlier) are refused and its receipts cannot be cancelled; the admin can **Reopen** the latest closed month with a reason
 - `/member` member area with bottom navigation, Urdu by default
 - `/manage/profile` and `/member/profile` change password and language
 - 5 wrong passwords for one mobile lock it for 15 minutes

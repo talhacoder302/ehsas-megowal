@@ -10,6 +10,7 @@ import type { Role } from "@/lib/roles";
 import {
   Account,
   AidCase,
+  CashCount,
   ContributionBill,
   ContributionRate,
   DEFAULT_MEMBER_NO_PREFIX,
@@ -17,12 +18,15 @@ import {
   Expense,
   Income,
   Member,
+  MonthClosing,
   Settings,
   Transfer,
   User,
   type SettingsDoc,
 } from "@/models";
+import { balanceOf } from "./account-totals";
 import { logActivity } from "./activity-log";
+import { closeBlockFor, closeMonthCore, firstEntryMonth } from "./closing-core";
 import { applyPayment, cancelIncome, createBillsForMonth, memberPayables } from "./contributions-core";
 import { generateTempPassword, hashPassword } from "./passwords";
 import { nextCaseNo, nextMemberNo } from "./sequence";
@@ -446,6 +450,75 @@ export async function seedDemoPayouts(input: { cashAccountId: string; heads: [st
   });
 
   return { skipped: false, disbursements, pending, expenses: expenses.length, transfers: 1 };
+}
+
+// ---------------------------------------------------------------------------
+// Keeping the books (Module 6)
+// ---------------------------------------------------------------------------
+
+export type DemoBooksResult = { reserveSet: boolean; closedMonth: MonthKey | null; counts: number };
+
+const DEMO_EMERGENCY_RESERVE = 20000;
+
+/**
+ * Demo emergency reserve (only if still at the default 0), the oldest month
+ * closed (only when no month is closed yet) and three cash counts, one of them
+ * Rs. 200 short (only when no count exists).
+ */
+export async function seedDemoBooks(input: { cashAccountId: string; bankAccountId: string | null; heads: [string, string] }): Promise<DemoBooksResult> {
+  await connectDB();
+  const [head1, head2] = input.heads;
+  const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  const reserve = await Settings.updateOne({ key: "main", emergencyReserveAmount: 0 }, { $set: { emergencyReserveAmount: DEMO_EMERGENCY_RESERVE } });
+
+  let closedMonth: MonthKey | null = null;
+  if (!(await MonthClosing.exists({}))) {
+    const first = await firstEntryMonth();
+    if (first && (await closeBlockFor(first)) === null) {
+      const doc = await closeMonthCore(first, head1);
+      await logActivity({
+        actorId: head1,
+        action: "month.closed",
+        entity: "MonthClosing",
+        entityId: doc._id,
+        meta: { source: "seed", month: first, closingBalance: doc.closingBalance, committedAmount: doc.committedAmount, freeBalance: doc.freeBalance },
+      });
+      closedMonth = first;
+    }
+  }
+
+  let counts = 0;
+  if (!(await CashCount.exists({}))) {
+    const plan = [
+      { accountId: input.cashAccountId, at: daysAgo(9), short: 0, note: "", by: head1 },
+      ...(input.bankAccountId ? [{ accountId: input.bankAccountId, at: daysAgo(3), short: 0, note: "Bank statement se mila liya", by: head2 }] : []),
+      { accountId: input.cashAccountId, at: new Date(), short: 200, note: "200 rupay kam hain, Riaz sahib ko khula wapas dena tha. Kal tak hisaab saaf karenge.", by: head2 },
+    ];
+    for (const c of plan) {
+      const systemBalance = await balanceOf(c.accountId, c.at);
+      const countedAmount = systemBalance - c.short;
+      const doc = await CashCount.create({
+        accountId: new Types.ObjectId(c.accountId),
+        date: c.at,
+        systemBalance,
+        countedAmount,
+        difference: countedAmount - systemBalance,
+        note: c.note,
+        countedBy: new Types.ObjectId(c.by),
+      });
+      await logActivity({
+        actorId: c.by,
+        action: "cash.counted",
+        entity: "CashCount",
+        entityId: doc._id,
+        meta: { source: "seed", accountId: c.accountId, systemBalance, countedAmount, difference: -c.short },
+      });
+      counts += 1;
+    }
+  }
+
+  return { reserveSet: reserve.modifiedCount > 0, closedMonth, counts };
 }
 
 // ---------------------------------------------------------------------------

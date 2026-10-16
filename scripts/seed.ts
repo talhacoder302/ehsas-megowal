@@ -4,7 +4,8 @@
  *
  *   npm run seed              settings, admin, 2 heads, demo members, rates,
  *                             cash account, three months of bills and payments, 8 aid cases,
- *                             aid payments, expenses and a bank transfer
+ *                             aid payments, expenses, a bank transfer, an emergency reserve,
+ *                             the oldest month closed and three cash counts
  *   npm run seed -- --no-demo settings, admin, the Rs. 500 rate and a cash account (for production)
  *
  * Needs SEED_ADMIN_MOBILE and SEED_ADMIN_PASSWORD in .env.local.
@@ -22,6 +23,7 @@ import {
   ensureMembers,
   ensureRates,
   ensureUser,
+  seedDemoBooks,
   seedDemoCases,
   seedDemoContributions,
   seedDemoPayouts,
@@ -390,6 +392,13 @@ async function main() {
     payouts.skipped
       ? "- payouts: already recorded, demo payouts skipped"
       : `- payouts: ${payouts.disbursements} aid payments (${payouts.pending} waiting for approval), ${payouts.expenses} expenses, ${payouts.transfers} transfer to HBL Megowal`,
+  );
+
+  const bank = await ensureAccount({ name: "HBL Megowal", type: "bank", holderUserId: null });
+  const books = await seedDemoBooks({ cashAccountId: account.id, bankAccountId: bank.id, heads: [head1, head2] });
+  console.log(
+    `- books: emergency reserve ${books.reserveSet ? "set to Rs. 20,000" : "unchanged"}, ` +
+      `${books.closedMonth ? `${books.closedMonth} closed` : "no month closed"}, ${books.counts} cash counts`,
   );
 }
 
