@@ -32,7 +32,7 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
    | `AUTH_URL`, `AUTH_TRUST_HOST` | production | Set `AUTH_TRUST_HOST=true` when running behind Hostinger's proxy. |
    | `NEXT_PUBLIC_APP_URL` | no | Public URL of the app, defaults to `http://localhost:3000`. |
    | `R2_*` | no | Cloudflare R2 for receipt photos (see below). Uploads are turned off if any is missing; records can still be saved without a photo. |
-   | `RESEND_API_KEY`, `EMAIL_FROM` | no | Email through Resend. Email is turned off if missing. |
+   | `RESEND_API_KEY`, `EMAIL_FROM` | no | Email through Resend (heads can email the monthly report link to members who have an email). Email is turned off if missing. |
    | `SEED_ADMIN_MOBILE`, `SEED_ADMIN_PASSWORD` | for seeding | The first admin login created by `npm run seed`. Password at least 8 characters. |
    | `SEED_ADMIN_NAME` | no | Admin display name, defaults to "Admin". |
    | `SEED_DEMO_PASSWORD` | no | One temporary password for the demo users; otherwise random ones are printed. |
@@ -88,7 +88,11 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
 - `/manage/cash-count` pick an account, count the money and enter it; the difference shows straight away and a note is needed when it does not match; past counts are kept
 - `/manage/closing` pick a month to see opening balance, income, aid paid, expenses, closing balance, committed money, reserve and free balance; **Close** it once it has ended (months close in order, and not while aid payments in it wait for approval)
 - a closed month is locked: payments, aid payments, expenses and transfers dated in it (or earlier) are refused and its receipts cannot be cancelled; the admin can **Reopen** the latest closed month with a reason
-- `/member` member area with bottom navigation, Urdu by default
+- `/manage/reports` monthly report for any month: opening balance, collection (members paid out of active members), aid by category with case numbers, expenses, closing balance, committed, reserve, free balance, open cases with their last reason, and a 12-month collection vs aid chart. Switch between the **Heads copy** and the **Members copy** (families' names hidden unless the case allows it)
+- download the report as a PDF in English or Urdu, **Share on WhatsApp** (Roman Urdu summary plus the report link; pick the village group), and **Email to members** when Resend is set up
+- the report link (`/reports/2026-10`) opens the right screen for whoever clicks it: heads see the manage report, members their own, and anyone signed out logs in first
+- `/member` member area, Urdu by default: pending amount, months paid this year and the latest receipt; **Payments** has the full history with receipt links and PDFs; **Reports** shows the members copy (members can never get the heads copy, not even as a PDF); **Cases** the anonymised case list
+- a member's form has an optional email, used only for the report email
 - `/manage/profile` and `/member/profile` change password and language
 - 5 wrong passwords for one mobile lock it for 15 minutes
 - `/api/health` returns `{"status":"ok","db":"up"}` when the database is reachable

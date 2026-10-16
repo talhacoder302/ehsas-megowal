@@ -111,6 +111,8 @@ export type SeedMember = {
   fatherName: string;
   /** Empty for members without a phone. */
   mobile: string;
+  /** Optional; demo addresses use example.com so nothing is ever delivered. */
+  email?: string;
   mohalla: string;
   joinDate: Date;
   openingDue?: number;
@@ -129,6 +131,8 @@ export async function ensureMembers(seeds: SeedMember[]): Promise<{ id: Types.Ob
   for (const { statusChange, ...seed } of seeds) {
     const existing = await Member.findOne({ name: seed.name, fatherName: seed.fatherName }).select("memberNo").lean();
     if (existing) {
+      // Members seeded before emails existed get theirs, without overwriting a real one.
+      if (seed.email) await Member.updateOne({ _id: existing._id, email: { $in: ["", null] } }, { $set: { email: seed.email } });
       out.push({ id: existing._id, memberNo: existing.memberNo, created: false });
       continue;
     }
