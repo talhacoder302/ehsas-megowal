@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
-import { HourglassIcon, WalletIcon } from "lucide-react";
+import { ClipboardListIcon, HourglassIcon, WalletIcon } from "lucide-react";
 import { PageHeader } from "@/components/manage/page-header";
 import { BudgetCard } from "@/components/manage/budget-card";
 import { PendingApprovals } from "@/components/manage/pending-approvals";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatRupees } from "@/lib/money";
 import { can } from "@/lib/permissions";
 import { listAccounts } from "@/server/accounts";
 import { requirePageUser } from "@/server/auth/guards";
 import { getBudget } from "@/server/closing";
+import { setupNeeded } from "@/server/setup";
 import { listPendingDisbursements } from "@/server/disbursements";
 import { readSettings } from "@/server/settings";
 
@@ -26,10 +28,11 @@ export default async function ManageDashboardPage() {
   const lang = locale === "ur" ? "ur" : "en";
   const canApprove = can(me.role, "disbursements.approve");
   const seesMoney = can(me.role, "accounts.manage");
-  const [pending, accounts, budget] = await Promise.all([
+  const [pending, accounts, budget, needsSetup] = await Promise.all([
     canApprove ? listPendingDisbursements() : Promise.resolve([]),
     seesMoney ? listAccounts() : Promise.resolve([]),
     seesMoney ? getBudget() : Promise.resolve(null),
+    can(me.role, "setup.manage") ? setupNeeded() : Promise.resolve(false),
   ]);
   const active = accounts.filter((a) => a.active);
   const total = active.reduce((sum, a) => sum + a.balance, 0);
@@ -37,6 +40,23 @@ export default async function ManageDashboardPage() {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
       <PageHeader title={t("manage.dashboard.title")} subtitle={t("manage.dashboard.subtitle")} />
+
+      {needsSetup ? (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <ClipboardListIcon className="mt-0.5 size-5 shrink-0 text-primary" />
+              <div className="flex flex-col gap-0.5">
+                <span className="font-medium">{t("setup.dashboardTitle")}</span>
+                <span className="text-sm text-muted-foreground">{t("setup.dashboardBody")}</span>
+              </div>
+            </div>
+            <Button asChild size="lg" className="self-start sm:self-auto">
+              <Link href="/manage/setup">{t("setup.dashboardButton")}</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {budget ? <BudgetCard budget={budget} lang={lang} canClose={can(me.role, "months.close")} /> : null}
 

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { FileSpreadsheetIcon, PlusIcon, SearchIcon, UsersIcon } from "lucide-react";
+import { FileSpreadsheetIcon, PlusIcon, SearchIcon, UploadIcon, UsersIcon } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,7 +69,15 @@ export function MembersView({ members, canManage }: MembersViewProps) {
             {t("members.subtitle")} · {t("members.count", { count: counts.all })}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {canManage ? (
+            <Button asChild variant="outline" size="lg">
+              <Link href="/manage/members/import">
+                <UploadIcon />
+                {t("members.import")}
+              </Link>
+            </Button>
+          ) : null}
           {members.length > 0 ? (
             <Button asChild variant="outline" size="lg">
               <a href={exportHref} download aria-label={t("members.exportLabel")} title={t("members.exportLabel")}>

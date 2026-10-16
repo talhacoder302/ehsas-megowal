@@ -307,7 +307,8 @@
         "language": "Language"
       }
     },
-    "dueNow": "Due now"
+    "dueNow": "Due now",
+    "import": "Import"
   },
   "paymentMethod": {
     "cash": "Cash",
@@ -787,7 +788,19 @@
     "photoTooLarge": "The photo is too large even after making it smaller.",
     "sameAccount": "Choose two different accounts.",
     "countNoteRequired": "The count does not match. Write a short note about the difference.",
-    "emailInvalid": "Enter a valid email address."
+    "emailInvalid": "Enter a valid email address.",
+    "monthInFuture": "This month has not started yet.",
+    "startAfterFirstMonth": "The program start date must be on or before the first month.",
+    "memberNoRequired": "Write the member number.",
+    "memberExists": "A member with this name and father's name already exists.",
+    "duplicateRow": "Repeated in this file (only the first one is used).",
+    "mobileTaken": "This mobile number already belongs to another member.",
+    "mobileDuplicate": "This mobile number appears twice in the file.",
+    "memberNoNotFound": "No member has this number.",
+    "monthNotBeforeFirst": "Must be before the first month kept in the app.",
+    "dateNotBeforeFirst": "Must be before the first month kept in the app.",
+    "billExists": "This member already has this month.",
+    "caseExists": "This case was already imported."
   },
   "serverErrors": {
     "unauthenticated": "Your session has ended. Please log in again.",
@@ -844,7 +857,20 @@
     "monthNotClosed": "This month is not closed.",
     "reopenLatestOnly": "Only the latest closed month can be reopened. Reopen the later months first.",
     "balanceChangedMeanwhile": "Money in this account changed while you were counting. Check the new balance and save the count again.",
-    "openingBalanceAfterClosing": "A month is already closed, so a new account must start at Rs. 0. Bring money in with a transfer or a payment."
+    "openingBalanceAfterClosing": "A month is already closed, so a new account must start at Rs. 0. Bring money in with a transfer or a payment.",
+    "beforeFirstMonth": "This month is before the first month kept in the app. Its dues are in the members' opening dues.",
+    "setupLocked": "The first month is already closed, so the opening setup can no longer change. The admin can reopen the month.",
+    "entriesBeforeFirstMonth": "Payments, aid, expenses or bills are already recorded before this month. Pick that month or an earlier one.",
+    "registerAfterFirstMonth": "Imported register history reaches this month or later. Pick a later first month.",
+    "openingDueBelowPaid": "This member has already paid more than this off the opening due in the app.",
+    "billsBeforeJoin": "This member has bills before the new join date.",
+    "setFirstMonthFirst": "Set the first month in step 1 first.",
+    "importFileMissing": "Choose an Excel file first.",
+    "importFileTooLarge": "The file is too big. Keep it under 900 KB.",
+    "importFileType": "Use an Excel file (.xlsx or .xls) or a .csv file.",
+    "importFileUnreadable": "This file could not be read. Save it again as .xlsx and try once more.",
+    "importTooManyRows": "Too many rows. Import at most 2,000 rows at a time.",
+    "importColumnsMissing": "Some required columns are missing. Use the template."
   },
   "manage": {
     "areaName": "Management",
@@ -861,7 +887,8 @@
       "settings": "Settings",
       "profile": "Profile",
       "cashCount": "Cash count",
-      "closing": "Month closing"
+      "closing": "Month closing",
+      "setup": "Opening setup"
     },
     "dashboard": {
       "title": "Dashboard",
@@ -1032,5 +1059,140 @@
     "pdfGenerated": "Made on {date}",
     "pdfComputerMade": "This report was made by computer from the fund's records.",
     "chartTable": "Show as a table"
+  },
+  "setup": {
+    "title": "Opening setup",
+    "subtitle": "Move the paper register into the app",
+    "stepsLabel": "Setup steps",
+    "steps": {
+      "dates": "Dates",
+      "balances": "Balances",
+      "members": "Members",
+      "imports": "Import",
+      "summary": "Check"
+    },
+    "stepTitles": {
+      "dates": "When did the fund start?",
+      "balances": "Money in each account",
+      "members": "Members' opening dues",
+      "imports": "Import from Excel",
+      "summary": "Check against the register"
+    },
+    "stepHints": {
+      "dates": "Months before the first month stay on paper. From the first month on, everything is kept in the app.",
+      "balances": "Write what each account held at the start of the first month, as the register shows.",
+      "members": "For each member: when they joined, and what they still owed before the first month.",
+      "imports": "Optional: add members, old payments and old completed cases from Excel files.",
+      "summary": "Compare these totals with the register before closing the first month."
+    },
+    "locked": "{month} is closed, so the opening setup is now read-only. The admin can reopen the month to change it.",
+    "lockedShort": "The first month is closed; old records can no longer be imported.",
+    "fromRegister": "From register",
+    "dashboardTitle": "Start with the opening setup",
+    "dashboardBody": "Enter the first month, account balances and members' old dues from the paper register.",
+    "dashboardButton": "Open setup",
+    "dates": {
+      "programStart": "Program start date",
+      "programStartHint": "The day the fund started on paper.",
+      "firstMonth": "First month in the app",
+      "firstMonthHint": "Bills, payments and closings start from this month.",
+      "save": "Save and continue",
+      "saved": "Dates saved."
+    },
+    "balances": {
+      "noAccounts": "Add an account first (for example, cash in hand).",
+      "balanceNow": "Balance now: {amount}",
+      "total": "Opening total",
+      "hint": "Once the first month is closed, these can no longer change.",
+      "save": "Save and continue",
+      "saved": "Opening balances saved."
+    },
+    "members": {
+      "none": "No members yet",
+      "noneHint": "Add members, or import them from Excel in the Import step.",
+      "search": "Search by name or number",
+      "total": "Total opening dues",
+      "openingDue": "Opening due (Rs.)",
+      "paidSince": "{amount} already paid off it in the app",
+      "save": "Save {count} changes",
+      "saved": "{count} members saved.",
+      "someFailed": "{saved} saved, {failed} could not be saved. See the red rows.",
+      "hint": "Only changed members are saved."
+    },
+    "imports": {
+      "needFirstMonth": "Set the first month in step 1 before importing old records.",
+      "membersTitle": "Import members",
+      "membersHint": "New members from an Excel sheet. Members already in the app are skipped.",
+      "historyTitle": "Old contributions (optional)",
+      "historyHint": "Payments written in the register before the first month. They show in each member's ledger as from the register and do not change any balance.",
+      "casesTitle": "Old completed aid cases (optional)",
+      "casesHint": "Cases completed before the first month, with the total paid. They do not change any balance."
+    },
+    "summary": {
+      "compare": "Check each total against the paper register. If something differs, fix it in the earlier steps before closing the first month.",
+      "membersTitle": "Members",
+      "totalMembers": "Total members",
+      "duesTitle": "Opening dues",
+      "duesHint": "{count} members owed something before the first month.",
+      "duesOriginal": "Total from the register",
+      "duesPaid": "Paid off since in the app",
+      "duesRemaining": "Still owed",
+      "accountsTitle": "Accounts",
+      "openingWas": "Opening {amount}",
+      "openingTotal": "Opening total",
+      "balanceTotal": "Balance now",
+      "registerTitle": "Imported from the register",
+      "registerHint": "History only; these never change a balance.",
+      "registerPayments": "Old payments",
+      "registerMembers": "Members with old payments",
+      "registerMonths": "Months",
+      "registerCases": "Old aid cases",
+      "doneOn": "Setup marked done on {date}",
+      "next": "Next: when {month} has ended, close it on the Month closing screen. After that the setup is locked.",
+      "lockedNext": "The first month is closed. The setup is locked.",
+      "markDone": "Mark setup as done",
+      "markDoneTitle": "Mark the setup as done?",
+      "markDoneBody": "You can still change it until the first month is closed.",
+      "marked": "Setup marked as done.",
+      "openClosing": "Month closing"
+    }
+  },
+  "imports": {
+    "template": "Download template",
+    "chooseFile": "Excel file",
+    "check": "Check file",
+    "missingColumns": "Missing columns: {columns}",
+    "validRows": "{count} rows ready",
+    "errorRows": "{count} rows with problems",
+    "noRows": "The file has no rows under the headings.",
+    "row": "Row {number}",
+    "showProblems": "Show only problems",
+    "showAll": "Show all {count} rows",
+    "importRows": "Import {count} rows",
+    "startOver": "Start over",
+    "skipHint": "Rows with problems are skipped. Fix them in Excel and import the file again; rows already imported are not added twice.",
+    "imported": "{created} imported, {skipped} skipped.",
+    "columnsHint": "Required columns: {columns}",
+    "fields": {
+      "name": "Name",
+      "fatherName": "Father name",
+      "mobile": "Mobile",
+      "mohalla": "Mohalla",
+      "address": "Address",
+      "joinDate": "Join date",
+      "openingDue": "Opening due",
+      "email": "Email",
+      "notes": "Notes",
+      "memberNo": "Member no",
+      "month": "Month",
+      "amount": "Amount paid",
+      "date": "Date",
+      "beneficiaryName": "Beneficiary name",
+      "category": "Category",
+      "guardianName": "Guardian",
+      "description": "Description",
+      "totalPaid": "Total paid",
+      "showNameToMembers": "Show name to members"
+    }
   }
 }
