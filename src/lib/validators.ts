@@ -2,7 +2,7 @@ import { z } from "zod";
 import { locales } from "@/i18n/config";
 import { CASE_CATEGORIES, CASE_STATUSES } from "@/lib/cases";
 import { ACCOUNT_TYPES, PAYMENT_METHODS } from "@/lib/contributions";
-import { MONTH_PATTERN, parseDateKey, pastDateKeySchema } from "@/lib/dates";
+import { currentMonth, MONTH_PATTERN, parseDateKey, pastDateKeySchema, todayKey } from "@/lib/dates";
 import { MEMBER_STATUSES } from "@/lib/member-status";
 import { fromUrduDigits, parseRupees } from "@/lib/money";
 import { EXPENSE_CATEGORIES } from "@/lib/payouts";
@@ -333,3 +333,66 @@ export type CashCountFormValues = z.output<typeof cashCountFormSchema>;
 export const caseNoteSchema = z.object({ text: z.string().trim().min(2, "noteRequired").max(1000, "notesTooLong") });
 export type CaseNoteInput = z.input<typeof caseNoteSchema>;
 export type ReasonFormInput = z.input<typeof reasonFormSchema>;
+
+// ---------------------------------------------------------------------------
+// Opening setup and register imports (Module 8)
+// ---------------------------------------------------------------------------
+
+/** Empty means 0 (no opening due). */
+const optionalRupeesInput = z
+  .union([z.number(), z.string()])
+  .transform((v) => (typeof v === "string" && v.trim() === "" ? 0 : v))
+  .pipe(rupeesInput({ min: 0 }));
+
+/** Step 1 of the opening setup. */
+export const setupDatesSchema = z
+  .object({
+    programStartDate: pastDateKeySchema,
+    firstMonth: monthKeySchema,
+  })
+  .refine((v) => v.firstMonth <= currentMonth(), { message: "monthInFuture", path: ["firstMonth"] })
+  .refine((v) => v.programStartDate.slice(0, 7) <= v.firstMonth, { message: "startAfterFirstMonth", path: ["programStartDate"] });
+export type SetupDatesInput = z.input<typeof setupDatesSchema>;
+export type SetupDatesValues = z.output<typeof setupDatesSchema>;
+
+/** Step 2: opening balance of each account at the start of the first month. */
+export const openingBalancesSchema = z.object({
+  accounts: z.array(z.object({ accountId: objectIdSchema, openingBalance: rupeesInput({ min: 0 }) })).max(50),
+});
+
+/** Step 3: each member's join date and opening due (what they owed before the first month). */
+export const memberOpeningsSchema = z.object({
+  members: z.array(z.object({ memberId: objectIdSchema, joinDate: pastDateKeySchema, openingDue: rupeesInput({ min: 0 }) })).max(2000),
+});
+
+/** One row of the members Excel import. */
+export const memberImportRowSchema = memberFormSchema.extend({ openingDue: optionalRupeesInput });
+export type MemberImportRow = z.output<typeof memberImportRowSchema>;
+
+/** One row of the old contribution history import (a payment written in the register). */
+export const historyImportRowSchema = z.object({
+  memberNo: z.string().trim().toUpperCase().min(1, "memberNoRequired"),
+  month: monthKeySchema,
+  amount: rupeesInput({ min: 1 }),
+  /** Day it was paid; empty means the first of the month. */
+  date: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || parseDateKey(v) !== null, { message: "dateInvalid", abort: true })
+    .refine((v) => v === "" || v <= todayKey(), "dateInFuture"),
+});
+export type HistoryImportRow = z.output<typeof historyImportRowSchema>;
+
+/** One row of the old completed aid cases import. */
+export const caseImportRowSchema = z.object({
+  beneficiaryName: z.string().trim().min(2, "nameRequired").max(80, "nameTooLong"),
+  category: z.enum(CASE_CATEGORIES, "categoryRequired"),
+  guardianName: z.string().trim().max(80, "nameTooLong"),
+  mohalla: z.string().trim().max(60, "mohallaTooLong"),
+  description: z.string().trim().min(3, "descriptionRequired").max(2000, "descriptionTooLong"),
+  totalPaid: rupeesInput({ min: 1 }),
+  /** Day the case was completed (last payment). */
+  date: pastDateKeySchema,
+  showNameToMembers: z.boolean(),
+});
+export type CaseImportRow = z.output<typeof caseImportRowSchema>;
