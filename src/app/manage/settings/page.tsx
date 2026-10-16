@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
-import { ChevronRightIcon, CoinsIcon, UserCheckIcon } from "lucide-react";
+import { ChevronRightIcon, CoinsIcon, ShieldCheckIcon } from "lucide-react";
 import { PageHeader } from "@/components/manage/page-header";
 import { can } from "@/lib/permissions";
 import { formatRupees } from "@/lib/money";
@@ -21,6 +21,7 @@ export default async function SettingsPage() {
 
   const [t, locale, rates, settings] = await Promise.all([getTranslations("settings"), getLocale(), listRates(), readSettings()]);
   const current = rates.find((r) => r.isCurrent);
+  const lang = locale === "ur" ? "ur" : "en";
 
   const sections = [
     {
@@ -28,16 +29,19 @@ export default async function SettingsPage() {
       icon: CoinsIcon,
       title: t("rates.title"),
       detail: current
-        ? t("rates.currentShort", { amount: formatRupees(current.amount, locale === "ur" ? "ur" : "en") })
+        ? t("rates.currentShort", { amount: formatRupees(current.amount, lang) })
         : t("rates.noneShort"),
     },
     {
-      href: "/manage/settings/approvals",
-      icon: UserCheckIcon,
-      title: t("approvals.title"),
-      detail: settings.approval.enabled
-        ? t("approvals.onShort", { limit: formatRupees(settings.approval.limit, locale === "ur" ? "ur" : "en") })
-        : t("approvals.offShort"),
+      href: "/manage/settings/fund",
+      icon: ShieldCheckIcon,
+      title: t("fund.title"),
+      detail: t("fund.short", {
+        reserve: formatRupees(settings.emergencyReserve, lang),
+        approval: settings.approval.enabled
+          ? t("fund.approvalOnShort", { limit: formatRupees(settings.approval.limit, lang) })
+          : t("fund.approvalOffShort"),
+      }),
     },
   ];
 

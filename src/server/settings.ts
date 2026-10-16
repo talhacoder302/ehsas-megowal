@@ -12,6 +12,8 @@ export type ProgramSettings = {
   showBeneficiaryNamesDefault: boolean;
   /** Disbursements above the limit wait for a second head. */
   approval: ApprovalSettings;
+  /** Kept aside for emergencies; not free to promise to new cases. */
+  emergencyReserve: number;
 };
 
 const DEFAULTS: ProgramSettings = {
@@ -22,6 +24,7 @@ const DEFAULTS: ProgramSettings = {
   caseNoPrefix: "C-",
   showBeneficiaryNamesDefault: false,
   approval: { enabled: false, limit: 0 },
+  emergencyReserve: 0,
 };
 
 /**
@@ -42,5 +45,6 @@ export async function readSettings(): Promise<ProgramSettings> {
       enabled: doc?.secondHeadApprovalEnabled ?? DEFAULTS.approval.enabled,
       limit: doc?.secondHeadApprovalLimit ?? DEFAULTS.approval.limit,
     },
+    emergencyReserve: doc?.emergencyReserveAmount ?? DEFAULTS.emergencyReserve,
   };
 }
