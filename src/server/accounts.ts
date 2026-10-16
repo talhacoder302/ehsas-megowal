@@ -1,40 +1,24 @@
 import "server-only";
 import { mongo, Types } from "mongoose";
 import type { AccountType } from "@/lib/contributions";
-import { connectDB } from "@/lib/db";
 import { AppError } from "@/lib/errors";
-import { COUNTED_APPROVAL_STATUSES } from "@/lib/payouts";
 import { requirePermission } from "@/lib/permissions";
 import type { Role } from "@/lib/roles";
 import { accountFormSchema } from "@/lib/validators";
-import { Account, Disbursement, Expense, Income, Transfer, User } from "@/models";
+import { Account, MonthClosing, User } from "@/models";
+import { accountBalance, movementsByAccount, NO_MOVEMENTS, type AccountMovements } from "./account-totals";
 import { logActivity } from "./activity-log";
 
-/** Everything that moves an account balance, in whole rupees. */
-export type AccountTotals = {
-  openingBalance: number;
-  /** Money received (cancelled payments left out). */
-  income: number;
-  /** Aid paid out (pending and rejected disbursements left out). */
-  disbursed: number;
-  expenses: number;
-  transfersIn: number;
-  transfersOut: number;
-};
-
-/** Balance = openingBalance + income − approved disbursements − expenses ± transfers. */
-export function accountBalance(t: AccountTotals): number {
-  return t.openingBalance + t.income - t.disbursed - t.expenses + t.transfersIn - t.transfersOut;
-}
-
-/** Taking `amount` out of an account with `balance` would leave it below zero. */
-export function wouldGoNegative(balance: number, amount: number): boolean {
-  return amount > balance;
-}
-
-export type AccountMovements = Omit<AccountTotals, "openingBalance">;
-
-const NO_MOVEMENTS: AccountMovements = { income: 0, disbursed: 0, expenses: 0, transfersIn: 0, transfersOut: 0 };
+export {
+  accountBalance,
+  assertBalanceCovers,
+  balanceOf,
+  movementsByAccount,
+  wouldGoNegative,
+  type AccountMovements,
+  type AccountTotals,
+  type DateRange,
+} from "./account-totals";
 
 export type AccountItem = AccountMovements & {
   id: string;
@@ -50,70 +34,6 @@ export type AccountItem = AccountMovements & {
 export type AccountOption = { id: string; name: string; type: AccountType; holderUserId: string | null; balance: number };
 
 export type StaffOption = { id: string; name: string; role: Role };
-
-// ---------------------------------------------------------------------------
-// Totals (internal: callers check the session)
-// ---------------------------------------------------------------------------
-
-type Sum = { _id: Types.ObjectId; total: number };
-
-async function sumBy(model: "income" | "disbursed" | "expenses" | "transfersIn" | "transfersOut", accountIds?: Types.ObjectId[]) {
-  const only = (field: string) => (accountIds ? { [field]: { $in: accountIds } } : {});
-  switch (model) {
-    case "income":
-      return Income.aggregate<Sum>([
-        { $match: { cancelled: false, ...only("accountId") } },
-        { $group: { _id: "$accountId", total: { $sum: "$amount" } } },
-      ]);
-    case "disbursed":
-      return Disbursement.aggregate<Sum>([
-        { $match: { approvalStatus: { $in: [...COUNTED_APPROVAL_STATUSES] }, ...only("accountId") } },
-        { $group: { _id: "$accountId", total: { $sum: "$amount" } } },
-      ]);
-    case "expenses":
-      return Expense.aggregate<Sum>([{ $match: only("accountId") }, { $group: { _id: "$accountId", total: { $sum: "$amount" } } }]);
-    case "transfersIn":
-      return Transfer.aggregate<Sum>([{ $match: only("toAccountId") }, { $group: { _id: "$toAccountId", total: { $sum: "$amount" } } }]);
-    case "transfersOut":
-      return Transfer.aggregate<Sum>([
-        { $match: only("fromAccountId") },
-        { $group: { _id: "$fromAccountId", total: { $sum: "$amount" } } },
-      ]);
-  }
-}
-
-/** Income, spending and transfers per account. */
-export async function movementsByAccount(accountIds?: Types.ObjectId[]): Promise<Map<string, AccountMovements>> {
-  await connectDB();
-  const keys = ["income", "disbursed", "expenses", "transfersIn", "transfersOut"] as const;
-  const sums = await Promise.all(keys.map((key) => sumBy(key, accountIds)));
-  const out = new Map<string, AccountMovements>();
-  keys.forEach((key, i) => {
-    for (const row of sums[i]) {
-      const id = row._id.toString();
-      out.set(id, { ...(out.get(id) ?? NO_MOVEMENTS), [key]: row.total });
-    }
-  });
-  return out;
-}
-
-/** Current balance of one account. Throws accountNotFound for unknown accounts. */
-export async function balanceOf(accountId: string): Promise<number> {
-  await connectDB();
-  if (!Types.ObjectId.isValid(accountId)) throw new AppError("accountNotFound");
-  const account = await Account.findById(accountId).select("openingBalance").lean();
-  if (!account) throw new AppError("accountNotFound");
-  const movements = (await movementsByAccount([account._id])).get(account._id.toString()) ?? NO_MOVEMENTS;
-  return accountBalance({ openingBalance: account.openingBalance, ...movements });
-}
-
-/**
- * Refuses to take `amount` out of an account that does not hold it, so no
- * action can leave a balance below zero.
- */
-export async function assertBalanceCovers(accountId: string, amount: number): Promise<void> {
-  if (wouldGoNegative(await balanceOf(accountId), amount)) throw new AppError("insufficientBalance");
-}
 
 // ---------------------------------------------------------------------------
 // Screens
@@ -180,6 +100,8 @@ export async function createAccount(input: unknown): Promise<string> {
     const holder = await User.exists({ _id: values.holderUserId, role: { $in: ["admin", "head"] }, status: "active" });
     if (!holder) throw new AppError("holderInvalid");
   }
+  // Closed months were balanced without this money; once one exists, money comes in as income or a transfer.
+  if (values.openingBalance > 0 && (await MonthClosing.exists({ status: "closed" }))) throw new AppError("openingBalanceAfterClosing");
   const taken = await Account.findOne({ name: values.name }).collation({ locale: "en", strength: 2 }).select("_id").lean();
   if (taken) throw new AppError("accountNameTaken");
 
