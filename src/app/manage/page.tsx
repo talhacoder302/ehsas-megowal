@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import { HourglassIcon, WalletIcon } from "lucide-react";
 import { PageHeader } from "@/components/manage/page-header";
+import { BudgetCard } from "@/components/manage/budget-card";
 import { PendingApprovals } from "@/components/manage/pending-approvals";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { formatRupees } from "@/lib/money";
 import { can } from "@/lib/permissions";
 import { listAccounts } from "@/server/accounts";
 import { requirePageUser } from "@/server/auth/guards";
+import { getBudget } from "@/server/closing";
 import { listPendingDisbursements } from "@/server/disbursements";
 import { readSettings } from "@/server/settings";
 
@@ -23,9 +25,11 @@ export default async function ManageDashboardPage() {
   const [t, locale, settings] = await Promise.all([getTranslations(), getLocale(), readSettings()]);
   const lang = locale === "ur" ? "ur" : "en";
   const canApprove = can(me.role, "disbursements.approve");
-  const [pending, accounts] = await Promise.all([
+  const seesMoney = can(me.role, "accounts.manage");
+  const [pending, accounts, budget] = await Promise.all([
     canApprove ? listPendingDisbursements() : Promise.resolve([]),
-    can(me.role, "accounts.manage") ? listAccounts() : Promise.resolve([]),
+    seesMoney ? listAccounts() : Promise.resolve([]),
+    seesMoney ? getBudget() : Promise.resolve(null),
   ]);
   const active = accounts.filter((a) => a.active);
   const total = active.reduce((sum, a) => sum + a.balance, 0);
@@ -33,6 +37,8 @@ export default async function ManageDashboardPage() {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
       <PageHeader title={t("manage.dashboard.title")} subtitle={t("manage.dashboard.subtitle")} />
+
+      {budget ? <BudgetCard budget={budget} lang={lang} canClose={can(me.role, "months.close")} /> : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         {canApprove ? (
