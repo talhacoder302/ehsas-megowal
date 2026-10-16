@@ -1,6 +1,6 @@
 import "server-only";
 import { Types } from "mongoose";
-import { buildLedger, type LedgerInput, type LedgerRow } from "@/lib/contributions";
+import { buildLedger, REGISTER_INCOME_SOURCE, type LedgerInput, type LedgerRow } from "@/lib/contributions";
 import { currentMonth, monthRange, type MonthKey } from "@/lib/dates";
 import { can, requireOwnMember } from "@/lib/permissions";
 import { ContributionBill, Income, Member } from "@/models";
@@ -52,6 +52,7 @@ export async function getMemberLedger(memberId: string): Promise<MemberLedger | 
       paidAmount: b.paidAmount,
       status: b.status,
       waivedReason: b.waivedReason,
+      imported: b.origin === "register",
     });
   }
   for (const i of incomes) {
@@ -67,6 +68,7 @@ export async function getMemberLedger(memberId: string): Promise<MemberLedger | 
       openingDuePaid: i.openingDuePaid,
       cancelled: i.cancelled,
       cancelReason: i.cancelReason,
+      imported: i.source === REGISTER_INCOME_SOURCE,
     });
   }
 

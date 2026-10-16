@@ -105,6 +105,11 @@ export function MemberLedgerView({ ledger, memberId, memberArea = false }: { led
                       {row.kind === "payment" && row.cancelled ? (
                         <Badge variant="destructive">{t("receipt.cancelled")}</Badge>
                       ) : null}
+                      {row.kind !== "opening" && row.imported ? (
+                        <Badge variant="outline" className="border-dashed text-muted-foreground">
+                          {t("setup.fromRegister")}
+                        </Badge>
+                      ) : null}
                     </div>
                     <span className="text-xs text-muted-foreground">
                       {row.kind === "bill" ? t("ledger.billDate") : formatDate(row.date, locale)}
@@ -143,7 +148,7 @@ export function MemberLedgerView({ ledger, memberId, memberArea = false }: { led
                     <span className="text-xs text-muted-foreground">{balanceText(row.balance)}</span>
                   </div>
                 </div>
-                {row.kind === "payment" && !row.cancelled && !canReceive ? (
+                {row.kind === "payment" && !row.cancelled && !row.imported && !canReceive ? (
                   <div className="flex gap-2">
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/receipt/${row.publicToken}`}>

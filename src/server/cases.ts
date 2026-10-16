@@ -37,8 +37,10 @@ export type CaseListItem = {
   description: string | null;
   estimatedAmount: number;
   approvedAmount: number | null;
-  /** Paid out so far (approved disbursements). */
+  /** Paid out so far (approved disbursements, plus the register amount for imported cases). */
   paidAmount: number;
+  /** An old completed case imported from the paper register. */
+  importedFromRegister: boolean;
   expectedDate: string | null;
   createdAt: string;
   lastUpdateAt: string;
@@ -86,7 +88,8 @@ function toListItem(c: LeanCase, canSeeDetails: boolean, paidAmount: number): Ca
       description: c.description,
       estimatedAmount: c.estimatedAmount,
       approvedAmount: c.approvedAmount ?? null,
-      paidAmount,
+      paidAmount: paidAmount + (c.registerPaidAmount ?? 0),
+      importedFromRegister: c.importedFromRegister ?? false,
       expectedDate: c.expectedDate ? c.expectedDate.toISOString() : null,
       createdAt: (c.createdAt ?? c._id.getTimestamp()).toISOString(),
       lastUpdateAt: c.lastUpdateAt.toISOString(),

@@ -2,6 +2,7 @@ import "server-only";
 import { Types } from "mongoose";
 import { connectDB } from "@/lib/db";
 import { AppError } from "@/lib/errors";
+import { NOT_FROM_REGISTER } from "@/lib/contributions";
 import { COUNTED_APPROVAL_STATUSES } from "@/lib/payouts";
 import { Account, Disbursement, Expense, Income, Transfer } from "@/models";
 
@@ -49,7 +50,7 @@ async function sumBy(
   switch (model) {
     case "income":
       return Income.aggregate<Sum>([
-        { $match: { cancelled: false, ...only("accountId") } },
+        { $match: { cancelled: false, ...NOT_FROM_REGISTER, ...only("accountId") } },
         { $group: { _id: "$accountId", total: { $sum: "$amount" } } },
       ]);
     case "disbursed":

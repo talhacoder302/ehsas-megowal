@@ -1,12 +1,12 @@
 import "server-only";
 import { Types } from "mongoose";
-import { canCancelPayment, totalDueNow, type PayableItem, type PaymentMethod } from "@/lib/contributions";
+import { canCancelPayment, REGISTER_INCOME_SOURCE, totalDueNow, type PayableItem, type PaymentMethod } from "@/lib/contributions";
 import { currentMonth, parseDateKey, type MonthKey } from "@/lib/dates";
 import { connectDB } from "@/lib/db";
 import { AppError } from "@/lib/errors";
 import { requirePermission } from "@/lib/permissions";
 import { paymentFormSchema, reasonFormSchema } from "@/lib/validators";
-import { Account, Income, Member, User, type IncomeDoc } from "@/models";
+import { Account, ContributionBill, Income, Member, User, type IncomeDoc } from "@/models";
 import { assertBalanceCovers, listAccountOptions, type AccountOption } from "./accounts";
 import { logActivity } from "./activity-log";
 import { assertDateOpen, isDateLocked } from "./closing-core";
@@ -37,6 +37,8 @@ export type PaymentListItem = {
   accountName: string;
   receivedByName: string;
   cancelled: boolean;
+  /** Imported from the paper register. */
+  imported: boolean;
 };
 
 export type ReceiptLine = { month: MonthKey | null; amount: number };
@@ -132,18 +134,28 @@ export async function cancelPayment(incomeId: string, input: unknown): Promise<v
   const { reason } = reasonFormSchema.parse(input);
   if (!Types.ObjectId.isValid(incomeId)) throw new AppError("notFound");
 
-  const income = await Income.findById(incomeId).select("receivedBy cancelled accountId amount date").lean();
+  const income = await Income.findById(incomeId).select("receivedBy cancelled accountId amount date source").lean();
   if (!income) throw new AppError("notFound");
   if (income.cancelled) throw new AppError("alreadyCancelled");
   if (!canCancelPayment(actor, { receivedBy: income.receivedBy.toString(), cancelled: income.cancelled })) {
     throw new AppError("cannotCancelOwnPayment");
   }
   await assertDateOpen(income.date);
+  const imported = income.source === REGISTER_INCOME_SOURCE;
   // Cancelling takes the money back out of the account; it must still be there.
-  await assertBalanceCovers(income.accountId.toString(), income.amount);
+  // Register imports never entered an account (the opening balance holds that money).
+  if (!imported) await assertBalanceCovers(income.accountId.toString(), income.amount);
 
   const cancelled = await cancelIncome(incomeId, actor.id, reason);
   if (!cancelled) throw new AppError("alreadyCancelled");
+  if (imported) {
+    // The register bill only existed to show the month as paid; without the payment it is not owed
+    // (unpaid months from the paper era are in the opening due), so it is waived with the same reason.
+    await ContributionBill.updateMany(
+      { _id: { $in: cancelled.billIds }, origin: "register", paidAmount: 0 },
+      { $set: { status: "waived", waivedReason: reason, waivedBy: new Types.ObjectId(actor.id), waivedAt: new Date() } },
+    );
+  }
 
   await logActivity({
     actorId: actor.id,
@@ -206,6 +218,7 @@ export async function listPayments(limit = 300): Promise<PaymentListItem[]> {
       accountName: accounts.get(i.accountId.toString()) ?? "",
       receivedByName: users.get(i.receivedBy.toString()) ?? "",
       cancelled: i.cancelled,
+      imported: i.source === REGISTER_INCOME_SOURCE,
     };
   });
 }

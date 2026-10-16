@@ -18,6 +18,14 @@ export type AccountType = (typeof ACCOUNT_TYPES)[number];
 export const INCOME_SOURCES = ["member_contribution", "opening_balance", "other"] as const;
 export type IncomeSource = (typeof INCOME_SOURCES)[number];
 
+/**
+ * Payments imported from the paper register. Their money is already inside the
+ * accounts' opening balances, so they show in member ledgers but are left out
+ * of every cash total (balances, month closing, reports, chart).
+ */
+export const REGISTER_INCOME_SOURCE = "opening_balance" as const satisfies IncomeSource;
+export const NOT_FROM_REGISTER = { source: { $ne: REGISTER_INCOME_SOURCE } } as const;
+
 /** How many months past the current one a member may pay in advance. */
 export const ADVANCE_MONTHS_LIMIT = 12;
 
@@ -209,7 +217,18 @@ export function canCancelPayment(
 
 export type LedgerInput =
   | { kind: "opening"; id: string; date: string; amount: number }
-  | { kind: "bill"; id: string; date: string; month: MonthKey; amount: number; paidAmount: number; status: BillStatus; waivedReason: string }
+  | {
+      kind: "bill";
+      id: string;
+      date: string;
+      month: MonthKey;
+      amount: number;
+      paidAmount: number;
+      status: BillStatus;
+      waivedReason: string;
+      /** Imported from the paper register. */
+      imported: boolean;
+    }
   | {
       kind: "payment";
       id: string;
@@ -223,6 +242,8 @@ export type LedgerInput =
       openingDuePaid: number;
       cancelled: boolean;
       cancelReason: string;
+      /** Imported from the paper register (no real receipt). */
+      imported: boolean;
     };
 
 export type LedgerRow = LedgerInput & {

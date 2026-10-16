@@ -35,7 +35,7 @@ export function PaymentsView({ payments }: { payments: PaymentListItem[] }) {
 
   const thisMonth = currentMonth();
   const monthTotal = payments
-    .filter((p) => !p.cancelled && monthKey(p.date) === thisMonth)
+    .filter((p) => !p.cancelled && !p.imported && monthKey(p.date) === thisMonth)
     .reduce((sum, p) => sum + p.amount, 0);
 
   const months = (p: PaymentListItem) => {
@@ -120,6 +120,11 @@ export function PaymentsView({ payments }: { payments: PaymentListItem[] }) {
                         </span>
                         <span>{formatDate(p.date, locale)}</span>
                         {p.cancelled ? <Badge variant="destructive">{t("receipt.cancelled")}</Badge> : null}
+                        {p.imported ? (
+                          <Badge variant="outline" className="border-dashed text-muted-foreground">
+                            {t("setup.fromRegister")}
+                          </Badge>
+                        ) : null}
                       </div>
                       <span className="truncate font-medium">
                         {p.memberName}{" "}

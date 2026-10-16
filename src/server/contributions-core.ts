@@ -167,11 +167,14 @@ export async function memberPayables(memberId: string): Promise<{ member: Payabl
   if (!member) return null;
 
   const [bills, rates] = await Promise.all([
-    ContributionBill.find({ memberId: member._id }).select("month amount paidAmount status").lean(),
+    ContributionBill.find({ memberId: member._id }).select("month amount paidAmount status origin").lean(),
     loadRates(),
   ]);
   const month = currentMonth();
-  const lastBilledMonth = bills.reduce<MonthKey | null>((max, b) => (max === null || b.month > max ? b.month : max), null);
+  // Register bills are paper-era history: new months are offered after the latest bill made in the app.
+  const lastBilledMonth = bills
+    .filter((b) => b.origin !== "register")
+    .reduce<MonthKey | null>((max, b) => (max === null || b.month > max ? b.month : max), null);
 
   const items = buildPayableItems({
     openingDue: member.openingDue,

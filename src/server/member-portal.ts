@@ -1,5 +1,6 @@
 import "server-only";
 import { Types } from "mongoose";
+import { NOT_FROM_REGISTER } from "@/lib/contributions";
 import { currentMonth, monthsBetween, type MonthKey } from "@/lib/dates";
 import { AppError } from "@/lib/errors";
 import { requireOwnMember, requireUser } from "@/lib/permissions";
@@ -45,7 +46,7 @@ export async function getMemberHome(): Promise<MemberHome> {
     Member.findById(memberId).select("name memberNo openingDue").lean(),
     billDuesByMember(now, new Types.ObjectId(memberId)),
     ContributionBill.find({ memberId, month: { $gte: `${year}-01`, $lte: now } }).select("month status").sort({ month: 1 }).lean(),
-    Income.findOne({ memberId, cancelled: false }).sort({ date: -1, createdAt: -1 }).lean(),
+    Income.findOne({ memberId, cancelled: false, ...NOT_FROM_REGISTER }).sort({ date: -1, createdAt: -1 }).lean(),
   ]);
   if (!member) throw new AppError("memberNotFound");
 
