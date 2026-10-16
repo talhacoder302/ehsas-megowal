@@ -1,42 +1,10 @@
 import "server-only";
-import path from "node:path";
-import type { Style } from "@react-pdf/types";
-import { Document, Font, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
+import { Document, Page, StyleSheet, View, renderToBuffer } from "@react-pdf/renderer";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/config";
 import { formatDate, formatDateNumeric, formatMonth } from "@/lib/dates";
-import { formatNumber } from "@/lib/money";
 import type { ReceiptView } from "@/server/payments";
-
-// Urdu uses Noto Naskh Arabic UI. react-pdf's text engine cannot shape Nastaliq
-// (it runs out of memory), and with plain Naskh or Sans Arabic it drops the
-// first letter of many words; the UI variant renders correctly.
-// Each label and value is its own <Text> so Urdu and Latin never mix in one run.
-const URDU_FONT = "NotoNaskh";
-const LATIN_FONT = "Helvetica";
-
-let fontsRegistered = false;
-function registerFonts() {
-  if (fontsRegistered) return;
-  const dir = path.join(process.cwd(), "assets", "fonts");
-  Font.register({
-    family: URDU_FONT,
-    fonts: [
-      { src: path.join(dir, "NotoNaskhArabicUI-Regular.ttf") },
-      { src: path.join(dir, "NotoNaskhArabicUI-Bold.ttf"), fontWeight: 700 },
-    ],
-  });
-  // Never break words with hyphens (it splits Urdu words).
-  Font.registerHyphenationCallback((word) => [word]);
-  fontsRegistered = true;
-}
-
-/** Text with no Arabic-script letters can use the Latin font. */
-function isLatin(text: string): boolean {
-  return !/[؀-ۿ]/.test(text);
-}
-
-const colors = { ink: "#1c1917", muted: "#6b6460", line: "#e7e2dd", brand: "#0f6b47", danger: "#b42318", soft: "#f4f1ee" };
+import { colors, LATIN_FONT, Money, registerFonts, T } from "./pdf-kit";
 
 const styles = StyleSheet.create({
   page: { padding: 28, fontSize: 10, color: colors.ink, fontFamily: LATIN_FONT },
@@ -88,32 +56,6 @@ async function receiptLabels(locale: Locale) {
       easypaisa: t("paymentMethod.easypaisa"),
     },
   };
-}
-
-// Type only; @react-pdf/types ships with @react-pdf/renderer.
-type Styles = Style | Style[];
-
-function styleList(style: Styles | undefined): Style[] {
-  return Array.isArray(style) ? style : [style ?? {}];
-}
-
-const urduText: Style = { fontFamily: URDU_FONT };
-const latinText: Style = { fontFamily: LATIN_FONT };
-
-/** A piece of text in the font its script needs. */
-function T({ children, style }: { children: string; style?: Styles }) {
-  return <Text style={[isLatin(children) ? latinText : urduText, ...styleList(style)]}>{children}</Text>;
-}
-
-/** "Rs. 1,500" in English; "1,500" and "روپے" as two pieces in Urdu. */
-function Money({ amount, rtl, rupees, style }: { amount: number; rtl: boolean; rupees: string; style?: Styles }) {
-  if (!rtl) return <T style={style}>{`Rs. ${formatNumber(amount)}`}</T>;
-  return (
-    <View style={{ flexDirection: "row-reverse", gap: 3, alignItems: "center" }}>
-      <T style={style}>{formatNumber(amount)}</T>
-      <T style={style}>{rupees}</T>
-    </View>
-  );
 }
 
 function Row({ label, value, rtl }: { label: string; value: string; rtl: boolean }) {
