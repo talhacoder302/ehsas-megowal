@@ -207,7 +207,9 @@
       "joinDateHint": "Monthly contributions start from this month.",
       "notes": "Notes",
       "notesHint": "Optional. Anything the heads should remember.",
-      "create": "Add member"
+      "create": "Add member",
+      "email": "Email (optional)",
+      "emailHint": "Used only to send the monthly report by email."
     },
     "created": "Member {memberNo} added.",
     "updated": "Member saved.",
@@ -228,7 +230,8 @@
       "address": "Address",
       "joinDate": "Join date",
       "notes": "Notes",
-      "status": "Status"
+      "status": "Status",
+      "email": "Email"
     },
     "statusSince": "since {date}",
     "status": {
@@ -783,7 +786,8 @@
     "photoType": "Only JPG, PNG or WebP photos can be uploaded.",
     "photoTooLarge": "The photo is too large even after making it smaller.",
     "sameAccount": "Choose two different accounts.",
-    "countNoteRequired": "The count does not match. Write a short note about the difference."
+    "countNoteRequired": "The count does not match. Write a short note about the difference.",
+    "emailInvalid": "Enter a valid email address."
   },
   "serverErrors": {
     "unauthenticated": "Your session has ended. Please log in again.",
@@ -876,9 +880,22 @@
     },
     "home": {
       "greeting": "Assalam-o-Alaikum",
-      "subtitle": "Your account summary will show here.",
-      "emptyTitle": "Nothing to show yet",
-      "emptyBody": "Your contributions and pending months will show here once your account is set up."
+      "greetingName": "Assalam-o-Alaikum, {name}",
+      "subtitle": "Your contribution at a glance",
+      "pendingTitle": "My pending amount",
+      "nothingPending": "Nothing pending. JazakAllah!",
+      "pendingHint": "You can pay any of the heads. You will get a receipt on WhatsApp.",
+      "monthsPaidTitle": "Months paid in {year}",
+      "monthsPaidCount": "{paid} of {billed} months",
+      "noMonthsYet": "No months billed this year yet.",
+      "latestReceiptTitle": "Latest receipt",
+      "noReceipt": "No payment recorded yet.",
+      "viewReceipt": "View receipt",
+      "downloadPdf": "PDF",
+      "allPayments": "All my payments",
+      "reportsLink": "Monthly reports",
+      "casesLink": "Aid cases",
+      "notBilled": "Not billed"
     }
   },
   "errors": {
@@ -952,5 +969,68 @@
     "reopenedToast": "{month} is open again.",
     "historyTitle": "Reopened before",
     "historyRow": "Reopened by {name} on {date}. Closing balance was {amount}."
+  },
+  "memberPayments": {
+    "title": "My contributions",
+    "subtitle": "Every bill and payment, with receipts",
+    "receipt": "Receipt",
+    "pdf": "PDF"
+  },
+  "reports": {
+    "title": "Monthly report",
+    "subtitle": "Collection, aid and balance for each month",
+    "month": "Month",
+    "version": "Version",
+    "headsVersion": "Heads copy",
+    "membersVersion": "Members copy",
+    "membersVersionHint": "Families' names are hidden unless the family agreed to show them.",
+    "provisional": "This month is not closed yet. The figures may still change.",
+    "closedOn": "Closed on {date}",
+    "summaryTitle": "Summary",
+    "opening": "Opening balance",
+    "collection": "Collection",
+    "aidGiven": "Aid given",
+    "expenses": "General expenses",
+    "closing": "Closing balance",
+    "committed": "Committed to open cases",
+    "reserve": "Emergency reserve",
+    "free": "Free balance",
+    "collectionTitle": "Collection",
+    "membersPaid": "{paid} of {total} members paid this month",
+    "payments": "{count} payments received",
+    "collectionHint": "Members who paid this month's contribution in full, out of the members active this month.",
+    "aidTitle": "Aid given",
+    "noAid": "No aid was paid this month.",
+    "nameHidden": "Name hidden",
+    "expensesTitle": "General expenses",
+    "noExpenses": "No general expenses this month.",
+    "expenseCount": "{count} entries",
+    "openCasesTitle": "Open cases",
+    "openCasesHint": "Status as of today, with the last reason the heads wrote.",
+    "noOpenCases": "No open cases right now.",
+    "approvedPaid": "Approved {approved} · paid {paid}",
+    "notApproved": "Not approved yet",
+    "chartTitle": "Collection and aid given",
+    "chartSubtitle": "Last 12 months",
+    "chartCollection": "Collection",
+    "chartAid": "Aid given",
+    "chartEmpty": "Nothing to show yet.",
+    "download": "Download PDF",
+    "pdfEnglish": "English",
+    "pdfUrdu": "اردو",
+    "shareWhatsApp": "Share on WhatsApp",
+    "shareHint": "Opens WhatsApp with a short Roman Urdu summary and the report link. Pick the village group.",
+    "emailButton": "Email to members",
+    "emailTitle": "Email the {month} report?",
+    "emailBody": "{count} members with an email address will get the report link. Members without an email are skipped.",
+    "emailConfirm": "Send emails",
+    "emailSent": "Report emailed to {count} members.",
+    "emailFailed": "Sent to {sent}. {failed} could not be sent; try again later.",
+    "emailNone": "No member has an email address yet. Add one on the member's page.",
+    "emailOff": "Email is not set up, so reports can only be shared on WhatsApp.",
+    "pdfTitle": "Monthly report",
+    "pdfGenerated": "Made on {date}",
+    "pdfComputerMade": "This report was made by computer from the fund's records.",
+    "chartTable": "Show as a table"
   }
 }

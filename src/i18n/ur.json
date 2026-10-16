@@ -207,7 +207,9 @@
       "joinDateHint": "ماہانہ چندہ اسی مہینے سے شروع ہوگا۔",
       "notes": "نوٹ",
       "notesHint": "اختیاری۔ کوئی بھی بات جو ذمہ داران کو یاد رکھنی ہو۔",
-      "create": "ممبر شامل کریں"
+      "create": "ممبر شامل کریں",
+      "email": "ای میل (اختیاری)",
+      "emailHint": "صرف ماہانہ رپورٹ ای میل کرنے کے لیے۔"
     },
     "created": "ممبر {memberNo} شامل ہو گیا۔",
     "updated": "ممبر محفوظ ہو گیا۔",
@@ -228,7 +230,8 @@
       "address": "پتہ",
       "joinDate": "شمولیت کی تاریخ",
       "notes": "نوٹ",
-      "status": "اسٹیٹس"
+      "status": "اسٹیٹس",
+      "email": "ای میل"
     },
     "statusSince": "{date} سے",
     "status": {
@@ -783,7 +786,8 @@
     "photoType": "صرف JPG، PNG یا WebP تصویریں اپلوڈ ہو سکتی ہیں۔",
     "photoTooLarge": "تصویر چھوٹی کرنے کے بعد بھی بہت بڑی ہے۔",
     "sameAccount": "دو مختلف کھاتے منتخب کریں۔",
-    "countNoteRequired": "گنتی برابر نہیں۔ فرق کے بارے میں مختصر نوٹ لکھیں۔"
+    "countNoteRequired": "گنتی برابر نہیں۔ فرق کے بارے میں مختصر نوٹ لکھیں۔",
+    "emailInvalid": "درست ای میل لکھیں۔"
   },
   "serverErrors": {
     "unauthenticated": "آپ کا سیشن ختم ہو گیا ہے۔ دوبارہ لاگ اِن کریں۔",
@@ -876,9 +880,22 @@
     },
     "home": {
       "greeting": "السلام علیکم",
-      "subtitle": "آپ کے کھاتے کا خلاصہ یہاں نظر آئے گا۔",
-      "emptyTitle": "ابھی کچھ موجود نہیں",
-      "emptyBody": "آپ کا کھاتہ بننے کے بعد آپ کی ادائیگیاں اور باقی مہینے یہاں نظر آئیں گے۔"
+      "greetingName": "السلام علیکم، {name}",
+      "subtitle": "آپ کے چندے کا خلاصہ",
+      "pendingTitle": "میری باقی رقم",
+      "nothingPending": "کچھ باقی نہیں۔ جزاک اللہ!",
+      "pendingHint": "آپ کسی بھی ذمہ دار کو ادا کر سکتے ہیں۔ رسید واٹس ایپ پر مل جائے گی۔",
+      "monthsPaidTitle": "{year} میں ادا شدہ مہینے",
+      "monthsPaidCount": "ادا: {billed} میں سے {paid}",
+      "noMonthsYet": "اس سال ابھی کوئی بل نہیں بنا۔",
+      "latestReceiptTitle": "آخری رسید",
+      "noReceipt": "ابھی کوئی ادائیگی درج نہیں۔",
+      "viewReceipt": "رسید دیکھیں",
+      "downloadPdf": "PDF",
+      "allPayments": "میری تمام ادائیگیاں",
+      "reportsLink": "ماہانہ رپورٹس",
+      "casesLink": "امدادی کیس",
+      "notBilled": "بل نہیں بنا"
     }
   },
   "errors": {
@@ -952,5 +969,68 @@
     "reopenedToast": "{month} دوبارہ کھل گیا۔",
     "historyTitle": "پہلے دوبارہ کھولا گیا",
     "historyRow": "{name} نے {date} کو دوبارہ کھولا۔ اختتامی رقم {amount} تھی۔"
+  },
+  "memberPayments": {
+    "title": "میرا چندہ",
+    "subtitle": "ہر بل اور ہر ادائیگی، رسیدوں کے ساتھ",
+    "receipt": "رسید",
+    "pdf": "PDF"
+  },
+  "reports": {
+    "title": "ماہانہ رپورٹ",
+    "subtitle": "ہر مہینے کی وصولی، امداد اور رقم",
+    "month": "مہینہ",
+    "version": "نسخہ",
+    "headsVersion": "ذمہ داران کا نسخہ",
+    "membersVersion": "ممبران کا نسخہ",
+    "membersVersionHint": "گھرانوں کے نام چھپے ہیں، سوائے ان کے جنہوں نے نام دکھانے کی اجازت دی۔",
+    "provisional": "یہ مہینہ ابھی بند نہیں ہوا۔ اعداد بدل سکتے ہیں۔",
+    "closedOn": "{date} کو بند ہوا",
+    "summaryTitle": "خلاصہ",
+    "opening": "ابتدائی رقم",
+    "collection": "وصولی",
+    "aidGiven": "دی گئی امداد",
+    "expenses": "عام اخراجات",
+    "closing": "اختتامی رقم",
+    "committed": "کھلے کیسوں کے لیے وعدہ شدہ",
+    "reserve": "ہنگامی رقم",
+    "free": "دستیاب رقم",
+    "collectionTitle": "وصولی",
+    "membersPaid": "اس مہینے ادائیگی: {total} میں سے {paid} ممبران",
+    "payments": "وصول شدہ ادائیگیاں: {count}",
+    "collectionHint": "اس مہینے کے فعال ممبران میں سے جنہوں نے اس مہینے کا پورا چندہ دیا۔",
+    "aidTitle": "دی گئی امداد",
+    "noAid": "اس مہینے کوئی امداد نہیں دی گئی۔",
+    "nameHidden": "نام پوشیدہ",
+    "expensesTitle": "عام اخراجات",
+    "noExpenses": "اس مہینے کوئی عام خرچ نہیں ہوا۔",
+    "expenseCount": "اندراج: {count}",
+    "openCasesTitle": "کھلے کیس",
+    "openCasesHint": "آج کی حالت، ذمہ داران کی لکھی آخری وجہ کے ساتھ۔",
+    "noOpenCases": "اس وقت کوئی کیس کھلا نہیں۔",
+    "approvedPaid": "منظور {approved}، ادا {paid}",
+    "notApproved": "ابھی منظور نہیں",
+    "chartTitle": "وصولی اور دی گئی امداد",
+    "chartSubtitle": "پچھلے 12 مہینے",
+    "chartCollection": "وصولی",
+    "chartAid": "امداد",
+    "chartEmpty": "ابھی دکھانے کو کچھ نہیں۔",
+    "download": "PDF ڈاؤن لوڈ کریں",
+    "pdfEnglish": "English",
+    "pdfUrdu": "اردو",
+    "shareWhatsApp": "واٹس ایپ پر بھیجیں",
+    "shareHint": "واٹس ایپ رومن اردو کے مختصر خلاصے اور رپورٹ کے لنک کے ساتھ کھلے گا۔ گاؤں کا گروپ چنیں۔",
+    "emailButton": "ممبران کو ای میل کریں",
+    "emailTitle": "{month} کی رپورٹ ای میل کریں؟",
+    "emailBody": "ای میل والے {count} ممبران کو رپورٹ کا لنک جائے گا۔ جن کی ای میل نہیں، انہیں چھوڑ دیا جائے گا۔",
+    "emailConfirm": "ای میل بھیجیں",
+    "emailSent": "رپورٹ {count} ممبران کو ای میل ہو گئی۔",
+    "emailFailed": "{sent} کو بھیج دی گئی۔ {failed} نہیں جا سکیں، بعد میں دوبارہ کوشش کریں۔",
+    "emailNone": "ابھی کسی ممبر کی ای میل درج نہیں۔ ممبر کے صفحے پر شامل کریں۔",
+    "emailOff": "ای میل سیٹ نہیں، اس لیے رپورٹ صرف واٹس ایپ پر بھیجی جا سکتی ہے۔",
+    "pdfTitle": "ماہانہ رپورٹ",
+    "pdfGenerated": "تاریخ: {date}",
+    "pdfComputerMade": "یہ رپورٹ فنڈ کے ریکارڈ سے کمپیوٹر کے ذریعے بنی ہے۔",
+    "chartTable": "جدول کی شکل میں دیکھیں"
   }
 }
