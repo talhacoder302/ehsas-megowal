@@ -19,6 +19,8 @@ type ReceiptActionsProps = {
   whatsappUrl: string | null;
   cancelled: boolean;
   canCancel: boolean;
+  /** Dated in a closed month. */
+  locked: boolean;
 };
 
 export function ReceiptActions(props: ReceiptActionsProps) {
@@ -67,7 +69,7 @@ export function ReceiptActions(props: ReceiptActionsProps) {
         ) : null}
       </div>
       {!props.cancelled && !props.canCancel ? (
-        <p className="text-xs text-muted-foreground">{t("receipt.cancelOwnHint")}</p>
+        <p className="text-xs text-muted-foreground">{props.locked ? t("receipt.cancelLockedHint") : t("receipt.cancelOwnHint")}</p>
       ) : null}
       {!props.whatsappUrl && !props.cancelled ? (
         <p className="text-xs text-muted-foreground">{t("receipt.noMobile")}</p>

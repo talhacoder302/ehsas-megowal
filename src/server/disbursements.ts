@@ -16,6 +16,7 @@ import { disbursementFormSchema, reasonFormSchema } from "@/lib/validators";
 import { Account, AidCase, Disbursement, User, type DisbursementDoc } from "@/models";
 import { assertBalanceCovers } from "./accounts";
 import { logActivity } from "./activity-log";
+import { assertDateOpen } from "./closing-core";
 import { payoutsByCase } from "./payout-totals";
 import { readSettings } from "./settings";
 import { photoViewUrl } from "./storage";
@@ -141,6 +142,7 @@ export async function recordDisbursement(caseId: string, input: unknown): Promis
 
   const date = parseDateKey(values.date);
   if (!date) throw new AppError("invalidInput");
+  await assertDateOpen(date);
   const created = await Disbursement.create({
     caseId: aidCase._id,
     amount: values.amount,
@@ -177,6 +179,8 @@ async function findPendingForDecision(disbursementId: string, actor: Viewer) {
   if (!canApproveDisbursement(actor, { paidBy: d.paidBy.toString(), approvalStatus: d.approvalStatus })) {
     throw new AppError("cannotApproveOwn");
   }
+  // A month cannot be closed with payments waiting, but check anyway.
+  await assertDateOpen(d.date);
   return d;
 }
 

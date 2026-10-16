@@ -392,7 +392,8 @@
     "cancelBody": "The payment stays in the records marked as cancelled, and the months it paid become unpaid again.",
     "cancelPlaceholder": "For example: entered twice by mistake",
     "cancelledToast": "Payment cancelled.",
-    "cancelOwnHint": "You received this payment, so only the other head or the admin can cancel it."
+    "cancelOwnHint": "You received this payment, so only the other head or the admin can cancel it.",
+    "cancelLockedHint": "This payment is in a closed month, so it cannot be cancelled. The admin can reopen the month."
   },
   "pending": {
     "title": "Pending dues",
@@ -654,7 +655,16 @@
     "paidTo": "to {name}",
     "enteredBy": "Entered by {name}",
     "balancesTitle": "Money in hand",
-    "openAccounts": "Open accounts"
+    "openAccounts": "Open accounts",
+    "budgetTitle": "Budget",
+    "budgetBalance": "Money in all accounts",
+    "budgetCommitted": "Promised to open cases",
+    "budgetReserve": "Emergency reserve",
+    "budgetFree": "Free to spend",
+    "budgetFreeHint": "Money in accounts minus what is promised to open cases and the emergency reserve.",
+    "budgetNegative": "More money is promised than the fund holds. Hold new approvals until more is collected.",
+    "closeReminder": "{month} has ended and is not closed yet.",
+    "closeNow": "Close it now"
   },
   "accounts": {
     "title": "Accounts",
@@ -712,16 +722,24 @@
       "emptyTitle": "No rates yet",
       "emptyBody": "Add the monthly contribution rate before generating bills."
     },
-    "approvals": {
-      "title": "Second-head approval",
-      "subtitle": "Large aid payments need a second person",
-      "onShort": "On, above {limit}",
-      "offShort": "Off",
+    "fund": {
+      "title": "Fund rules",
+      "subtitle": "Emergency reserve, second-head approval and privacy",
+      "short": "Reserve {reserve} · {approval}",
+      "approvalOnShort": "approval above {limit}",
+      "approvalOffShort": "no second approval",
+      "reserveTitle": "Emergency reserve",
+      "reserve": "Emergency reserve (Rs.)",
+      "reserveHint": "Kept aside for sudden needs like a death in a family. It is not counted as free money on the dashboard or in the month closing.",
+      "approvalTitle": "Second-head approval",
       "enabled": "Ask a second head to approve large payments",
       "enabledHint": "Payments above the limit wait until another head (not the one who entered it) or the admin approves them.",
       "limit": "Limit (Rs.)",
       "limitHint": "Payments above this amount need approval.",
-      "saved": "Approval settings saved."
+      "privacyTitle": "Privacy",
+      "namesDefault": "Show beneficiary names to members on new cases",
+      "namesDefaultHint": "Only the starting position of the switch on the new case form. Each case can still be changed, and existing cases are not affected.",
+      "saved": "Fund rules saved."
     }
   },
   "validation": {
@@ -764,7 +782,8 @@
     "photoInvalid": "The photo is not valid. Please upload it again.",
     "photoType": "Only JPG, PNG or WebP photos can be uploaded.",
     "photoTooLarge": "The photo is too large even after making it smaller.",
-    "sameAccount": "Choose two different accounts."
+    "sameAccount": "Choose two different accounts.",
+    "countNoteRequired": "The count does not match. Write a short note about the difference."
   },
   "serverErrors": {
     "unauthenticated": "Your session has ended. Please log in again.",
@@ -812,7 +831,16 @@
     "alreadyDecided": "This payment has already been approved or rejected.",
     "cannotApproveOwn": "You entered this payment, so another head or the admin has to approve it.",
     "caseNotApproved": "Only an open, approved case has an approved amount to change.",
-    "approvedBelowPaid": "The approved amount cannot be less than what is already paid or waiting for approval."
+    "approvedBelowPaid": "The approved amount cannot be less than what is already paid or waiting for approval.",
+    "monthLocked": "This date is in a month that is already closed. Use a later date, or ask the admin to reopen the month.",
+    "monthAlreadyClosed": "This month is already closed.",
+    "monthNotEnded": "A month can only be closed after it has ended.",
+    "closePreviousFirst": "Close the earlier months first, in order.",
+    "pendingApprovalsInMonth": "Some aid payments in this month still wait for a second head. Approve or reject them first.",
+    "monthNotClosed": "This month is not closed.",
+    "reopenLatestOnly": "Only the latest closed month can be reopened. Reopen the later months first.",
+    "balanceChangedMeanwhile": "Money in this account changed while you were counting. Check the new balance and save the count again.",
+    "openingBalanceAfterClosing": "A month is already closed, so a new account must start at Rs. 0. Bring money in with a transfer or a payment."
   },
   "manage": {
     "areaName": "Management",
@@ -827,7 +855,9 @@
       "reports": "Reports",
       "users": "Users",
       "settings": "Settings",
-      "profile": "Profile"
+      "profile": "Profile",
+      "cashCount": "Cash count",
+      "closing": "Month closing"
     },
     "dashboard": {
       "title": "Dashboard",
@@ -856,5 +886,71 @@
     "body": "Please try again. If it keeps happening, tell the admin.",
     "notFoundTitle": "Page not found",
     "notFoundBody": "This page does not exist or has been moved."
+  },
+  "cashCount": {
+    "title": "Cash count",
+    "subtitle": "Count the money and compare it with what the app says",
+    "account": "Account",
+    "systemBalance": "The app says",
+    "counted": "Counted amount (Rs.)",
+    "countedHint": "Count the notes and coins (or check the bank or wallet balance) and enter the total.",
+    "difference": "Difference",
+    "match": "Matches",
+    "short": "Short by {amount}",
+    "extra": "Extra {amount}",
+    "note": "Note",
+    "notePlaceholder": "For example: Rs. 200 change not returned yet",
+    "noteHint": "Needed when the count does not match.",
+    "save": "Save count",
+    "saved": "Count saved.",
+    "savedDifference": "Count saved. The difference is recorded.",
+    "historyTitle": "Past counts",
+    "emptyTitle": "No counts yet",
+    "emptyBody": "Count the cash at least once a month, before closing the month.",
+    "countedBy": "Counted by {name}",
+    "appShort": "App",
+    "countedShort": "Counted",
+    "noAccounts": "Add an account first."
+  },
+  "closing": {
+    "title": "Month closing",
+    "subtitle": "Close each month after it ends. A closed month is locked.",
+    "month": "Month",
+    "stateClosed": "Closed",
+    "stateReopened": "Reopened",
+    "stateOpen": "Open",
+    "opening": "Opening balance",
+    "openingFromPrevious": "Closing balance of {month}",
+    "openingFromAccounts": "Account opening balances plus earlier entries",
+    "income": "Total income",
+    "disbursed": "Aid paid (approved only)",
+    "expenses": "Expenses",
+    "closing": "Closing balance",
+    "committed": "Committed to open cases",
+    "committedHint": "Approved but not yet paid, at month end.",
+    "reserve": "Emergency reserve",
+    "free": "Free balance",
+    "freeHint": "Closing balance − committed − reserve",
+    "freeNegative": "The free balance is below zero: more money is promised than the fund holds.",
+    "accountsTitle": "Balance by account at month end",
+    "closedBy": "Closed by {name} on {date}",
+    "closedLocked": "Nothing dated in this month or earlier can be added or cancelled.",
+    "liveNote": "These figures are live. They are saved when the month is closed.",
+    "close": "Close {month}",
+    "closeTitle": "Close {month}?",
+    "closeBody": "The figures will be saved and nothing dated in {month} or earlier can be added or cancelled afterwards. Only the admin can reopen it.",
+    "closedToast": "{month} is closed.",
+    "blockNotEnded": "{month} has not ended yet. It can be closed from the 1st of next month.",
+    "blockClosePrevious": "Months close in order. Close {month} first.",
+    "blockPending": "Aid payments waiting for approval up to this month: {count}. Approve or reject them before closing.",
+    "countHint": "Do a cash count before closing so the money in hand matches the books.",
+    "countLink": "Count cash",
+    "reopen": "Reopen month",
+    "reopenTitle": "Reopen {month}?",
+    "reopenBody": "Entries dated in {month} can be added or cancelled again until a head closes it again. The reason and the old figures are kept.",
+    "reopenPlaceholder": "For example: a payment was entered with the wrong date",
+    "reopenedToast": "{month} is open again.",
+    "historyTitle": "Reopened before",
+    "historyRow": "Reopened by {name} on {date}. Closing balance was {amount}."
   }
 }

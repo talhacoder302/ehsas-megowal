@@ -77,6 +77,7 @@ export default async function ReceiptPage({ params, searchParams }: Props) {
         whatsappUrl={whatsappUrl}
         cancelled={receipt.cancelled}
         canCancel={receipt.canCancel}
+        locked={receipt.locked}
       />
 
       {receipt.member.id ? (

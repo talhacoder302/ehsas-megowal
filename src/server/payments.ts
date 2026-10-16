@@ -9,6 +9,7 @@ import { paymentFormSchema, reasonFormSchema } from "@/lib/validators";
 import { Account, Income, Member, User, type IncomeDoc } from "@/models";
 import { assertBalanceCovers, listAccountOptions, type AccountOption } from "./accounts";
 import { logActivity } from "./activity-log";
+import { assertDateOpen, isDateLocked } from "./closing-core";
 import { applyPayment, cancelIncome, memberPayables, type PayableMember } from "./contributions-core";
 import { readSettings } from "./settings";
 
@@ -66,6 +67,8 @@ export type StaffReceiptView = ReceiptView & {
   memberMobile: string;
   accountName: string;
   canCancel: boolean;
+  /** Dated in a closed month: cannot be cancelled until the admin reopens it. */
+  locked: boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -93,6 +96,7 @@ export async function receivePayment(input: unknown): Promise<{ id: string; rece
   const values = paymentFormSchema.parse(input);
   const date = parseDateKey(values.date);
   if (!date) throw new AppError("invalidInput");
+  await assertDateOpen(date);
 
   const payment = await applyPayment({
     memberId: values.memberId,
@@ -128,12 +132,13 @@ export async function cancelPayment(incomeId: string, input: unknown): Promise<v
   const { reason } = reasonFormSchema.parse(input);
   if (!Types.ObjectId.isValid(incomeId)) throw new AppError("notFound");
 
-  const income = await Income.findById(incomeId).select("receivedBy cancelled accountId amount").lean();
+  const income = await Income.findById(incomeId).select("receivedBy cancelled accountId amount date").lean();
   if (!income) throw new AppError("notFound");
   if (income.cancelled) throw new AppError("alreadyCancelled");
   if (!canCancelPayment(actor, { receivedBy: income.receivedBy.toString(), cancelled: income.cancelled })) {
     throw new AppError("cannotCancelOwnPayment");
   }
+  await assertDateOpen(income.date);
   // Cancelling takes the money back out of the account; it must still be there.
   await assertBalanceCovers(income.accountId.toString(), income.amount);
 
@@ -256,10 +261,11 @@ export async function getReceipt(incomeId: string): Promise<StaffReceiptView | n
   if (!Types.ObjectId.isValid(incomeId)) return null;
   const income = await Income.findById(incomeId).lean();
   if (!income) return null;
-  const view = await toReceiptView(income);
+  const [view, locked] = await Promise.all([toReceiptView(income), isDateLocked(income.date)]);
   return {
     ...view,
-    canCancel: canCancelPayment(me, { receivedBy: income.receivedBy.toString(), cancelled: income.cancelled }),
+    canCancel: !locked && canCancelPayment(me, { receivedBy: income.receivedBy.toString(), cancelled: income.cancelled }),
+    locked,
   };
 }
 

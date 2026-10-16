@@ -8,6 +8,7 @@ import { expenseFormSchema, transferFormSchema } from "@/lib/validators";
 import { Account, Expense, Transfer, User } from "@/models";
 import { assertBalanceCovers } from "./accounts";
 import { logActivity } from "./activity-log";
+import { assertDateOpen } from "./closing-core";
 import { photoViewUrl } from "./storage";
 
 export type ExpenseItem = {
@@ -74,6 +75,7 @@ export async function createExpense(input: unknown): Promise<string> {
   await assertBalanceCovers(values.accountId, values.amount);
   const date = parseDateKey(values.date);
   if (!date) throw new AppError("invalidInput");
+  await assertDateOpen(date);
 
   const expense = await Expense.create({
     category: values.category,
@@ -125,6 +127,7 @@ export async function createTransfer(input: unknown): Promise<string> {
   await assertBalanceCovers(values.fromAccountId, values.amount);
   const date = parseDateKey(values.date);
   if (!date) throw new AppError("invalidInput");
+  await assertDateOpen(date);
 
   const transfer = await Transfer.create({
     fromAccountId: new Types.ObjectId(values.fromAccountId),

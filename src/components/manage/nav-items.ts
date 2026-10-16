@@ -1,5 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  BanknoteIcon,
+  CalendarCheckIcon,
   FileChartColumnIcon,
   HandCoinsIcon,
   HeartHandshakeIcon,
@@ -34,6 +36,8 @@ export const manageNavItems: readonly ManageNavItem[] = [
   { key: "cases", href: "/manage/cases", icon: HeartHandshakeIcon, ready: true },
   { key: "expenses", href: "/manage/expenses", icon: ReceiptIcon, ready: true },
   { key: "accounts", href: "/manage/accounts", icon: WalletIcon, ready: true },
+  { key: "cashCount", href: "/manage/cash-count", icon: BanknoteIcon, ready: true },
+  { key: "closing", href: "/manage/closing", icon: CalendarCheckIcon, ready: true },
   { key: "reports", href: "/manage/reports", icon: FileChartColumnIcon, ready: false },
   { key: "users", href: "/manage/users", icon: ShieldCheckIcon, ready: true, adminOnly: true },
   { key: "settings", href: "/manage/settings", icon: SettingsIcon, ready: true, adminOnly: true },
