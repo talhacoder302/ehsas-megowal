@@ -1,24 +1,70 @@
 # Ehsas Program, Megowal
 
-Village welfare fund manager for Ehsas Program, Megowal: member contributions, pending dues, aid case tracking (weddings, funerals, medical), cash accounts and transparent monthly reports. Built with Next.js, TypeScript and MongoDB.
+A web app for the village welfare fund of Megowal. Members give a fixed monthly contribution; two heads keep the money and use it to help families in need (a daughter's wedding, a death in the family, medical treatment, school fees, house repair, ration). The app replaces the paper registers: every rupee in and out is recorded, every aid case is tracked from request to completion, each month is closed and locked, and members can see their own account and an anonymised monthly report on their phone.
 
-The app is bilingual (English and Urdu). Member screens open in Urdu by default and the management screens open in English; anyone can switch with the language button.
+- **Bilingual**: English and Urdu (right-to-left, Nastaliq). Member screens open in Urdu, management screens in English; anyone can switch.
+- **Phone first**: built for heads using a phone in the village; installable as an app, with a read-only offline mode.
+- **No paid services needed**: MongoDB Atlas free tier, WhatsApp share links instead of a paid API; photo storage (Cloudflare R2) and email (Resend) are optional.
 
-## Requirements
+> **Deploying?** See **[DEPLOY.md](DEPLOY.md)** for step-by-step Hostinger instructions and the manual checklist.
 
-- Node.js 20.9 or newer (developed on Node 24)
-- npm
-- A MongoDB Atlas cluster (the free tier is enough)
+## Screenshots
 
-## Setup
+<!-- Add screenshots to docs/screenshots/ with these names and they will show here. Capture at 375px wide (phone). -->
 
-1. Install dependencies:
+| Screen | File to add |
+| --- | --- |
+| Manage dashboard (budget, collection, cases, approvals, activity) | `docs/screenshots/dashboard.png` |
+| Receive payment and the WhatsApp receipt | `docs/screenshots/payment.png` |
+| Aid case with timeline and payouts | `docs/screenshots/case.png` |
+| Month closing | `docs/screenshots/closing.png` |
+| Monthly report with chart | `docs/screenshots/report.png` |
+| Member home in Urdu | `docs/screenshots/member-home.png` |
+| Opening setup (reconciliation) | `docs/screenshots/setup.png` |
+
+## Features
+
+### For members (`/member`, Urdu by default)
+- Home: amount still owed, which months of this year are paid, the latest receipt.
+- Full contribution history with every receipt (view and PDF in Urdu or English).
+- Monthly reports (members copy: families' names hidden unless the family agreed) with a 12-month chart.
+- Aid cases list, anonymised, with status and the latest reason.
+
+### For heads (`/manage`)
+- **Dashboard**: money in all accounts, committed to open cases, emergency reserve and free to spend; this month's collection against what is expected; members still owing; open cases by status; cases on hold or not updated for 7+ days; aid payments waiting for a second head; recent activity.
+- **Members**: add, edit, change status (left, deceased, exempt) with a reason and date, create logins shared on WhatsApp in Roman Urdu, Excel export and Excel import.
+- **Contributions**: rates that can change over time, monthly bills (generating twice never duplicates), payments that clear old dues first, advance payments, sequential receipts with a public link, English/Urdu PDF and WhatsApp message, polite reminders, waive and cancel with a reason.
+- **Aid cases**: requested → verifying → approved → in progress → completed (or on hold / rejected), every change with a reason; payouts in instalments within the approved amount, with receipt photos; second-head approval above a limit.
+- **Money out**: expenses with photos, transfers between accounts, balances that can never go below zero.
+- **Keeping the books**: cash counts with differences explained, month closing (opening, income, aid, expenses, closing, committed, reserve, free balance) that locks the month; only the admin can reopen, with a reason.
+- **Reports**: heads and members copies, PDF in both languages, WhatsApp summary for the village group, optional email to members.
+- **Opening setup**: move from the paper register: first month, opening balances, members' old dues, Excel imports of members, old contributions and old completed cases, and a reconciliation summary to compare with the register.
+
+### For the admin
+- Users and roles, contribution rates, fund rules (emergency reserve, second-head approval, default for showing beneficiary names).
+- **Full backup**: Settings → Download full backup gives every collection as one Excel file (one sheet each), so an offline copy of the community's records can be kept.
+
+### Trust and safety
+- Roles: admin, head, member. Every server action and API checks the session and role; members can only ever read their own records and the anonymised reports.
+- Beneficiary names, guardians, contacts, mohalla and descriptions are removed on the server for members unless the case allows it.
+- Nothing financial is ever deleted: cancellations keep the record with the reason and who did it. Every change is in the activity log.
+- Security headers with a per-request Content Security Policy, login rate limiting (5 wrong passwords per 15 minutes) and limits on uploads, imports, emails and backups.
+
+## Tech stack
+
+Next.js 16 (App Router, TypeScript), Tailwind CSS 4 + shadcn/ui, MongoDB Atlas + Mongoose, Auth.js (mobile number + password), Zod, next-intl, Recharts, @react-pdf/renderer, SheetJS, Cloudflare R2 (optional), Resend (optional), Serwist (installable app), Vitest.
+
+## Run it on your computer
+
+Requirements: Node.js 20.9 or newer, npm, and a MongoDB database (an Atlas free cluster, or MongoDB running locally).
+
+1. Install:
 
    ```bash
    npm install
    ```
 
-2. Create your local env file and fill it in:
+2. Copy the env file and fill it in:
 
    ```bash
    cp .env.example .env.local
@@ -26,118 +72,64 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
 
    | Variable | Required | Notes |
    | --- | --- | --- |
-   | `MONGODB_URI` | yes | Atlas connection string (`mongodb+srv://...`). Add your IP in Atlas > Network Access. |
+   | `MONGODB_URI` | yes | Atlas connection string (`mongodb+srv://...`) or `mongodb://127.0.0.1:27017`. |
    | `MONGODB_DB` | no | Database name, defaults to `ehsas_megowal`. |
    | `AUTH_SECRET` | yes | At least 32 characters. Generate with `npx auth secret`. |
-   | `AUTH_URL`, `AUTH_TRUST_HOST` | production | Set `AUTH_TRUST_HOST=true` when running behind Hostinger's proxy. |
-   | `NEXT_PUBLIC_APP_URL` | no | Public URL of the app, defaults to `http://localhost:3000`. |
-   | `R2_*` | no | Cloudflare R2 for receipt photos (see below). Uploads are turned off if any is missing; records can still be saved without a photo. |
-   | `RESEND_API_KEY`, `EMAIL_FROM` | no | Email through Resend (heads can email the monthly report link to members who have an email). Email is turned off if missing. |
-   | `SEED_ADMIN_MOBILE`, `SEED_ADMIN_PASSWORD` | for seeding | The first admin login created by `npm run seed`. Password at least 8 characters. |
-   | `SEED_ADMIN_NAME` | no | Admin display name, defaults to "Admin". |
-   | `SEED_DEMO_PASSWORD` | no | One temporary password for the demo users; otherwise random ones are printed. |
+   | `AUTH_URL`, `AUTH_TRUST_HOST` | production | Your public URL and `true` behind a proxy (Hostinger). |
+   | `NEXT_PUBLIC_APP_URL` | no | Public URL, defaults to `http://localhost:3000`. Used in receipt and report links. |
+   | `R2_*` | no | Cloudflare R2 for receipt photos. Uploads are off if any is missing. |
+   | `RESEND_API_KEY`, `EMAIL_FROM` | no | Report emails. Email is off if missing. |
+   | `SEED_ADMIN_MOBILE`, `SEED_ADMIN_PASSWORD`, `SEED_ADMIN_NAME` | for the seed | The first admin login. |
+   | `SEED_DEMO_PASSWORD` | no | One temporary password for the demo users. |
 
-3. Create the database, default settings, the admin login and demo data:
+3. Create the database with demo data and start:
 
    ```bash
    npm run seed
-   ```
-
-   The seed prints the logins it creates and adds 35 demo members (a few marked left, deceased or exempt), contribution rates (Rs. 300 from 2023, Rs. 500 from the current month), a "Cash in hand" account kept by the first head, three months of bills and payments, 8 aid cases in different stages, aid payments (one waiting for a second head), expenses, a cash-to-bank transfer and three cash counts (one Rs. 200 short), does the opening setup (the oldest demo month as the first app month, three months of register payments for six members and one old aid case) and closes that month, so the setup shows as locked until the admin reopens it. It also turns on second-head approval above Rs. 25,000, sets a Rs. 20,000 emergency reserve and gives the cash account a paper-register opening balance. Demo users (2 heads and 1 member) must change their password at first login. On the live site use `npm run seed -- --no-demo`: it creates the settings, the admin, the Rs. 500 rate from the current month and a "Cash in hand" account.
-
-4. Start the dev server and open http://localhost:3000:
-
-   ```bash
    npm run dev
    ```
+
+   Open http://localhost:3000 and log in with the admin mobile and password from `.env.local`. The demo has 35 members, 2 heads (0300-1110001 and 0300-1110002), 1 member login (0300-1110003), three months of payments, 9 aid cases, expenses, a closed month and the opening setup done. Demo users must change their password at first login.
+
+   On a real installation use `npm run seed -- --no-demo` (settings, the admin, the Rs. 500 rate and a cash account only).
 
 ## Scripts
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev` | Start the dev server |
-| `npm run build` | Production build |
-| `npm start` | Run the production build |
+| `npm run dev` | Development server (the service worker is off in development) |
+| `npm run build` | Production build, including the service worker |
+| `npm start` | Run the production build (listens on `PORT`, default 3000) |
 | `npm run lint` | ESLint |
-| `npm run typecheck` | TypeScript check (`tsc --noEmit`) |
+| `npm run typecheck` | TypeScript check |
 | `npm test` | Unit tests (Vitest) |
-| `npm run seed` | Create collections, indexes, default settings, the admin login and demo data. Safe to run again; never changes existing passwords. |
+| `npm run seed` | Collections, indexes, settings, the admin login and demo data. Safe to run again; never changes existing passwords. `-- --no-demo` for production. |
 
-## Checking it works
+`GET /api/health` returns `{"status":"ok","db":"up"}` when the app can reach the database.
 
-- `/` landing page with a login button
-- `/login` log in with the admin mobile and password from `.env.local` (any format works: `0300-1234567`, `+92 300 1234567`)
-- `/manage` management area with sidebar (menu button on phones); the admin also sees **Users**
-- `/manage/users` add users, link them to members, reset passwords (share on WhatsApp), disable and enable
-- `/manage/members` search members by name, father's name, mobile or member number, filter by status, and download the list as Excel
-- `/manage/members/new` add a member (member numbers like EP-036 are given automatically)
-- open a member to edit them, change their status (left, deceased, exempt) with a reason and date, see their activity, and create a login that is shared on WhatsApp in Roman Urdu
-- `/manage/pending` pick a month, see billed / collected / pending / collection %, press **Generate bills** (pressing again never makes duplicates), and send a polite WhatsApp reminder to anyone who owes
-- `/manage/payments/new` find a member, tick months (or type an amount) and save: old dues are paid first, then the oldest months, then advance months
-- after saving, the receipt opens with **Send receipt on WhatsApp** and PDF downloads in English and Urdu; the receipt link (`/receipt/...`) opens without logging in
-- cancel a payment from its receipt (the admin, or the head who did not receive it) and waive a bill from the member's Contributions tab, both with a reason
-- `/manage/accounts` balances of cash, bank and mobile wallet accounts; `/manage/settings` (admin) contribution rates and their history
-- `/manage/cases` aid cases in Open / Completed / Rejected tabs with category and date filters; cases on hold or with no update for over 7 days are highlighted with their last reason
-- open a case to move it through requested → verifying → approved → in progress → completed (or on hold / rejected); every change needs a reason, and approving needs an amount
-- `/member/cases` the members' view of the same cases, without the family's name, contact or mohalla unless the case allows it
-- on an approved or in-progress case, **Pay out** with a receipt photo; it cannot go over the approved amount (change the approved amount with a reason first) or take an account below zero
-- `/manage` dashboard: payments above the limit wait in **Waiting for approval** until a different head or the admin approves them; account balances
-- `/manage/expenses` running costs with receipt photos; `/manage/accounts` balance breakdown and **Transfer money** between accounts
-- `/manage/settings/fund` (admin) emergency reserve, second-head approval and its limit, and whether new cases show the beneficiary's name to members
-- `/manage` dashboard **Budget** card: money in all accounts, minus what is promised to open cases and the emergency reserve, gives what is free to spend; a reminder appears when a finished month is not closed
-- `/manage/cash-count` pick an account, count the money and enter it; the difference shows straight away and a note is needed when it does not match; past counts are kept
-- `/manage/closing` pick a month to see opening balance, income, aid paid, expenses, closing balance, committed money, reserve and free balance; **Close** it once it has ended (months close in order, and not while aid payments in it wait for approval)
-- a closed month is locked: payments, aid payments, expenses and transfers dated in it (or earlier) are refused and its receipts cannot be cancelled; the admin can **Reopen** the latest closed month with a reason
-- `/manage/reports` monthly report for any month: opening balance, collection (members paid out of active members), aid by category with case numbers, expenses, closing balance, committed, reserve, free balance, open cases with their last reason, and a 12-month collection vs aid chart. Switch between the **Heads copy** and the **Members copy** (families' names hidden unless the case allows it)
-- download the report as a PDF in English or Urdu, **Share on WhatsApp** (Roman Urdu summary plus the report link; pick the village group), and **Email to members** when Resend is set up
-- the report link (`/reports/2026-10`) opens the right screen for whoever clicks it: heads see the manage report, members their own, and anyone signed out logs in first
-- `/member` member area, Urdu by default: pending amount, months paid this year and the latest receipt; **Payments** has the full history with receipt links and PDFs; **Reports** shows the members copy (members can never get the heads copy, not even as a PDF); **Cases** the anonymised case list
-- a member's form has an optional email, used only for the report email
-- `/manage/setup` opening setup for moving from the paper register (heads and admin): 1) program start date and first month kept in the app, 2) each account's opening balance, 3) each member's join date and opening due, 4) Excel imports, 5) a reconciliation summary to compare with the register. It stays editable until the first month is closed (and again if the admin reopens it)
-- Excel imports come with a template (download it from each import card): **members** (also from the Members page, any time), **old contributions** (member no, month, amount; before the first month) and **old completed aid cases**. Each file is checked first and every row with a problem is listed (missing name, repeated or taken mobile, bad date, unknown member, month already recorded); only the good rows are imported
-- imported register payments get `REG-` numbers, show "From register" in the payments list and the member's ledger, and never change an account balance or a month's totals (that money is already in the opening balances)
-- `/manage/profile` and `/member/profile` change password and language
-- `/manage` dashboard also shows this month's collection against what is expected, how many members still owe, open cases by status, cases on hold or with no update for 7 days or more, and the last 5 things anyone did
-- long lists (payments, expenses, cash counts, members, cases, users) show 25 at a time with Previous / Next
-- **Install app** button in the header (Android/desktop: the browser's install prompt; iPhone: Share → Add to Home Screen steps). The installed app opens on the login page, which sends a signed-in user straight to their area
-- offline: a banner says "No internet", nothing can be saved (payments say so clearly, and nothing is queued for later), the last members list and pending list a head opened can still be read, and any other page shows a "No internet" page in English and Urdu. Logging out deletes the saved lists from the phone
-- 5 wrong passwords for one mobile lock it for 15 minutes
-- `/api/health` returns `{"status":"ok","db":"up"}` when the database is reachable
+## Receipt photos (Cloudflare R2, optional)
 
-## Receipt photos (Cloudflare R2)
+Photos are compressed in the browser (about 150 KB) and uploaded straight to R2, so the app server never handles the file. Set the `R2_*` variables and a CORS rule on the bucket; step by step in [DEPLOY.md](DEPLOY.md#5-receipt-photos-cloudflare-r2-optional). Without R2 everything works, just without photos.
 
-Photos are compressed in the browser (about 150 KB) and uploaded straight to R2, so the app server never handles the file.
+## Backups
 
-1. In Cloudflare, create an R2 bucket (for example `ehsas-receipts`) and an R2 API token with Object Read & Write on it.
-2. Set `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and `R2_BUCKET`. `R2_PUBLIC_URL` is optional: leave it empty to keep photos private (the app makes one-hour links), or set it to the bucket's public URL.
-3. In the bucket settings add a CORS rule so browsers may upload:
-
-   ```json
-   [{ "AllowedOrigins": ["https://your-site.example"], "AllowedMethods": ["PUT", "GET"], "AllowedHeaders": ["content-type"], "MaxAgeSeconds": 3600 }]
-   ```
-
-Leave `R2_ENDPOINT` empty; it only exists for testing with a local S3-compatible server.
-
-## Deploying to Hostinger (Node.js hosting)
-
-1. Push the repo and connect it in hPanel, or upload the project.
-2. Set the same environment variables as in `.env.local` (with `AUTH_TRUST_HOST=true` and your real `AUTH_URL`).
-3. Build command `npm run build`, start command `npm start`. The build also bundles the service worker (Serwist, using the `esbuild` that comes with the dev dependencies), so install dev dependencies before building. The site must be on HTTPS for the service worker and the Install button.
-4. Allow Hostinger's outbound IP in Atlas Network Access.
+- **Settings → Download full backup** (admin): an Excel file with one sheet per collection (password hashes are never included). Download one at least every month, after closing the month, and give the heads a copy.
+- The Atlas free tier has no automatic backups, which is why this button exists.
 
 ## Project layout
 
 ```
-src/app/(public)    landing page
-src/app/(auth)      login
+src/app/(public)    landing page, public receipt links, shared report links
+src/app/(auth)      login, forced password change
 src/app/manage      admin and head screens
 src/app/member      member portal (mobile first)
-src/app/api         route handlers
-src/server          business logic and all database queries
+src/app/api         route handlers (PDFs, Excel, backup, health, auth)
+src/server          business logic and all database queries (each function checks the session)
 src/models          Mongoose models
-src/lib             env, db, permissions, money and date helpers
+src/lib             pure rules and helpers (money, dates, permissions, validators, reports, imports)
 src/components      ui (shadcn), shared, manage, member
 src/i18n            next-intl config and messages (en.json, ur.json)
-scripts             seed and utility scripts
-assets/fonts        Noto Naskh Arabic UI for Urdu receipt PDFs (SIL Open Font License)
+src/sw.ts           service worker (Serwist)
+scripts             seed
+assets/fonts        Noto Naskh Arabic UI for Urdu PDFs (SIL Open Font License)
 ```
