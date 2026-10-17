@@ -6,7 +6,7 @@ A web app for the village welfare fund of Megowal. Members give a fixed monthly 
 - **Phone first**: built for heads using a phone in the village; installable as an app, with a read-only offline mode.
 - **No paid services needed**: MongoDB Atlas free tier, WhatsApp share links instead of a paid API; photo storage (Cloudflare R2) and email (Resend) are optional.
 
-> **Deploying?** See **[DEPLOY.md](DEPLOY.md)** for step-by-step Hostinger instructions and the manual checklist.
+> **Deploying?** See **[DEPLOY.md](DEPLOY.md)** for step-by-step Vercel instructions and the manual checklist.
 
 ## Screenshots
 
@@ -75,8 +75,8 @@ Requirements: Node.js 20.9 or newer, npm, and a MongoDB database (an Atlas free 
    | `MONGODB_URI` | yes | Atlas connection string (`mongodb+srv://...`) or `mongodb://127.0.0.1:27017`. |
    | `MONGODB_DB` | no | Database name, defaults to `ehsas_megowal`. |
    | `AUTH_SECRET` | yes | At least 32 characters. Generate with `npx auth secret`. |
-   | `AUTH_URL`, `AUTH_TRUST_HOST` | production | Your public URL and `true` behind a proxy (Hostinger). |
-   | `NEXT_PUBLIC_APP_URL` | no | Public URL, defaults to `http://localhost:3000`. Used in receipt and report links. |
+   | `AUTH_URL` | production | Your public URL (`AUTH_TRUST_HOST` is only needed behind other proxies). |
+   | `NEXT_PUBLIC_APP_URL` | no | Public URL used in receipt and report links. Defaults to the Vercel production domain on Vercel, otherwise `http://localhost:3000`. |
    | `R2_*` | no | Cloudflare R2 for receipt photos. Uploads are off if any is missing. |
    | `RESEND_API_KEY`, `EMAIL_FROM` | no | Report emails. Email is off if missing. |
    | `SEED_ADMIN_MOBILE`, `SEED_ADMIN_PASSWORD`, `SEED_ADMIN_NAME` | for the seed | The first admin login. |
@@ -99,7 +99,7 @@ Requirements: Node.js 20.9 or newer, npm, and a MongoDB database (an Atlas free 
 | --- | --- |
 | `npm run dev` | Development server (the service worker is off in development) |
 | `npm run build` | Production build, including the service worker |
-| `npm start` | Run the production build (listens on `PORT`, default 3000) |
+| `npm start` | Run the production build yourself (listens on `PORT`, default 3000; not needed on Vercel) |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript check |
 | `npm test` | Unit tests (Vitest) |
@@ -109,7 +109,7 @@ Requirements: Node.js 20.9 or newer, npm, and a MongoDB database (an Atlas free 
 
 ## Receipt photos (Cloudflare R2, optional)
 
-Photos are compressed in the browser (about 150 KB) and uploaded straight to R2, so the app server never handles the file. Set the `R2_*` variables and a CORS rule on the bucket; step by step in [DEPLOY.md](DEPLOY.md#5-receipt-photos-cloudflare-r2-optional). Without R2 everything works, just without photos.
+Photos are compressed in the browser (about 150 KB) and uploaded straight to R2, so the app server never handles the file. Set the `R2_*` variables and a CORS rule on the bucket; step by step in [DEPLOY.md](DEPLOY.md#7-receipt-photos-cloudflare-r2-optional). Without R2 everything works, just without photos.
 
 ## Backups
 
