@@ -28,6 +28,7 @@ import {
 } from "@/lib/contributions";
 import { formatMonth, type DateKey } from "@/lib/dates";
 import type { ServerErrorCode } from "@/lib/errors";
+import { callAction, useOnline } from "@/lib/offline";
 import { formatRupees, parseRupees } from "@/lib/money";
 import { formatMobile, paymentFormSchema, type PaymentFormInput, type PaymentFormValues } from "@/lib/validators";
 import type { PaymentContext } from "@/server/payments";
@@ -46,6 +47,7 @@ export function PaymentForm({ context, today }: { context: PaymentContext; today
   const locale = useLocale() === "ur" ? "ur" : "en";
   const validation = useValidationMessage();
   const router = useRouter();
+  const online = useOnline();
   const [serverError, setServerError] = useState<ServerErrorCode | null>(null);
   const [showAllAdvance, setShowAllAdvance] = useState(false);
   const { member, items, accounts } = context;
@@ -89,7 +91,8 @@ export function PaymentForm({ context, today }: { context: PaymentContext; today
 
   async function onSubmit(values: PaymentFormValues) {
     setServerError(null);
-    const result = await receivePaymentAction(values);
+    // Payments are never saved or queued offline: without internet this returns "offline" at once.
+    const result = await callAction(() => receivePaymentAction(values));
     if (!result.ok) return setServerError(result.error);
     toast.success(t("payments.saved", { receipt: result.data.receiptNumber }));
     router.push(`/manage/payments/${result.data.id}?new=1`);
@@ -344,11 +347,12 @@ export function PaymentForm({ context, today }: { context: PaymentContext; today
             </div>
           </FieldGroup>
 
+          {online ? null : <FormError code="offlinePayment" />}
           <Button
             type="submit"
             size="lg"
             className="h-12 text-base"
-            disabled={submitting || leftover > 0 || amount <= 0 || accounts.length === 0}
+            disabled={!online || submitting || leftover > 0 || amount <= 0 || accounts.length === 0}
           >
             {submitting ? <Loader2Icon className="animate-spin" /> : <ReceiptTextIcon />}
             {amount > 0 ? t("payments.saveAmount", { amount: formatRupees(amount, locale) }) : t("payments.save")}

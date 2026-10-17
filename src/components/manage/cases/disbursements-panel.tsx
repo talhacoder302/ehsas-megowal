@@ -37,6 +37,7 @@ import { needsSecondApproval, type ApprovalSettings, type ApprovalStatus } from 
 import { disbursementFormSchema, type DisbursementFormInput, type DisbursementFormValues } from "@/lib/validators";
 import type { AccountOption } from "@/server/accounts";
 import type { DisbursementItem } from "@/server/disbursements";
+import { callAction } from "@/lib/offline";
 
 const STATUS_STYLE: Record<ApprovalStatus, string> = {
   not_required: "hidden",
@@ -68,7 +69,7 @@ export function DisbursementsPanel(props: DisbursementsPanelProps) {
 
   async function approve(item: DisbursementItem) {
     setApproving(item.id);
-    const result = await approveDisbursementAction(item.id);
+    const result = await callAction(() => approveDisbursementAction(item.id));
     setApproving(null);
     if (!result.ok) return toast.error(t(`serverErrors.${result.error}`));
     toast.success(t("disbursements.approvedToast"));
@@ -199,7 +200,7 @@ function DisbursementForm({
 
   async function onSubmit(values: DisbursementFormValues) {
     setServerError(null);
-    const result = await recordDisbursementAction(caseId, values);
+    const result = await callAction(() => recordDisbursementAction(caseId, values));
     if (!result.ok) return setServerError(result.error);
     toast.success(result.data.approvalStatus === "pending" ? t("disbursements.savedPending") : t("disbursements.saved"));
     onDone();

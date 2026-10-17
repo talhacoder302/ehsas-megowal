@@ -20,6 +20,7 @@ import { createCaseAction, updateCaseAction } from "@/app/manage/cases/actions";
 import { CASE_CATEGORIES } from "@/lib/cases";
 import type { ServerErrorCode } from "@/lib/errors";
 import { caseFormSchema, type CaseFormInput, type CaseFormValues } from "@/lib/validators";
+import { callAction } from "@/lib/offline";
 
 type CaseFormProps = {
   /** Leave out to open a new case. */
@@ -54,12 +55,12 @@ export function CaseForm({ aidCase, mohallas, showNamesDefault }: CaseFormProps)
   async function onSubmit(values: CaseFormValues) {
     setServerError(null);
     if (aidCase) {
-      const result = await updateCaseAction(aidCase.id, values);
+      const result = await callAction(() => updateCaseAction(aidCase.id, values));
       if (!result.ok) return setServerError(result.error);
       toast.success(t("cases.updated"));
       router.push(`/manage/cases/${aidCase.id}`);
     } else {
-      const result = await createCaseAction(values);
+      const result = await callAction(() => createCaseAction(values));
       if (!result.ok) return setServerError(result.error);
       toast.success(t("cases.created", { caseNo: result.data.caseNo }));
       router.push(`/manage/cases/${result.data.id}`);

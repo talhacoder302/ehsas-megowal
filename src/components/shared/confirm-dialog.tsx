@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { ActionResult, ServerErrorCode } from "@/lib/errors";
+import { callAction } from "@/lib/offline";
 
 type ConfirmDialogProps<T> = {
   open: boolean;
@@ -45,7 +46,7 @@ export function ConfirmDialog<T>({
   async function confirm() {
     setPending(true);
     setError(null);
-    const result = await onConfirm();
+    const result = await callAction(onConfirm);
     setPending(false);
     if (!result.ok) return setError(result.error);
     onOpenChange(false);

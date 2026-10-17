@@ -16,6 +16,7 @@ import { saveSetupDatesAction } from "@/app/manage/setup/actions";
 import type { DateKey, MonthKey } from "@/lib/dates";
 import type { ServerErrorCode } from "@/lib/errors";
 import { setupDatesSchema, type SetupDatesInput, type SetupDatesValues } from "@/lib/validators";
+import { callAction } from "@/lib/offline";
 
 type DatesStepProps = { programStartDate: DateKey | null; firstMonth: MonthKey | null; locked: boolean; today: DateKey; thisMonth: MonthKey };
 
@@ -32,7 +33,7 @@ export function DatesStep({ programStartDate, firstMonth, locked, today, thisMon
 
   async function onSubmit(values: SetupDatesValues) {
     setServerError(null);
-    const result = await saveSetupDatesAction(values);
+    const result = await callAction(() => saveSetupDatesAction(values));
     if (!result.ok) return setServerError(result.error);
     toast.success(t("saved"));
     router.push("/manage/setup?step=2");

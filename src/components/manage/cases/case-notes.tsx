@@ -14,6 +14,7 @@ import { formatDateTime } from "@/lib/dates";
 import type { ServerErrorCode } from "@/lib/errors";
 import { caseNoteSchema, type CaseNoteInput } from "@/lib/validators";
 import type { CaseNoteItem } from "@/server/cases";
+import { callAction } from "@/lib/offline";
 
 /** Private notes for the heads (never shown to members). */
 export function CaseNotes({ caseId, notes, canAdd }: { caseId: string; notes: CaseNoteItem[]; canAdd: boolean }) {
@@ -25,7 +26,7 @@ export function CaseNotes({ caseId, notes, canAdd }: { caseId: string; notes: Ca
 
   async function onSubmit(values: CaseNoteInput) {
     setServerError(null);
-    const result = await addCaseNoteAction(caseId, values);
+    const result = await callAction(() => addCaseNoteAction(caseId, values));
     if (!result.ok) return setServerError(result.error);
     form.reset({ text: "" });
   }

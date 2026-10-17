@@ -18,6 +18,7 @@ import {
   type ChangePasswordInput,
   type SetPasswordInput,
 } from "@/lib/validators";
+import { callAction } from "@/lib/offline";
 
 type PasswordFieldProps<T extends FieldValues> = {
   control: Control<T>;
@@ -70,7 +71,7 @@ export function SetPasswordForm() {
 
   async function onSubmit(values: SetPasswordInput) {
     setServerError(null);
-    const result = await setPasswordAction(values);
+    const result = await callAction(() => setPasswordAction(values));
     if (!result.ok) setServerError(result.error);
   }
 
@@ -103,7 +104,7 @@ export function ChangePasswordForm() {
 
   async function onSubmit(values: ChangePasswordInput) {
     setServerError(null);
-    const result = await changePasswordAction(values);
+    const result = await callAction(() => changePasswordAction(values));
     if (!result.ok) {
       setServerError(result.error);
       return;

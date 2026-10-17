@@ -27,6 +27,7 @@ import { ROLES } from "@/lib/roles";
 import { formatMobile, userFormSchema, type UserFormInput, type UserFormValues } from "@/lib/validators";
 import type { MemberLinkOption } from "@/server/members";
 import type { UserListItem } from "@/server/users";
+import { callAction } from "@/lib/offline";
 
 // Radix Select does not allow an empty value, so "not linked" uses this sentinel.
 const NO_MEMBER = "none";
@@ -75,12 +76,12 @@ function UserForm({ user, memberOptions, users, onOpenChange, onCreated }: UserF
     const payload = { ...values, memberId: values.memberId ?? "" };
 
     if (user) {
-      const result = await updateUserAction(user.id, payload);
+      const result = await callAction(() => updateUserAction(user.id, payload));
       if (!result.ok) return setServerError(result.error);
       toast.success(t("users.updated"));
       onOpenChange(false);
     } else {
-      const result = await createUserAction(payload);
+      const result = await callAction(() => createUserAction(payload));
       if (!result.ok) return setServerError(result.error);
       toast.success(t("users.created"));
       onOpenChange(false);

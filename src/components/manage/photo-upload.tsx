@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { createUploadAction } from "@/app/manage/actions";
 import type { ServerErrorCode } from "@/lib/errors";
 import { MAX_UPLOAD_BYTES, TARGET_UPLOAD_MB, type ReceiptKind } from "@/lib/uploads";
+import { callAction } from "@/lib/offline";
 
 type PhotoUploadProps = {
   kind: ReceiptKind;
@@ -74,7 +75,7 @@ export function PhotoUpload({ kind, value, onChange, enabled, onBusyChange }: Ph
       if (compressed.size > MAX_UPLOAD_BYTES) return setState({ step: "error", code: "photoTooLarge" });
 
       setState({ step: "uploading" });
-      const ticket = await createUploadAction({ kind, contentType: "image/jpeg", size: compressed.size });
+      const ticket = await callAction(() => createUploadAction({ kind, contentType: "image/jpeg", size: compressed.size }));
       if (!ticket.ok) return setState({ step: "error", code: ticket.error });
 
       const response = await fetch(ticket.data.uploadUrl, {

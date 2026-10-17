@@ -19,6 +19,7 @@ import {
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import type { ActionResult, ServerErrorCode } from "@/lib/errors";
+import { callAction } from "@/lib/offline";
 import { reasonFormSchema, type ReasonFormInput } from "@/lib/validators";
 
 type ReasonDialogProps = {
@@ -50,7 +51,7 @@ function ReasonForm({ title, description, confirmLabel, placeholder, destructive
 
   async function onSubmit(values: ReasonFormInput) {
     setServerError(null);
-    const result = await onConfirm(values);
+    const result = await callAction(() => onConfirm(values));
     if (!result.ok) return setServerError(result.error);
     onOpenChange(false);
     onDone();

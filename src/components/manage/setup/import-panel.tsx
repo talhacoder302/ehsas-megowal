@@ -14,6 +14,7 @@ import type { ServerErrorCode } from "@/lib/errors";
 import { IMPORT_COLUMNS, type ImportKind } from "@/lib/imports";
 import { cn } from "@/lib/utils";
 import type { ImportPreview } from "@/server/imports";
+import { callAction } from "@/lib/offline";
 
 /** Fields shown on each preview row (the rest only matter when they have an error). */
 const SUMMARY: Record<ImportKind, string[]> = {
@@ -58,7 +59,7 @@ export function ImportPanel({ kind, title, description, disabledReason }: Import
   async function check() {
     setBusy("preview");
     setError(null);
-    const result = await previewImportAction(kind, form());
+    const result = await callAction(() => previewImportAction(kind, form()));
     setBusy(null);
     if (!result.ok) return setError(result.error);
     setPreview(result.data);
@@ -67,7 +68,7 @@ export function ImportPanel({ kind, title, description, disabledReason }: Import
   async function save() {
     setBusy("import");
     setError(null);
-    const result = await runImportAction(kind, form());
+    const result = await callAction(() => runImportAction(kind, form()));
     setBusy(null);
     if (!result.ok) return setError(result.error);
     toast.success(t("imported", { created: result.data.created, skipped: result.data.skipped }));

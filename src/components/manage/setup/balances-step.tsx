@@ -15,6 +15,7 @@ import { saveOpeningBalancesAction } from "@/app/manage/setup/actions";
 import type { ServerErrorCode } from "@/lib/errors";
 import { formatRupees, parseRupees } from "@/lib/money";
 import type { SetupAccount } from "@/server/setup";
+import { callAction } from "@/lib/offline";
 
 /** Step 2: what each account held at the start of the first month, from the register. */
 export function BalancesStep({ accounts, locked }: { accounts: SetupAccount[]; locked: boolean }) {
@@ -30,7 +31,7 @@ export function BalancesStep({ accounts, locked }: { accounts: SetupAccount[]; l
   async function save() {
     setError(null);
     setSaving(true);
-    const result = await saveOpeningBalancesAction({ accounts: accounts.map((a) => ({ accountId: a.id, openingBalance: values[a.id] ?? "" })) });
+    const result = await callAction(() => saveOpeningBalancesAction({ accounts: accounts.map((a) => ({ accountId: a.id, openingBalance: values[a.id] ?? "" })) }));
     setSaving(false);
     if (!result.ok) return setError(result.error);
     toast.success(t("setup.balances.saved"));

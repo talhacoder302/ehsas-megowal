@@ -20,6 +20,7 @@ import type { ServerErrorCode } from "@/lib/errors";
 import { formatRupees } from "@/lib/money";
 import { rateFormSchema, type RateFormInput, type RateFormValues } from "@/lib/validators";
 import type { RateItem } from "@/server/rates";
+import { callAction } from "@/lib/offline";
 
 export function RatesView({ rates, currentMonth }: { rates: RateItem[]; currentMonth: MonthKey }) {
   const t = useTranslations();
@@ -35,7 +36,7 @@ export function RatesView({ rates, currentMonth }: { rates: RateItem[]; currentM
 
   async function onSubmit(values: RateFormValues) {
     setServerError(null);
-    const result = await addRateAction(values);
+    const result = await callAction(() => addRateAction(values));
     if (!result.ok) return setServerError(result.error);
     toast.success(t("settings.rates.added"));
     form.reset({ amount: "", effectiveFrom: shiftMonth(currentMonth, 1), note: "" });

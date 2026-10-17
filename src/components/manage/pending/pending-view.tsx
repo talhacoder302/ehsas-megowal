@@ -20,6 +20,7 @@ import { formatRupees } from "@/lib/money";
 import { formatMobile } from "@/lib/validators";
 import { reminderMessage, whatsappLink } from "@/lib/whatsapp";
 import type { PendingReport } from "@/server/pending";
+import { callAction } from "@/lib/offline";
 
 type PendingViewProps = {
   report: PendingReport;
@@ -56,7 +57,7 @@ export function PendingView({ report, currentMonth, canGenerate, programName, vi
   async function generate() {
     setGenerating(true);
     setGenerateError(null);
-    const result = await generateBillsAction(report.month);
+    const result = await callAction(() => generateBillsAction(report.month));
     setGenerating(false);
     if (!result.ok) return setGenerateError(result.error);
     const { created, alreadyBilled } = result.data;

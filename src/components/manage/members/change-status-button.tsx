@@ -31,6 +31,7 @@ import {
   type MemberStatusChangeInput,
   type MemberStatusChangeValues,
 } from "@/lib/validators";
+import { callAction } from "@/lib/offline";
 
 type ChangeStatusButtonProps = {
   memberId: string;
@@ -77,7 +78,7 @@ function StatusForm({ memberId, name, status, minDate, onDone }: ChangeStatusBut
 
   async function onSubmit(values: MemberStatusChangeValues) {
     setServerError(null);
-    const result = await changeMemberStatusAction(memberId, values);
+    const result = await callAction(() => changeMemberStatusAction(memberId, values));
     if (!result.ok) return setServerError(result.error);
     toast.success(t("members.status.changed"));
     onDone();

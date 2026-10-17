@@ -27,6 +27,7 @@ import { formatRupees } from "@/lib/money";
 import { transferFormSchema, type TransferFormInput, type TransferFormValues } from "@/lib/validators";
 import type { AccountOption } from "@/server/accounts";
 import type { TransferItem } from "@/server/expenses";
+import { callAction } from "@/lib/offline";
 
 type TransfersSectionProps = { transfers: TransferItem[]; options: AccountOption[]; today: DateKey };
 
@@ -87,7 +88,7 @@ function TransferForm({ options, today, onDone }: { options: AccountOption[]; to
 
   async function onSubmit(values: TransferFormValues) {
     setServerError(null);
-    const result = await createTransferAction(values);
+    const result = await callAction(() => createTransferAction(values));
     if (!result.ok) return setServerError(result.error);
     toast.success(t("transfers.saved"));
     onDone();

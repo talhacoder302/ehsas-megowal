@@ -12,6 +12,7 @@ import { approveDisbursementAction, rejectDisbursementAction } from "@/app/manag
 import { formatDate } from "@/lib/dates";
 import { formatRupees } from "@/lib/money";
 import type { PendingDisbursementItem } from "@/server/disbursements";
+import { callAction } from "@/lib/offline";
 
 /** Disbursements above the limit waiting for a second head (dashboard). */
 export function PendingApprovals({ items }: { items: PendingDisbursementItem[] }) {
@@ -22,7 +23,7 @@ export function PendingApprovals({ items }: { items: PendingDisbursementItem[] }
 
   async function approve(item: PendingDisbursementItem) {
     setBusy(item.id);
-    const result = await approveDisbursementAction(item.id);
+    const result = await callAction(() => approveDisbursementAction(item.id));
     setBusy(null);
     if (!result.ok) return toast.error(t(`serverErrors.${result.error}`));
     toast.success(result.data.fullyPaid ? t("disbursements.approvedFullyPaid") : t("disbursements.approvedToast"));

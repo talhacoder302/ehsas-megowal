@@ -26,6 +26,7 @@ import { changeCaseStatusAction } from "@/app/manage/cases/actions";
 import type { CaseStatus } from "@/lib/cases";
 import type { ServerErrorCode } from "@/lib/errors";
 import { caseStatusChangeSchema, type CaseStatusChangeInput, type CaseStatusChangeValues } from "@/lib/validators";
+import { callAction } from "@/lib/offline";
 
 type CaseStatusButtonProps = {
   caseId: string;
@@ -83,7 +84,7 @@ function StatusForm({
 
   async function onSubmit(values: CaseStatusChangeValues) {
     setServerError(null);
-    const result = await changeCaseStatusAction(caseId, values);
+    const result = await callAction(() => changeCaseStatusAction(caseId, values));
     if (!result.ok) return setServerError(result.error);
     toast.success(t("cases.status.changed", { status: t(`caseStatus.${values.status}`) }));
     onDone();

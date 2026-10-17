@@ -28,6 +28,7 @@ import {
   type ApprovedAmountChangeInput,
   type ApprovedAmountChangeValues,
 } from "@/lib/validators";
+import { callAction } from "@/lib/offline";
 
 type ApprovedAmountButtonProps = {
   caseId: string;
@@ -65,7 +66,7 @@ function AmountForm({ caseId, approvedAmount, committed, onDone }: ApprovedAmoun
 
   async function onSubmit(values: ApprovedAmountChangeValues) {
     setServerError(null);
-    const result = await changeApprovedAmountAction(caseId, values);
+    const result = await callAction(() => changeApprovedAmountAction(caseId, values));
     if (!result.ok) return setServerError(result.error);
     toast.success(t("disbursements.approvedChanged"));
     onDone();

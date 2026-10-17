@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { saveMemberOpeningsAction } from "@/app/manage/setup/actions";
 import { parseDateKey, type DateKey } from "@/lib/dates";
 import type { ServerErrorCode } from "@/lib/errors";
+import { callAction } from "@/lib/offline";
 import { formatRupees, parseRupees } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { SetupMember } from "@/server/setup";
@@ -49,9 +50,11 @@ export function MembersStep({ members, locked, today }: { members: SetupMember[]
   async function save() {
     setError(null);
     setSaving(true);
-    const result = await saveMemberOpeningsAction({
-      members: changed.map((m) => ({ memberId: m.id, joinDate: rows[m.id].joinDate, openingDue: rows[m.id].openingDue })),
-    });
+    const result = await callAction(() =>
+      saveMemberOpeningsAction({
+        members: changed.map((m) => ({ memberId: m.id, joinDate: rows[m.id].joinDate, openingDue: rows[m.id].openingDue })),
+      }),
+    );
     setSaving(false);
     if (!result.ok) return setError(result.error);
     setRowErrors(Object.fromEntries(result.data.errors.map((e) => [e.memberId, e.code])));

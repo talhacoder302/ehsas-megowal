@@ -17,6 +17,7 @@ import { createMemberAction, updateMemberAction } from "@/app/manage/members/act
 import { todayKey } from "@/lib/dates";
 import type { ServerErrorCode } from "@/lib/errors";
 import { memberFormSchema, type MemberFormInput, type MemberFormValues } from "@/lib/validators";
+import { callAction } from "@/lib/offline";
 
 type MemberFormProps = {
   /** Leave out to add a new member. */
@@ -48,12 +49,12 @@ export function MemberForm({ member, mohallas }: MemberFormProps) {
   async function onSubmit(values: MemberFormValues) {
     setServerError(null);
     if (member) {
-      const result = await updateMemberAction(member.id, values);
+      const result = await callAction(() => updateMemberAction(member.id, values));
       if (!result.ok) return setServerError(result.error);
       toast.success(t("members.updated"));
       router.push(`/manage/members/${member.id}`);
     } else {
-      const result = await createMemberAction(values);
+      const result = await callAction(() => createMemberAction(values));
       if (!result.ok) return setServerError(result.error);
       toast.success(t("members.created", { memberNo: result.data.memberNo }));
       router.push(`/manage/members/${result.data.id}`);

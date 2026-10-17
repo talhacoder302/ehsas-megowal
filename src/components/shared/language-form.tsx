@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { changeLanguageAction } from "@/app/(auth)/actions";
 import { localeNames, locales, type Locale } from "@/i18n/config";
 import type { ServerErrorCode } from "@/lib/errors";
+import { callAction } from "@/lib/offline";
 
 /** Saves the language on the account (and the cookie) from the profile page. */
 export function LanguageForm({ saved }: { saved: Locale }) {
@@ -25,7 +26,7 @@ export function LanguageForm({ saved }: { saved: Locale }) {
     setChoice(locale);
     setServerError(null);
     startTransition(async () => {
-      const result = await changeLanguageAction(locale);
+      const result = await callAction(() => changeLanguageAction(locale));
       if (!result.ok) {
         setServerError(result.error);
         setChoice(saved);

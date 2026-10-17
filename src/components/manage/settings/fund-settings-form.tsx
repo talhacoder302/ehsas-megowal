@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { updateFundSettingsAction } from "@/app/manage/settings/fund/actions";
 import type { ServerErrorCode } from "@/lib/errors";
 import { fundSettingsSchema, type FundSettingsInput, type FundSettingsValues } from "@/lib/validators";
+import { callAction } from "@/lib/offline";
 
 function SwitchRow({ id, title, hint, checked, onChange }: { id: string; title: string; hint: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -46,7 +47,7 @@ export function FundSettingsForm(props: FundSettingsValues) {
 
   async function onSubmit(values: FundSettingsValues) {
     setServerError(null);
-    const result = await updateFundSettingsAction(values);
+    const result = await callAction(() => updateFundSettingsAction(values));
     if (!result.ok) return setServerError(result.error);
     toast.success(t("settings.fund.saved"));
   }

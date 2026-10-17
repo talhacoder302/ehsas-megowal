@@ -32,6 +32,7 @@ import type { DateKey } from "@/lib/dates";
 import type { AccountItem, AccountOption, StaffOption } from "@/server/accounts";
 import type { TransferItem } from "@/server/expenses";
 import { TransfersSection } from "./transfers-section";
+import { callAction } from "@/lib/offline";
 
 const TYPE_ICONS: Record<AccountType, typeof WalletIcon> = {
   cash_in_hand: BanknoteIcon,
@@ -154,7 +155,7 @@ function AccountForm({ staff, onDone }: { staff: StaffOption[]; onDone: () => vo
 
   async function onSubmit(values: AccountFormValues) {
     setServerError(null);
-    const result = await createAccountAction({ ...values, holderUserId: values.holderUserId ?? "" });
+    const result = await callAction(() => createAccountAction({ ...values, holderUserId: values.holderUserId ?? "" }));
     if (!result.ok) return setServerError(result.error);
     toast.success(t("accounts.created"));
     onDone();

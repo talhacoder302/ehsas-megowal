@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { loginAction } from "@/app/(auth)/actions";
 import type { ServerErrorCode } from "@/lib/errors";
 import { loginSchema, type LoginInput, type LoginValues } from "@/lib/validators";
+import { callAction } from "@/lib/offline";
 
 export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
   const t = useTranslations("login");
@@ -27,7 +28,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
   async function onSubmit(values: LoginValues) {
     setServerError(null);
     // Redirects on success, so only failures come back.
-    const result = await loginAction(values, callbackUrl);
+    const result = await callAction(() => loginAction(values, callbackUrl));
     if (!result.ok) {
       setServerError(result.error);
       form.resetField("password");
