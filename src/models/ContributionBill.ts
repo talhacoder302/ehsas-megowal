@@ -29,6 +29,8 @@ const contributionBillSchema = new Schema(
 contributionBillSchema.index({ memberId: 1, month: 1 }, { unique: true });
 contributionBillSchema.index({ month: 1, status: 1 });
 contributionBillSchema.index({ status: 1, month: 1 });
+// Opening setup: earliest app bill and latest register bill.
+contributionBillSchema.index({ origin: 1, month: 1 });
 
 export type ContributionBillDoc = InferSchemaType<typeof contributionBillSchema> & { _id: Types.ObjectId };
 

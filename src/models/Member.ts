@@ -49,6 +49,9 @@ const memberSchema = new Schema(
 );
 
 memberSchema.index({ status: 1, name: 1 });
+// Duplicate check on name + father name (case-insensitive) and the mobile checks of imports and logins.
+memberSchema.index({ name: 1, fatherName: 1 }, { collation: { locale: "en", strength: 2 } });
+memberSchema.index({ mobile: 1 });
 
 export type MemberDoc = InferSchemaType<typeof memberSchema> & { _id: Types.ObjectId };
 

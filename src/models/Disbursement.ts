@@ -32,6 +32,8 @@ const disbursementSchema = new Schema(
 disbursementSchema.index({ caseId: 1, date: 1 });
 disbursementSchema.index({ approvalStatus: 1, createdAt: 1 });
 disbursementSchema.index({ accountId: 1, approvalStatus: 1 });
+// Month totals, the chart, closings and the first entry month all filter on the payment date.
+disbursementSchema.index({ date: 1, approvalStatus: 1 });
 
 export type DisbursementDoc = InferSchemaType<typeof disbursementSchema> & { _id: Types.ObjectId };
 

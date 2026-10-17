@@ -14,6 +14,8 @@ const activityLogSchema = new Schema(
 
 activityLogSchema.index({ createdAt: -1 });
 activityLogSchema.index({ entity: 1, entityId: 1, createdAt: -1 });
+// A member's Activity tab also finds payments and waived bills through meta.memberId.
+activityLogSchema.index({ "meta.memberId": 1, createdAt: -1 }, { partialFilterExpression: { "meta.memberId": { $exists: true } } });
 
 export type ActivityLogDoc = InferSchemaType<typeof activityLogSchema> & { _id: Types.ObjectId };
 

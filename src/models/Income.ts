@@ -45,6 +45,8 @@ const incomeSchema = new Schema(
 incomeSchema.index({ date: -1, createdAt: -1 });
 incomeSchema.index({ memberId: 1, date: 1 });
 incomeSchema.index({ accountId: 1, cancelled: 1 });
+// Payments list (cancelled hidden by default, newest first) and month totals.
+incomeSchema.index({ cancelled: 1, date: -1, createdAt: -1 });
 
 export type IncomeDoc = InferSchemaType<typeof incomeSchema> & { _id: Types.ObjectId };
 

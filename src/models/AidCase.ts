@@ -62,6 +62,9 @@ const aidCaseSchema = new Schema(
 
 aidCaseSchema.index({ status: 1, lastUpdateAt: 1 });
 aidCaseSchema.index({ createdAt: -1 });
+// Register cases (opening setup) and committed money (cases with an approved amount).
+aidCaseSchema.index({ importedFromRegister: 1, lastUpdateAt: -1 });
+aidCaseSchema.index({ approvedAmount: 1 });
 
 export type AidCaseDoc = InferSchemaType<typeof aidCaseSchema> & { _id: Types.ObjectId };
 
