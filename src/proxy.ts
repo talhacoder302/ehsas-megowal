@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import { AREA_HEADER, areaFromPath } from "@/i18n/config";
 import { canOpenPath, homePathFor, isRole } from "@/lib/roles";
+import { contentSecurityPolicy, originOf } from "@/lib/security";
 import { authConfig } from "@/server/auth/config";
 
 // Uses the database-free Auth.js config: it only reads the JWT cookie.
@@ -37,11 +38,23 @@ export const proxy = auth((req) => {
 
   return next();
 
-  // Tells the i18n config which part of the app is rendered so member screens default to Urdu.
+  // Tells the i18n config which part of the app is rendered so member screens default to Urdu,
+  // and sends the Content Security Policy with a fresh nonce (Next.js adds it to its own scripts).
   function next() {
+    const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+    const csp = contentSecurityPolicy({
+      nonce,
+      dev: process.env.NODE_ENV === "development",
+      https: process.env.NODE_ENV === "production" && (process.env.NEXT_PUBLIC_APP_URL ?? "").startsWith("https://"),
+      connect: [originOf(process.env.R2_ENDPOINT)].filter((o): o is string => o !== null),
+    });
     const headers = new Headers(req.headers);
     headers.set(AREA_HEADER, area);
-    return NextResponse.next({ request: { headers } });
+    headers.set("x-nonce", nonce);
+    headers.set("Content-Security-Policy", csp);
+    const response = NextResponse.next({ request: { headers } });
+    response.headers.set("Content-Security-Policy", csp);
+    return response;
   }
 });
 
