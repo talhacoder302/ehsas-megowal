@@ -668,7 +668,62 @@
     "budgetFreeHint": "Money in accounts minus what is promised to open cases and the emergency reserve.",
     "budgetNegative": "More money is promised than the fund holds. Hold new approvals until more is collected.",
     "closeReminder": "{month} has ended and is not closed yet.",
-    "closeNow": "Close it now"
+    "closeNow": "Close it now",
+    "collectionTitle": "Collection for {month}",
+    "collected": "Collected",
+    "expected": "Expected",
+    "expectedEstimate": "Expected (bills not made yet)",
+    "noBillsYet": "Nothing is expected yet: add a contribution rate or generate this month's bills on the Pending page.",
+    "collectedPercent": "{percent}% of what is expected",
+    "pendingMembers": "{count, plural, one {# member still owes} other {# members still owe}}",
+    "casesTitle": "Open cases ({count})",
+    "attentionTitle": "Needs attention ({count})",
+    "attentionNone": "No case is on hold or waiting 7 days or more for an update.",
+    "attentionMore": "{count} more on the cases list",
+    "activity": {
+      "title": "Recent activity",
+      "empty": "Nothing yet.",
+      "system": "System",
+      "actions": {
+        "user_created": "Login created",
+        "user_updated": "Login edited",
+        "user_disabled": "Login turned off",
+        "user_enabled": "Login turned on",
+        "user_password_reset": "Password reset",
+        "user_password_changed": "Password changed",
+        "user_language_changed": "Language changed",
+        "member_created": "Member added",
+        "member_updated": "Member edited",
+        "member_status_changed": "Member status changed",
+        "rate_created": "Contribution rate added",
+        "account_created": "Account added",
+        "account_opening_balance_changed": "Opening balance changed",
+        "bills_generated": "Bills generated",
+        "bill_waived": "Bill waived",
+        "payment_received": "Payment received",
+        "payment_cancelled": "Payment cancelled",
+        "case_created": "Aid case opened",
+        "case_updated": "Aid case edited",
+        "case_status_changed": "Case status changed",
+        "case_note_added": "Note added to a case",
+        "case_approved_amount_changed": "Approved amount changed",
+        "disbursement_created": "Aid paid out",
+        "disbursement_approved": "Aid payment approved",
+        "disbursement_rejected": "Aid payment rejected",
+        "expense_created": "Expense added",
+        "transfer_created": "Money moved between accounts",
+        "settings_updated": "Settings changed",
+        "month_closed": "Month closed",
+        "month_reopened": "Month reopened",
+        "cash_counted": "Cash counted",
+        "report_emailed": "Report emailed",
+        "setup_dates_saved": "Opening setup dates saved",
+        "setup_completed": "Opening setup done",
+        "import_members": "Members imported",
+        "import_history": "Register payments imported",
+        "import_cases": "Old aid cases imported"
+      }
+    }
   },
   "accounts": {
     "title": "Accounts",
@@ -870,7 +925,9 @@
     "importFileType": "Use an Excel file (.xlsx or .xls) or a .csv file.",
     "importFileUnreadable": "This file could not be read. Save it again as .xlsx and try once more.",
     "importTooManyRows": "Too many rows. Import at most 2,000 rows at a time.",
-    "importColumnsMissing": "Some required columns are missing. Use the template."
+    "importColumnsMissing": "Some required columns are missing. Use the template.",
+    "offline": "No internet. Nothing was saved. Try again when you are back online.",
+    "offlinePayment": "No internet. Payments cannot be saved offline; wait until you are back online."
   },
   "manage": {
     "areaName": "Management",
@@ -1194,5 +1251,28 @@
       "totalPaid": "Total paid",
       "showNameToMembers": "Show name to members"
     }
+  },
+  "offline": {
+    "bannerTitle": "No internet.",
+    "bannerBody": "You may be seeing a saved copy. Nothing can be saved until the connection is back.",
+    "title": "No internet",
+    "body": "This page needs internet. Check your connection and try again.",
+    "lists": "Heads can still open the last saved members list and pending list:",
+    "members": "Members",
+    "pending": "Pending",
+    "retry": "Try again"
+  },
+  "install": {
+    "button": "Install app",
+    "iosTitle": "Install on iPhone",
+    "iosBody": "Add Ehsas to your home screen in two steps:",
+    "iosStep1": "Tap the Share button at the bottom of Safari.",
+    "iosStep2": "Choose “Add to Home Screen”, then Add."
+  },
+  "pagination": {
+    "label": "Pages",
+    "previous": "Previous page",
+    "next": "Next page",
+    "pageOf": "Page {page} of {count} · {total} in all"
   }
 }

@@ -11,7 +11,7 @@ export const OPEN_STATUSES = ["requested", "verifying", "approved", "in_progress
 
 export type CaseTab = "open" | "completed" | "rejected";
 
-/** A case with no update for this many days is highlighted on the list. */
+/** A case with no update for this many days (or more) is highlighted on the list and the dashboard. */
 export const STALE_DAYS = 7;
 
 export function isOpenStatus(status: CaseStatus): boolean {
@@ -94,9 +94,9 @@ export function daysSince(at: Date | string, now: Date | number = Date.now()): n
   return Math.max(0, Math.floor((new Date(now).getTime() - new Date(at).getTime()) / DAY_MS));
 }
 
-/** An open case that has had no update for more than STALE_DAYS days. */
+/** An open case that has had no update for STALE_DAYS days or more. */
 export function isStale(status: CaseStatus, lastUpdateAt: Date | string, now: Date | number = Date.now()): boolean {
-  return isOpenStatus(status) && daysSince(lastUpdateAt, now) > STALE_DAYS;
+  return isOpenStatus(status) && daysSince(lastUpdateAt, now) >= STALE_DAYS;
 }
 
 /** On the list, cases on hold or without a recent update stand out. */

@@ -4,6 +4,9 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { ClipboardListIcon, HourglassIcon, WalletIcon } from "lucide-react";
 import { PageHeader } from "@/components/manage/page-header";
 import { BudgetCard } from "@/components/manage/budget-card";
+import { ActivityCard } from "@/components/manage/dashboard/activity-card";
+import { CasesCard } from "@/components/manage/dashboard/cases-card";
+import { CollectionCard } from "@/components/manage/dashboard/collection-card";
 import { PendingApprovals } from "@/components/manage/pending-approvals";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +16,7 @@ import { can } from "@/lib/permissions";
 import { listAccounts } from "@/server/accounts";
 import { requirePageUser } from "@/server/auth/guards";
 import { getBudget } from "@/server/closing";
+import { getDashboard } from "@/server/dashboard";
 import { setupNeeded } from "@/server/setup";
 import { listPendingDisbursements } from "@/server/disbursements";
 import { readSettings } from "@/server/settings";
@@ -28,11 +32,12 @@ export default async function ManageDashboardPage() {
   const lang = locale === "ur" ? "ur" : "en";
   const canApprove = can(me.role, "disbursements.approve");
   const seesMoney = can(me.role, "accounts.manage");
-  const [pending, accounts, budget, needsSetup] = await Promise.all([
+  const [pending, accounts, budget, needsSetup, dashboard] = await Promise.all([
     canApprove ? listPendingDisbursements() : Promise.resolve([]),
     seesMoney ? listAccounts() : Promise.resolve([]),
     seesMoney ? getBudget() : Promise.resolve(null),
     can(me.role, "setup.manage") ? setupNeeded() : Promise.resolve(false),
+    getDashboard(),
   ]);
   const active = accounts.filter((a) => a.active);
   const total = active.reduce((sum, a) => sum + a.balance, 0);
@@ -59,6 +64,11 @@ export default async function ManageDashboardPage() {
       ) : null}
 
       {budget ? <BudgetCard budget={budget} lang={lang} canClose={can(me.role, "months.close")} /> : null}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <CollectionCard data={dashboard.collection} lang={lang} />
+        <CasesCard data={dashboard.cases} />
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         {canApprove ? (
@@ -112,6 +122,8 @@ export default async function ManageDashboardPage() {
           </Card>
         ) : null}
       </div>
+
+      {dashboard.activity ? <ActivityCard entries={dashboard.activity} lang={lang} /> : null}
     </div>
   );
 }

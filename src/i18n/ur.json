@@ -668,7 +668,62 @@
     "budgetFreeHint": "کھاتوں کی رقم میں سے کھلے کیسوں کی وعدہ شدہ رقم اور ہنگامی رقم نکال کر۔",
     "budgetNegative": "فنڈ میں موجود رقم سے زیادہ کا وعدہ ہو چکا ہے۔ مزید وصولی تک نئی منظوریاں روک لیں۔",
     "closeReminder": "{month} ختم ہو چکا ہے مگر ابھی بند نہیں ہوا۔",
-    "closeNow": "ابھی بند کریں"
+    "closeNow": "ابھی بند کریں",
+    "collectionTitle": "{month} کی وصولی",
+    "collected": "وصول ہوا",
+    "expected": "متوقع",
+    "expectedEstimate": "متوقع (بل ابھی نہیں بنے)",
+    "noBillsYet": "ابھی کچھ متوقع نہیں: چندے کی شرح شامل کریں یا بقایا جات کے صفحے پر اس مہینے کے بل بنائیں۔",
+    "collectedPercent": "متوقع کا {percent}٪",
+    "pendingMembers": "{count} ممبران کے ذمے ابھی بقایا ہے",
+    "casesTitle": "کھلے کیس ({count})",
+    "attentionTitle": "توجہ طلب ({count})",
+    "attentionNone": "کوئی کیس رکا ہوا نہیں اور نہ 7 دن یا زیادہ سے اپڈیٹ کا منتظر ہے۔",
+    "attentionMore": "کیسوں کی فہرست میں {count} مزید",
+    "activity": {
+      "title": "حالیہ سرگرمی",
+      "empty": "ابھی کچھ نہیں۔",
+      "system": "سسٹم",
+      "actions": {
+        "user_created": "لاگ ان بنایا گیا",
+        "user_updated": "لاگ ان میں تبدیلی",
+        "user_disabled": "لاگ ان بند کیا گیا",
+        "user_enabled": "لاگ ان کھولا گیا",
+        "user_password_reset": "پاس ورڈ ری سیٹ",
+        "user_password_changed": "پاس ورڈ تبدیل",
+        "user_language_changed": "زبان تبدیل",
+        "member_created": "ممبر شامل کیا گیا",
+        "member_updated": "ممبر میں تبدیلی",
+        "member_status_changed": "ممبر کی حیثیت تبدیل",
+        "rate_created": "چندے کی شرح شامل",
+        "account_created": "کھاتہ بنایا گیا",
+        "account_opening_balance_changed": "ابتدائی رقم تبدیل",
+        "bills_generated": "بل بنائے گئے",
+        "bill_waived": "بل معاف کیا گیا",
+        "payment_received": "وصولی",
+        "payment_cancelled": "وصولی منسوخ",
+        "case_created": "امدادی کیس کھولا گیا",
+        "case_updated": "امدادی کیس میں تبدیلی",
+        "case_status_changed": "کیس کی حالت تبدیل",
+        "case_note_added": "کیس میں نوٹ شامل",
+        "case_approved_amount_changed": "منظور شدہ رقم تبدیل",
+        "disbursement_created": "امداد ادا کی گئی",
+        "disbursement_approved": "امدادی ادائیگی منظور",
+        "disbursement_rejected": "امدادی ادائیگی رد",
+        "expense_created": "خرچ شامل",
+        "transfer_created": "کھاتوں کے درمیان رقم منتقل",
+        "settings_updated": "ترتیبات تبدیل",
+        "month_closed": "مہینہ بند کیا گیا",
+        "month_reopened": "مہینہ دوبارہ کھولا گیا",
+        "cash_counted": "نقدی گنی گئی",
+        "report_emailed": "رپورٹ ای میل کی گئی",
+        "setup_dates_saved": "ابتدائی سیٹ اپ کی تاریخیں محفوظ",
+        "setup_completed": "ابتدائی سیٹ اپ مکمل",
+        "import_members": "ممبران درآمد",
+        "import_history": "رجسٹر کی وصولیاں درآمد",
+        "import_cases": "پرانے امدادی کیس درآمد"
+      }
+    }
   },
   "accounts": {
     "title": "کھاتے",
@@ -870,7 +925,9 @@
     "importFileType": "ایکسل فائل (.xlsx یا .xls) یا .csv فائل استعمال کریں۔",
     "importFileUnreadable": "یہ فائل پڑھی نہیں جا سکی۔ اسے .xlsx میں دوبارہ محفوظ کر کے کوشش کریں۔",
     "importTooManyRows": "قطاریں بہت زیادہ ہیں۔ ایک بار میں زیادہ سے زیادہ 2,000 قطاریں درآمد کریں۔",
-    "importColumnsMissing": "کچھ ضروری کالم موجود نہیں۔ ٹیمپلیٹ استعمال کریں۔"
+    "importColumnsMissing": "کچھ ضروری کالم موجود نہیں۔ ٹیمپلیٹ استعمال کریں۔",
+    "offline": "انٹرنیٹ نہیں۔ کچھ محفوظ نہیں ہوا۔ انٹرنیٹ آنے پر دوبارہ کوشش کریں۔",
+    "offlinePayment": "انٹرنیٹ نہیں۔ ادائیگی آف لائن محفوظ نہیں ہو سکتی؛ انٹرنیٹ آنے کا انتظار کریں۔"
   },
   "manage": {
     "areaName": "انتظامیہ",
@@ -1194,5 +1251,28 @@
       "totalPaid": "کل ادا شدہ",
       "showNameToMembers": "ممبران کو نام دکھائیں"
     }
+  },
+  "offline": {
+    "bannerTitle": "انٹرنیٹ نہیں۔",
+    "bannerBody": "ہو سکتا ہے آپ محفوظ شدہ نقل دیکھ رہے ہوں۔ انٹرنیٹ آنے تک کچھ محفوظ نہیں ہو سکتا۔",
+    "title": "انٹرنیٹ نہیں",
+    "body": "اس صفحے کے لیے انٹرنیٹ ضروری ہے۔ کنکشن دیکھ کر دوبارہ کوشش کریں۔",
+    "lists": "ذمہ داران آخری محفوظ ممبران کی فہرست اور بقایا جات اب بھی کھول سکتے ہیں:",
+    "members": "ممبران",
+    "pending": "بقایا جات",
+    "retry": "دوبارہ کوشش کریں"
+  },
+  "install": {
+    "button": "ایپ انسٹال کریں",
+    "iosTitle": "آئی فون پر انسٹال کریں",
+    "iosBody": "دو قدموں میں احساس کو ہوم اسکرین پر شامل کریں:",
+    "iosStep1": "سفاری کے نیچے شیئر کا بٹن دبائیں۔",
+    "iosStep2": "“Add to Home Screen” چنیں، پھر Add دبائیں۔"
+  },
+  "pagination": {
+    "label": "صفحات",
+    "previous": "پچھلا صفحہ",
+    "next": "اگلا صفحہ",
+    "pageOf": "صفحہ {page} از {count} · کل {total}"
   }
 }

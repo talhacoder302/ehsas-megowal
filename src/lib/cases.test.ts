@@ -80,10 +80,11 @@ describe("tabs, staleness and attention", () => {
     expect(caseTab("rejected")).toBe("rejected");
   });
 
-  it("flags open cases with no update for more than 7 days", () => {
+  it("flags open cases with no update for 7 days or more", () => {
     expect(daysSince("2026-09-28T10:00:00.000Z", now)).toBe(8);
     expect(isStale("verifying", "2026-09-28T10:00:00.000Z", now)).toBe(true);
-    expect(isStale("verifying", "2026-09-29T10:00:00.000Z", now)).toBe(false);
+    expect(isStale("verifying", "2026-09-29T10:00:00.000Z", now)).toBe(true);
+    expect(isStale("verifying", "2026-09-30T10:00:00.000Z", now)).toBe(false);
     expect(isStale("completed", "2026-01-01T00:00:00.000Z", now)).toBe(false);
   });
 
