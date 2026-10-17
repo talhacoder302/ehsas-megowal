@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
-import { ChevronRightIcon, CoinsIcon, ShieldCheckIcon } from "lucide-react";
+import { ChevronRightIcon, CoinsIcon, DatabaseBackupIcon, DownloadIcon, ShieldCheckIcon } from "lucide-react";
 import { PageHeader } from "@/components/manage/page-header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { can } from "@/lib/permissions";
 import { formatRupees } from "@/lib/money";
 import { requirePageUser } from "@/server/auth/guards";
@@ -67,6 +69,25 @@ export default async function SettingsPage() {
           </li>
         ))}
       </ul>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <DatabaseBackupIcon className="size-5 text-primary" />
+            {t("backup.title")}
+          </CardTitle>
+          <CardDescription>{t("backup.body")}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
+          <Button asChild size="lg" className="self-start">
+            <a href="/api/backup" download>
+              <DownloadIcon />
+              {t("backup.button")}
+            </a>
+          </Button>
+          <p className="text-xs text-muted-foreground">{t("backup.hint")}</p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

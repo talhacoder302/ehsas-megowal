@@ -10,6 +10,7 @@ export const PERMISSIONS = [
   "settings.manage",
   "users.manage",
   "months.reopen",
+  "backup.download",
   // heads (and admin)
   "members.read",
   "members.manage",

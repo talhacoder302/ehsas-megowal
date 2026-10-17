@@ -721,7 +721,8 @@
         "setup_completed": "Opening setup done",
         "import_members": "Members imported",
         "import_history": "Register payments imported",
-        "import_cases": "Old aid cases imported"
+        "import_cases": "Old aid cases imported",
+        "backup_downloaded": "Full backup downloaded"
       }
     }
   },
@@ -799,6 +800,12 @@
       "namesDefault": "Show beneficiary names to members on new cases",
       "namesDefaultHint": "Only the starting position of the switch on the new case form. Each case can still be changed, and existing cases are not affected.",
       "saved": "Fund rules saved."
+    },
+    "backup": {
+      "title": "Full backup",
+      "body": "Download every record (members, payments, bills, cases, aid, expenses, accounts, closings and the activity log) as one Excel file, one sheet per collection.",
+      "button": "Download full backup",
+      "hint": "Keep the file somewhere safe and give the heads a copy. Passwords are not included. Each download is recorded in the activity log."
     }
   },
   "validation": {
@@ -927,7 +934,8 @@
     "importTooManyRows": "Too many rows. Import at most 2,000 rows at a time.",
     "importColumnsMissing": "Some required columns are missing. Use the template.",
     "offline": "No internet. Nothing was saved. Try again when you are back online.",
-    "offlinePayment": "No internet. Payments cannot be saved offline; wait until you are back online."
+    "offlinePayment": "No internet. Payments cannot be saved offline; wait until you are back online.",
+    "tooManyRequests": "Too many requests in a short time. Please wait a few minutes and try again."
   },
   "manage": {
     "areaName": "Management",
