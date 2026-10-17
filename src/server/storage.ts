@@ -7,6 +7,7 @@ import { getServerEnv, type R2Config } from "@/lib/env";
 import { AppError } from "@/lib/errors";
 import { requirePermission, type Permission } from "@/lib/permissions";
 import { buildReceiptKey, isReceiptKey, uploadRequestSchema, type ReceiptKind } from "@/lib/uploads";
+import { assertRateLimit } from "./rate-limit";
 
 // Receipt photos live in Cloudflare R2. The browser compresses the photo and
 // PUTs it straight to R2 with a short-lived pre-signed URL; the app only
@@ -56,7 +57,8 @@ export type UploadTicket = { key: string; uploadUrl: string; contentType: string
  */
 export async function createReceiptUpload(input: unknown): Promise<UploadTicket> {
   const request = uploadRequestSchema.parse(input);
-  await requirePermission(KIND_PERMISSION[request.kind]);
+  const actor = await requirePermission(KIND_PERMISSION[request.kind]);
+  await assertRateLimit("upload", actor.id);
   const storage = r2();
   if (!storage) throw new AppError("uploadsDisabled");
 

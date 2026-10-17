@@ -25,6 +25,7 @@ import {
 } from "@/lib/validators";
 import { AidCase, ContributionBill, Member } from "@/models";
 import { logActivity } from "./activity-log";
+import { assertRateLimit } from "./rate-limit";
 import { nextMemberNo } from "./sequence";
 import { readSettings } from "./settings";
 import { assertSetupOpen, createRegisterCases, createRegisterPayments, REGISTER_NOTE } from "./setup-core";
@@ -159,7 +160,8 @@ async function checkCases(raw: Raw[], firstMonth: MonthKey): Promise<Checked<Cas
 
 /** Reads the file and shows every row with its problems. Nothing is saved. */
 export async function previewImport(kind: ImportKind, form: FormData): Promise<ImportPreview> {
-  await requirePermission(PERMISSION[kind]);
+  const actor = await requirePermission(PERMISSION[kind]);
+  await assertRateLimit("import", actor.id);
   if (kind !== "members") await assertSetupOpen();
   const { missing, rows } = await checkRows(kind, form);
   const valid = missing.length ? 0 : rows.filter((r) => r.data).length;
@@ -175,6 +177,7 @@ export async function previewImport(kind: ImportKind, form: FormData): Promise<I
 /** Reads the same file again, checks it again and saves the valid rows. Rows with problems are skipped. */
 export async function runImport(kind: ImportKind, form: FormData): Promise<ImportResult> {
   const actor = await requirePermission(PERMISSION[kind]);
+  await assertRateLimit("import", actor.id);
   if (kind !== "members") await assertSetupOpen();
   const { missing, rows } = await checkRows(kind, form);
   if (missing.length) throw new AppError("importColumnsMissing");

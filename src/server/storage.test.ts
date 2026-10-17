@@ -7,6 +7,8 @@ vi.mock("@/lib/env", () => ({ getServerEnv: () => env }));
 
 const getCurrentUser = vi.fn<() => Promise<CurrentUser | null>>();
 vi.mock("@/server/auth/current-user", () => ({ getCurrentUser: () => getCurrentUser() }));
+// The rate limit has its own test; here every upload is within it.
+vi.mock("./rate-limit", () => ({ assertRateLimit: async () => undefined }));
 
 const { createReceiptUpload, photoViewUrl, uploadsEnabled } = await import("./storage");
 

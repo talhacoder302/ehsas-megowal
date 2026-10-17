@@ -6,6 +6,7 @@ import { monthKeySchema } from "@/lib/validators";
 import { reportMessage, romanMonthLong } from "@/lib/whatsapp";
 import { Member } from "@/models";
 import { logActivity } from "./activity-log";
+import { assertRateLimit } from "./rate-limit";
 import { getMonthlyReport } from "./reports";
 
 /** Resend accepts up to 100 emails per batch call. */
@@ -34,6 +35,7 @@ export async function emailMonthlyReport(monthInput: unknown): Promise<ReportEma
   const month = monthKeySchema.parse(monthInput);
   const email = getServerEnv().email;
   if (!email) return { sent: 0, failed: 0 };
+  await assertRateLimit("reportEmail", actor.id);
 
   const report = await getMonthlyReport(month, "members");
   const members = await Member.find({ status: { $in: ["active", "exempt"] }, email: { $nin: ["", null] } })

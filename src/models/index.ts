@@ -12,6 +12,7 @@ export { Income, type IncomeDoc } from "./Income";
 export { LoginAttempt, LOGIN_WINDOW_SECONDS } from "./LoginAttempt";
 export { Member, MEMBER_STATUSES, type MemberDoc, type MemberStatus } from "./Member";
 export { MonthClosing, type MonthClosingDoc } from "./MonthClosing";
+export { RATE_LIMIT_MAX_WINDOW_SECONDS, RateLimitHit } from "./RateLimitHit";
 export { DEFAULT_MEMBER_NO_PREFIX, Settings, type SettingsDoc } from "./Settings";
 export { Transfer, type TransferDoc } from "./Transfer";
 export { User, USER_STATUSES, type UserDoc, type UserStatus } from "./User";
