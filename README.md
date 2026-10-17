@@ -97,6 +97,10 @@ The app is bilingual (English and Urdu). Member screens open in Urdu by default 
 - Excel imports come with a template (download it from each import card): **members** (also from the Members page, any time), **old contributions** (member no, month, amount; before the first month) and **old completed aid cases**. Each file is checked first and every row with a problem is listed (missing name, repeated or taken mobile, bad date, unknown member, month already recorded); only the good rows are imported
 - imported register payments get `REG-` numbers, show "From register" in the payments list and the member's ledger, and never change an account balance or a month's totals (that money is already in the opening balances)
 - `/manage/profile` and `/member/profile` change password and language
+- `/manage` dashboard also shows this month's collection against what is expected, how many members still owe, open cases by status, cases on hold or with no update for 7 days or more, and the last 5 things anyone did
+- long lists (payments, expenses, cash counts, members, cases, users) show 25 at a time with Previous / Next
+- **Install app** button in the header (Android/desktop: the browser's install prompt; iPhone: Share → Add to Home Screen steps). The installed app opens on the login page, which sends a signed-in user straight to their area
+- offline: a banner says "No internet", nothing can be saved (payments say so clearly, and nothing is queued for later), the last members list and pending list a head opened can still be read, and any other page shows a "No internet" page in English and Urdu. Logging out deletes the saved lists from the phone
 - 5 wrong passwords for one mobile lock it for 15 minutes
 - `/api/health` returns `{"status":"ok","db":"up"}` when the database is reachable
 
@@ -118,7 +122,7 @@ Leave `R2_ENDPOINT` empty; it only exists for testing with a local S3-compatible
 
 1. Push the repo and connect it in hPanel, or upload the project.
 2. Set the same environment variables as in `.env.local` (with `AUTH_TRUST_HOST=true` and your real `AUTH_URL`).
-3. Build command `npm run build`, start command `npm start`.
+3. Build command `npm run build`, start command `npm start`. The build also bundles the service worker (Serwist, using the `esbuild` that comes with the dev dependencies), so install dev dependencies before building. The site must be on HTTPS for the service worker and the Install button.
 4. Allow Hostinger's outbound IP in Atlas Network Access.
 
 ## Project layout

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Noto_Nastaliq_Urdu } from "next/font/google";
+import { SerwistProvider } from "@serwist/turbopack/react";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { DirectionProvider } from "@/components/ui/direction";
@@ -31,6 +32,9 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s · ${t("common.programName")}`,
     },
     description: t("metadata.description"),
+    applicationName: "Ehsas Program",
+    appleWebApp: { capable: true, title: "Ehsas", statusBarStyle: "default" },
+    icons: { apple: "/icons/apple-touch-icon.png" },
   };
 }
 
@@ -53,7 +57,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider>
           <DirectionProvider dir={dir}>
-            {children}
+            {/* Off in development so pages are never served from an old cache while coding. */}
+            <SerwistProvider
+              swUrl="/serwist/sw.js"
+              disable={process.env.NODE_ENV === "development"}
+              cacheOnNavigation={false}
+              reloadOnOnline={false}
+            >
+              {children}
+            </SerwistProvider>
             <Toaster position="top-center" dir={dir} richColors />
           </DirectionProvider>
         </NextIntlClientProvider>

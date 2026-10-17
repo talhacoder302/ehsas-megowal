@@ -1,6 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { Brand } from "@/components/shared/brand";
+import { InstallAppButton } from "@/components/shared/install-app-button";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
+import { OfflineBanner } from "@/components/shared/offline-banner";
 import { UserMenu } from "@/components/shared/user-menu";
 import { ManageNav } from "@/components/manage/manage-nav";
 import { MobileNav } from "@/components/manage/mobile-nav";
@@ -22,10 +24,12 @@ export default async function ManageLayout({ children }: { children: React.React
           <MobileNav role={me.role} />
           <Brand href="/manage" subtitle={t("areaName")} className="md:hidden" />
           <div className="ms-auto flex items-center gap-2">
+            <InstallAppButton />
             <LanguageSwitcher />
             <UserMenu name={me.name} role={me.role} memberId={me.memberId} area="manage" />
           </div>
         </header>
+        <OfflineBanner />
         <main className="flex-1 p-4 md:p-6">{children}</main>
       </div>
     </div>

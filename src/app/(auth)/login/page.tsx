@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { AuthShell } from "@/components/shared/auth-shell";
+import { ClearOfflineCache } from "@/components/shared/clear-offline-cache";
 import { LoginForm } from "@/components/shared/login-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { safeRedirectPath } from "@/lib/roles";
@@ -16,6 +17,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
   return (
     <AuthShell>
+      <ClearOfflineCache />
       <Card>
         <CardHeader>
           <CardTitle className="text-xl">{t("title")}</CardTitle>
