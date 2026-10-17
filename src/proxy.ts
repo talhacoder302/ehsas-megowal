@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import { AREA_HEADER, areaFromPath } from "@/i18n/config";
+import { resolveAppUrl } from "@/lib/app-url";
 import { canOpenPath, homePathFor, isRole } from "@/lib/roles";
 import { contentSecurityPolicy, originOf } from "@/lib/security";
 import { authConfig } from "@/server/auth/config";
@@ -45,7 +46,7 @@ export const proxy = auth((req) => {
     const csp = contentSecurityPolicy({
       nonce,
       dev: process.env.NODE_ENV === "development",
-      https: process.env.NODE_ENV === "production" && (process.env.NEXT_PUBLIC_APP_URL ?? "").startsWith("https://"),
+      https: process.env.NODE_ENV === "production" && resolveAppUrl(process.env).startsWith("https://"),
       connect: [originOf(process.env.R2_ENDPOINT)].filter((o): o is string => o !== null),
     });
     const headers = new Headers(req.headers);

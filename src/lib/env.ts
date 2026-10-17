@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { resolveAppUrl } from "./app-url";
 
 // Empty strings in .env files are treated as "not set".
 const optional = z
@@ -24,7 +25,8 @@ const serverSchema = z.object({
   AUTH_URL: optional,
   AUTH_TRUST_HOST: optional,
 
-  NEXT_PUBLIC_APP_URL: optional.transform((v) => v ?? "http://localhost:3000"),
+  // Optional: see resolveAppUrl (on Vercel it defaults to the production domain).
+  NEXT_PUBLIC_APP_URL: optional,
 
   R2_ACCOUNT_ID: optional,
   R2_ACCESS_KEY_ID: optional,
@@ -54,7 +56,9 @@ export type EmailConfig = {
   from: string;
 };
 
-export type ServerEnv = RawServerEnv & {
+export type ServerEnv = Omit<RawServerEnv, "NEXT_PUBLIC_APP_URL"> & {
+  /** Public address without a trailing slash (resolveAppUrl). */
+  NEXT_PUBLIC_APP_URL: string;
   /** null when R2 is not configured; receipt photo uploads are then disabled. */
   r2: R2Config | null;
   /** null when Resend is not configured; emails are then skipped. */
@@ -107,6 +111,7 @@ export function getServerEnv(): ServerEnv {
 
   cached = {
     ...parsed.data,
+    NEXT_PUBLIC_APP_URL: resolveAppUrl(process.env),
     r2: resolveR2(parsed.data),
     email: resolveEmail(parsed.data),
   };
