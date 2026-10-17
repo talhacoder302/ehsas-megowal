@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/manage/page-header";
 import { PhotoUpload } from "@/components/manage/photo-upload";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FormError, useValidationMessage } from "@/components/shared/form-error";
+import { Pagination } from "@/components/shared/pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,27 +26,29 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createExpenseAction } from "@/app/manage/expenses/actions";
-import { currentMonth, formatDate, formatMonthShort, monthKey, type DateKey } from "@/lib/dates";
+import { currentMonth, formatDate, formatMonthShort, type DateKey } from "@/lib/dates";
 import type { ServerErrorCode } from "@/lib/errors";
 import { formatRupees } from "@/lib/money";
 import { EXPENSE_CATEGORIES } from "@/lib/payouts";
 import { expenseFormSchema, type ExpenseFormInput, type ExpenseFormValues } from "@/lib/validators";
 import type { AccountOption } from "@/server/accounts";
-import type { ExpenseItem } from "@/server/expenses";
+import type { ExpensesPage } from "@/server/expenses";
+import { callAction } from "@/lib/offline";
 
 type ExpensesViewProps = {
-  expenses: ExpenseItem[];
+  data: ExpensesPage;
   accounts: AccountOption[];
   uploadsEnabled: boolean;
   today: DateKey;
 };
 
-export function ExpensesView({ expenses, accounts, uploadsEnabled, today }: ExpensesViewProps) {
+export function ExpensesView({ data, accounts, uploadsEnabled, today }: ExpensesViewProps) {
   const t = useTranslations();
   const locale = useLocale() === "ur" ? "ur" : "en";
   const [adding, setAdding] = useState(false);
   const thisMonth = currentMonth();
-  const monthTotal = expenses.filter((e) => monthKey(e.date) === thisMonth).reduce((sum, e) => sum + e.amount, 0);
+  const expenses = data.items;
+  const monthTotal = data.monthTotal;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
@@ -60,7 +63,7 @@ export function ExpensesView({ expenses, accounts, uploadsEnabled, today }: Expe
         }
       />
 
-      {expenses.length === 0 ? (
+      {data.total === 0 ? (
         <EmptyState icon={ReceiptIcon} title={t("expenses.emptyTitle")} description={t("expenses.emptyBody")} />
       ) : (
         <ul className="flex flex-col gap-2">
@@ -91,6 +94,7 @@ export function ExpensesView({ expenses, accounts, uploadsEnabled, today }: Expe
           ))}
         </ul>
       )}
+      <Pagination page={data.page} pageCount={data.pageCount} total={data.total} basePath="/manage/expenses" />
 
       <Dialog open={adding} onOpenChange={setAdding}>
         <DialogContent className="max-h-[92svh] overflow-y-auto sm:max-w-md">
@@ -101,7 +105,7 @@ export function ExpensesView({ expenses, accounts, uploadsEnabled, today }: Expe
   );
 }
 
-function ExpenseForm({ accounts, uploadsEnabled, today, onDone }: Omit<ExpensesViewProps, "expenses"> & { onDone: () => void }) {
+function ExpenseForm({ accounts, uploadsEnabled, today, onDone }: Omit<ExpensesViewProps, "data"> & { onDone: () => void }) {
   const t = useTranslations();
   const locale = useLocale() === "ur" ? "ur" : "en";
   const validation = useValidationMessage();
@@ -114,7 +118,7 @@ function ExpenseForm({ accounts, uploadsEnabled, today, onDone }: Omit<ExpensesV
 
   async function onSubmit(values: ExpenseFormValues) {
     setServerError(null);
-    const result = await createExpenseAction(values);
+    const result = await callAction(() => createExpenseAction(values));
     if (!result.ok) return setServerError(result.error);
     toast.success(t("expenses.saved"));
     onDone();

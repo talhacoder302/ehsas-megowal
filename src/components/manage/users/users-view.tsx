@@ -6,6 +6,7 @@ import { KeyRoundIcon, MoreVerticalIcon, PencilIcon, PlusIcon, SearchIcon, UserC
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Pagination } from "@/components/shared/pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,7 @@ import { resetPasswordAction, setUserStatusAction, type TempPasswordResult } fro
 import { formatDate } from "@/lib/dates";
 import { ROLES, type Role } from "@/lib/roles";
 import { formatMobile, mobileSearchDigits } from "@/lib/validators";
+import { usePaging } from "@/lib/use-paging";
 import type { MemberLinkOption } from "@/server/members";
 import type { UserListItem } from "@/server/users";
 import { TempPasswordDialog } from "@/components/manage/temp-password-dialog";
@@ -61,6 +63,7 @@ export function UsersView({ users, memberOptions, currentUserId }: UsersViewProp
       );
     });
   }, [users, query, roleFilter]);
+  const paged = usePaging(filtered, `${roleFilter}|${query}`);
 
   const close = () => setPending(null);
 
@@ -164,7 +167,7 @@ export function UsersView({ users, memberOptions, currentUserId }: UsersViewProp
         <>
           {/* Phones: cards */}
           <ul className="flex flex-col gap-2 md:hidden">
-            {filtered.map((u) => (
+            {paged.items.map((u) => (
               <li key={u.id} className={`rounded-xl border bg-card p-3 ${u.status === "disabled" ? "opacity-60" : ""}`}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex min-w-0 flex-col gap-1">
@@ -207,7 +210,7 @@ export function UsersView({ users, memberOptions, currentUserId }: UsersViewProp
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((u) => (
+                {paged.items.map((u) => (
                   <TableRow key={u.id} className={u.status === "disabled" ? "opacity-60" : undefined}>
                     <TableCell className="font-medium">{u.name}</TableCell>
                     <TableCell>
@@ -232,6 +235,7 @@ export function UsersView({ users, memberOptions, currentUserId }: UsersViewProp
               </TableBody>
             </Table>
           </div>
+          <Pagination page={paged.page} pageCount={paged.pageCount} total={paged.total} onPageChange={paged.setPage} />
         </>
       )}
 

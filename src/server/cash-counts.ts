@@ -2,6 +2,7 @@ import "server-only";
 import { Types } from "mongoose";
 import { countDifference } from "@/lib/closing";
 import { AppError } from "@/lib/errors";
+import { pageCount, pageWindow, parsePage, type Page } from "@/lib/pagination";
 import { requirePermission } from "@/lib/permissions";
 import { cashCountFormSchema } from "@/lib/validators";
 import { Account, CashCount, User } from "@/models";
@@ -20,17 +21,21 @@ export type CashCountItem = {
   countedByName: string;
 };
 
-/** Past counts, newest first. */
-export async function listCashCounts(limit = 100): Promise<CashCountItem[]> {
+/** Past counts, newest first, one page at a time. */
+export async function listCashCounts(pageInput?: unknown): Promise<Page<CashCountItem>> {
   await requirePermission("cash.count");
-  const rows = await CashCount.find().sort({ date: -1 }).limit(limit).lean();
+  const total = await CashCount.countDocuments();
+  const count = pageCount(total);
+  const page = parsePage(pageInput, count);
+  const { skip, limit } = pageWindow(page);
+  const rows = await CashCount.find().sort({ date: -1 }).skip(skip).limit(limit).lean();
   const [accounts, users] = await Promise.all([
     Account.find({ _id: { $in: [...new Set(rows.map((r) => r.accountId.toString()))] } }).select("name").lean(),
     User.find({ _id: { $in: [...new Set(rows.map((r) => r.countedBy.toString()))] } }).select("name").lean(),
   ]);
   const accountName = new Map(accounts.map((a) => [a._id.toString(), a.name]));
   const userName = new Map(users.map((u) => [u._id.toString(), u.name]));
-  return rows.map((r) => ({
+  const items = rows.map((r) => ({
     id: r._id.toString(),
     accountId: r.accountId.toString(),
     accountName: accountName.get(r.accountId.toString()) ?? "",
@@ -41,6 +46,7 @@ export async function listCashCounts(limit = 100): Promise<CashCountItem[]> {
     note: r.note,
     countedByName: userName.get(r.countedBy.toString()) ?? "",
   }));
+  return { items, page, pageCount: count, total };
 }
 
 /**

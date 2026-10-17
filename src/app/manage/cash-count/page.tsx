@@ -12,10 +12,13 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("title") };
 }
 
-export default async function CashCountPage() {
+type Props = { searchParams: Promise<{ page?: string | string[] }> };
+
+export default async function CashCountPage({ searchParams }: Props) {
   const me = await requirePageUser("/manage/cash-count");
   if (!can(me.role, "cash.count")) redirect("/manage");
-  const [accounts, counts] = await Promise.all([listAccountOptions(), listCashCounts()]);
+  const { page } = await searchParams;
+  const [accounts, counts] = await Promise.all([listAccountOptions(), listCashCounts(page)]);
   const mine = accounts.find((a) => a.holderUserId === me.id);
   return <CashCountView accounts={accounts} counts={counts} defaultAccountId={mine?.id ?? null} />;
 }

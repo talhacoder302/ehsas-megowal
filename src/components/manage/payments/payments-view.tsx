@@ -1,42 +1,47 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { HandCoinsIcon, HourglassIcon, PlusIcon, SearchIcon } from "lucide-react";
 import { PageHeader } from "@/components/manage/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Pagination } from "@/components/shared/pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { currentMonth, formatDate, formatMonthShort, monthKey } from "@/lib/dates";
+import { currentMonth, formatDate, formatMonthShort } from "@/lib/dates";
 import { formatRupees } from "@/lib/money";
-import type { PaymentListItem } from "@/server/payments";
+import type { PaymentListItem, PaymentsPage } from "@/server/payments";
 
-export function PaymentsView({ payments }: { payments: PaymentListItem[] }) {
+type PaymentsViewProps = {
+  data: PaymentsPage;
+  /** The search and filter the page was loaded with (from the URL). */
+  q: string;
+  showCancelled: boolean;
+};
+
+/** Payments newest first. Search, the cancelled filter and paging all run on the server. */
+export function PaymentsView({ data, q, showCancelled }: PaymentsViewProps) {
   const t = useTranslations();
   const locale = useLocale() === "ur" ? "ur" : "en";
-  const [query, setQuery] = useState("");
-  const [showCancelled, setShowCancelled] = useState(false);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return payments.filter((p) => {
-      if (!showCancelled && p.cancelled) return false;
-      if (!q) return true;
-      return (
-        p.memberName.toLowerCase().includes(q) ||
-        p.memberNo.toLowerCase().includes(q) ||
-        p.receiptNumber.toLowerCase().includes(q)
-      );
-    });
-  }, [payments, query, showCancelled]);
+  const router = useRouter();
+  const [query, setQuery] = useState(q);
+  const payments = data.items;
+  const params = { q: q || undefined, cancelled: showCancelled ? "1" : undefined };
+  const go = (next: { q?: string; cancelled?: boolean }) => {
+    const search = new URLSearchParams();
+    const nextQ = next.q ?? q;
+    if (nextQ.trim()) search.set("q", nextQ.trim());
+    if (next.cancelled ?? showCancelled) search.set("cancelled", "1");
+    const text = search.toString();
+    router.push(`/manage/payments${text ? `?${text}` : ""}`);
+  };
 
   const thisMonth = currentMonth();
-  const monthTotal = payments
-    .filter((p) => !p.cancelled && !p.imported && monthKey(p.date) === thisMonth)
-    .reduce((sum, p) => sum + p.amount, 0);
+  const monthTotal = data.monthTotal;
 
   const months = (p: PaymentListItem) => {
     const parts = p.monthsCovered.map((m) => formatMonthShort(m, locale));
@@ -67,7 +72,7 @@ export function PaymentsView({ payments }: { payments: PaymentListItem[] }) {
         }
       />
 
-      {payments.length === 0 ? (
+      {data.total === 0 && !q && !showCancelled ? (
         <EmptyState
           icon={HandCoinsIcon}
           title={t("payments.emptyTitle")}
@@ -84,28 +89,40 @@ export function PaymentsView({ payments }: { payments: PaymentListItem[] }) {
       ) : (
         <>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="relative flex-1">
+            <form
+              role="search"
+              className="relative flex-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                go({ q: query });
+              }}
+            >
               <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  // Clearing the box shows everything again.
+                  if (e.target.value === "" && q) go({ q: "" });
+                }}
                 placeholder={t("payments.searchPlaceholder")}
                 aria-label={t("common.search")}
+                enterKeyHint="search"
                 className="h-10 ps-9"
               />
-            </div>
+            </form>
             <label className="flex items-center gap-2 text-sm">
-              <Switch checked={showCancelled} onCheckedChange={setShowCancelled} />
+              <Switch checked={showCancelled} onCheckedChange={(on) => go({ cancelled: on })} />
               {t("payments.showCancelled")}
             </label>
           </div>
 
-          {filtered.length === 0 ? (
+          {payments.length === 0 ? (
             <EmptyState title={t("payments.noMatchTitle")} description={t("payments.noMatchBody")} />
           ) : (
             <ul className="flex flex-col gap-2">
-              {filtered.map((p) => (
+              {payments.map((p) => (
                 <li key={p.id}>
                   <Link
                     href={`/manage/payments/${p.id}`}
@@ -145,6 +162,7 @@ export function PaymentsView({ payments }: { payments: PaymentListItem[] }) {
               ))}
             </ul>
           )}
+          <Pagination page={data.page} pageCount={data.pageCount} total={data.total} basePath="/manage/payments" params={params} />
         </>
       )}
     </div>

@@ -14,9 +14,12 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("title") };
 }
 
-export default async function ExpensesPage() {
+type Props = { searchParams: Promise<{ page?: string | string[] }> };
+
+export default async function ExpensesPage({ searchParams }: Props) {
   const me = await requirePageUser("/manage/expenses");
   if (!can(me.role, "expenses.manage")) redirect("/manage");
-  const [expenses, accounts] = await Promise.all([listExpenses(), listAccountOptions()]);
-  return <ExpensesView expenses={expenses} accounts={accounts} uploadsEnabled={uploadsEnabled()} today={todayKey()} />;
+  const { page } = await searchParams;
+  const [data, accounts] = await Promise.all([listExpenses(page), listAccountOptions()]);
+  return <ExpensesView data={data} accounts={accounts} uploadsEnabled={uploadsEnabled()} today={todayKey()} />;
 }

@@ -9,6 +9,7 @@ import { BanknoteIcon, Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/manage/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Pagination } from "@/components/shared/pagination";
 import { FormError, useValidationMessage } from "@/components/shared/form-error";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,9 @@ import { formatRupees, parseRupees } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { cashCountFormSchema, type CashCountFormInput, type CashCountFormValues } from "@/lib/validators";
 import type { AccountOption } from "@/server/accounts";
+import type { Page } from "@/lib/pagination";
 import type { CashCountItem } from "@/server/cash-counts";
+import { callAction } from "@/lib/offline";
 
 /** "Matches", "Short by Rs. 200" or "Extra Rs. 300", coloured. */
 function DifferenceBadge({ difference }: { difference: number }) {
@@ -42,7 +45,7 @@ function DifferenceBadge({ difference }: { difference: number }) {
 
 type CashCountViewProps = {
   accounts: AccountOption[];
-  counts: CashCountItem[];
+  counts: Page<CashCountItem>;
   /** The account the viewer holds, chosen first. */
   defaultAccountId: string | null;
 };
@@ -62,11 +65,11 @@ export function CashCountView({ accounts, counts, defaultAccountId }: CashCountV
       )}
 
       <h2 className="mt-2 text-lg font-semibold">{t("cashCount.historyTitle")}</h2>
-      {counts.length === 0 ? (
+      {counts.total === 0 ? (
         <EmptyState icon={BanknoteIcon} title={t("cashCount.emptyTitle")} description={t("cashCount.emptyBody")} />
       ) : (
         <ul className="flex flex-col gap-2">
-          {counts.map((c) => (
+          {counts.items.map((c) => (
             <li key={c.id} className="flex flex-col gap-2 rounded-xl border bg-card p-3 text-sm">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="flex min-w-0 flex-col gap-0.5">
@@ -96,6 +99,7 @@ export function CashCountView({ accounts, counts, defaultAccountId }: CashCountV
           ))}
         </ul>
       )}
+      <Pagination page={counts.page} pageCount={counts.pageCount} total={counts.total} basePath="/manage/cash-count" />
     </div>
   );
 }
@@ -129,7 +133,7 @@ function CashCountForm({ accounts, defaultAccountId }: Omit<CashCountViewProps, 
 
   async function onSubmit(values: CashCountFormValues) {
     setServerError(null);
-    const result = await recordCashCountAction(values);
+    const result = await callAction(() => recordCashCountAction(values));
     if (!result.ok) {
       setServerError(result.error);
       if (result.error === "balanceChangedMeanwhile") router.refresh();

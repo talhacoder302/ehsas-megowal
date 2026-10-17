@@ -11,8 +11,14 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("title") };
 }
 
-export default async function PaymentsPage() {
+type Props = { searchParams: Promise<{ q?: string | string[]; cancelled?: string | string[]; page?: string | string[] }> };
+
+export default async function PaymentsPage({ searchParams }: Props) {
   const me = await requirePageUser("/manage/payments");
   if (!can(me.role, "payments.record")) redirect("/manage");
-  return <PaymentsView payments={await listPayments()} />;
+  const params = await searchParams;
+  const q = typeof params.q === "string" ? params.q : "";
+  const showCancelled = params.cancelled === "1";
+  const data = await listPayments({ q, cancelled: showCancelled, page: params.page });
+  return <PaymentsView key={`${q}|${showCancelled}`} data={data} q={q} showCancelled={showCancelled} />;
 }

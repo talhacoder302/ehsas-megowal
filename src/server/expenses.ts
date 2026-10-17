@@ -1,7 +1,8 @@
 import "server-only";
 import { Types } from "mongoose";
-import { parseDateKey } from "@/lib/dates";
+import { currentMonth, monthRange, parseDateKey } from "@/lib/dates";
 import { AppError } from "@/lib/errors";
+import { pageCount, pageWindow, parsePage, type Page } from "@/lib/pagination";
 import type { ExpenseCategory } from "@/lib/payouts";
 import { requirePermission } from "@/lib/permissions";
 import { expenseFormSchema, transferFormSchema } from "@/lib/validators";
@@ -50,11 +51,22 @@ async function activeAccountOrThrow(accountId: string): Promise<void> {
 // Expenses: program costs not tied to a case
 // ---------------------------------------------------------------------------
 
-export async function listExpenses(limit = 300): Promise<ExpenseItem[]> {
+export type ExpensesPage = Page<ExpenseItem> & { monthTotal: number };
+
+/** Expenses newest first, one page at a time, with this month's total. */
+export async function listExpenses(pageInput?: unknown): Promise<ExpensesPage> {
   await requirePermission("expenses.manage");
-  const rows = await Expense.find().sort({ date: -1, createdAt: -1 }).limit(limit).lean();
+  const { start, end } = monthRange(currentMonth());
+  const [total, monthSum] = await Promise.all([
+    Expense.countDocuments(),
+    Expense.aggregate<{ total: number }>([{ $match: { date: { $gte: start, $lt: end } } }, { $group: { _id: null, total: { $sum: "$amount" } } }]),
+  ]);
+  const count = pageCount(total);
+  const page = parsePage(pageInput, count);
+  const { skip, limit } = pageWindow(page);
+  const rows = await Expense.find().sort({ date: -1, createdAt: -1 }).skip(skip).limit(limit).lean();
   const [users, accounts] = await Promise.all([names("user", rows.map((r) => r.createdBy)), names("account", rows.map((r) => r.accountId))]);
-  return Promise.all(
+  const items = await Promise.all(
     rows.map(async (r) => ({
       id: r._id.toString(),
       category: r.category,
@@ -66,6 +78,7 @@ export async function listExpenses(limit = 300): Promise<ExpenseItem[]> {
       photoUrl: await photoViewUrl(r.receiptPhotoKey),
     })),
   );
+  return { items, page, pageCount: count, total, monthTotal: monthSum[0]?.total ?? 0 };
 }
 
 export async function createExpense(input: unknown): Promise<string> {

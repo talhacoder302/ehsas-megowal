@@ -5,12 +5,14 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { FileSpreadsheetIcon, PlusIcon, SearchIcon, UploadIcon, UsersIcon } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Pagination } from "@/components/shared/pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MEMBER_STATUSES, type MemberStatus } from "@/lib/member-status";
 import { formatRupees } from "@/lib/money";
+import { usePaging } from "@/lib/use-paging";
 import { formatMobile, mobileSearchDigits } from "@/lib/validators";
 import type { MemberListItem } from "@/server/members";
 import { MemberStatusBadge } from "./member-status-badge";
@@ -48,6 +50,7 @@ export function MembersView({ members, canManage }: MembersViewProps) {
       );
     });
   }, [members, query, status]);
+  const paged = usePaging(filtered, `${status}|${query}`);
 
   const pending = (m: MemberListItem) =>
     m.pendingAmount === null ? (
@@ -150,7 +153,7 @@ export function MembersView({ members, canManage }: MembersViewProps) {
             <>
               {/* Phones: cards */}
               <ul className="flex flex-col gap-2 md:hidden">
-                {filtered.map((m) => (
+                {paged.items.map((m) => (
                   <li key={m.id}>
                     <Link
                       href={`/manage/members/${m.id}`}
@@ -196,7 +199,7 @@ export function MembersView({ members, canManage }: MembersViewProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filtered.map((m) => (
+                    {paged.items.map((m) => (
                       // The name link stretches over the whole row, so any click opens the member.
                       <TableRow key={m.id} className="relative cursor-pointer">
                         <TableCell>
@@ -230,6 +233,8 @@ export function MembersView({ members, canManage }: MembersViewProps) {
                   </TableBody>
                 </Table>
               </div>
+
+              <Pagination page={paged.page} pageCount={paged.pageCount} total={paged.total} onPageChange={paged.setPage} />
 
               {filtered.every((m) => m.pendingAmount === null) ? (
                 <p className="text-xs text-muted-foreground">{t("members.pendingSoon")}</p>

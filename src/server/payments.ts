@@ -1,10 +1,12 @@
 import "server-only";
 import { Types } from "mongoose";
-import { canCancelPayment, REGISTER_INCOME_SOURCE, totalDueNow, type PayableItem, type PaymentMethod } from "@/lib/contributions";
-import { currentMonth, parseDateKey, type MonthKey } from "@/lib/dates";
+import { canCancelPayment, NOT_FROM_REGISTER, REGISTER_INCOME_SOURCE, totalDueNow, type PayableItem, type PaymentMethod } from "@/lib/contributions";
+import { currentMonth, monthRange, parseDateKey, type MonthKey } from "@/lib/dates";
 import { connectDB } from "@/lib/db";
 import { AppError } from "@/lib/errors";
+import { pageCount, pageWindow, parsePage, type Page } from "@/lib/pagination";
 import { requirePermission } from "@/lib/permissions";
+import { containsPattern } from "@/lib/search";
 import { paymentFormSchema, reasonFormSchema } from "@/lib/validators";
 import { Account, ContributionBill, Income, Member, User, type IncomeDoc } from "@/models";
 import { assertBalanceCovers, listAccountOptions, type AccountOption } from "./accounts";
@@ -189,10 +191,41 @@ async function namesById<T extends { _id: Types.ObjectId }>(
   return new Map(rows.map((r) => [r._id.toString(), pick(r)]));
 }
 
-/** Recent payments, newest first. */
-export async function listPayments(limit = 300): Promise<PaymentListItem[]> {
+export type PaymentFilters = { q?: unknown; cancelled?: unknown; page?: unknown };
+
+export type PaymentsPage = Page<PaymentListItem> & {
+  /** Money received this month (cancelled and register imports left out). */
+  monthTotal: number;
+};
+
+/**
+ * Payments newest first, one page at a time. The search matches the receipt
+ * number, the member number or the member's name; cancelled payments are left
+ * out unless asked for.
+ */
+export async function listPayments(filters: PaymentFilters = {}): Promise<PaymentsPage> {
   await requirePermission("payments.record");
-  const incomes = await Income.find().sort({ date: -1, createdAt: -1 }).limit(limit).lean();
+  const q = typeof filters.q === "string" ? filters.q.trim() : "";
+  const showCancelled = filters.cancelled === true || filters.cancelled === "1";
+
+  const query: Record<string, unknown> = showCancelled ? {} : { cancelled: false };
+  if (q) {
+    const pattern = containsPattern(q);
+    const matching = await Member.find({ $or: [{ name: pattern }, { memberNo: pattern }] }).select("_id").limit(500).lean();
+    query.$or = [{ receiptNumber: pattern }, { memberId: { $in: matching.map((m) => m._id) } }];
+  }
+  const { start, end } = monthRange(currentMonth());
+  const [total, monthSum] = await Promise.all([
+    Income.countDocuments(query),
+    Income.aggregate<{ total: number }>([
+      { $match: { cancelled: false, ...NOT_FROM_REGISTER, date: { $gte: start, $lt: end } } },
+      { $group: { _id: null, total: { $sum: "$amount" } } },
+    ]),
+  ]);
+  const count = pageCount(total);
+  const page = parsePage(filters.page, count);
+  const { skip, limit } = pageWindow(page);
+  const incomes = await Income.find(query).sort({ date: -1, createdAt: -1 }).skip(skip).limit(limit).lean();
 
   const memberIds = incomes.map((i) => i.memberId).filter((id): id is Types.ObjectId => Boolean(id));
   const [members, accounts, users] = await Promise.all([
@@ -202,7 +235,7 @@ export async function listPayments(limit = 300): Promise<PaymentListItem[]> {
   ]);
   const memberMap = new Map(members.map((m) => [m._id.toString(), m]));
 
-  return incomes.map((i) => {
+  const items = incomes.map((i) => {
     const member = i.memberId ? memberMap.get(i.memberId.toString()) : undefined;
     return {
       id: i._id.toString(),
@@ -221,6 +254,7 @@ export async function listPayments(limit = 300): Promise<PaymentListItem[]> {
       imported: i.source === REGISTER_INCOME_SOURCE,
     };
   });
+  return { items, page, pageCount: count, total, monthTotal: monthSum[0]?.total ?? 0 };
 }
 
 async function toReceiptView(income: IncomeDoc): Promise<ReceiptView & { memberMobile: string; accountName: string }> {

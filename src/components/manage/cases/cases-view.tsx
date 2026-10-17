@@ -7,6 +7,7 @@ import { CircleAlertIcon, HeartHandshakeIcon, PlusIcon, SearchIcon, XIcon } from
 import { PageHeader } from "@/components/manage/page-header";
 import { CaseCategoryLabel, CaseStatusBadge } from "@/components/shared/case-badges";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Pagination } from "@/components/shared/pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CASE_CATEGORIES, caseTab, daysSince, isStale, needsAttention, type CaseCategory, type CaseTab } from "@/lib/cases";
 import { dateKey, formatDate } from "@/lib/dates";
 import { formatRupees } from "@/lib/money";
+import { usePaging } from "@/lib/use-paging";
 import { cn } from "@/lib/utils";
 import type { CaseListItem } from "@/server/cases";
 
@@ -65,6 +67,7 @@ export function CasesView({ cases, canManage, now }: CasesViewProps) {
         return flag || (a.createdAt < b.createdAt ? 1 : -1);
       });
   }, [cases, tab, category, from, to, query, now]);
+  const paged = usePaging(filtered, [tab, category, from, to, query].join("|"));
 
   const filtersOn = category !== "all" || from !== "" || to !== "" || query !== "";
 
@@ -170,7 +173,7 @@ export function CasesView({ cases, canManage, now }: CasesViewProps) {
         <EmptyState title={t("cases.noMatchTitle")} description={t("cases.noMatchBody")} />
       ) : (
         <ul className="flex flex-col gap-2">
-          {filtered.map((c) => {
+          {paged.items.map((c) => {
             const days = daysSince(c.lastUpdateAt, new Date(now));
             const stale = isStale(c.status, c.lastUpdateAt, new Date(now));
             const flagged = c.status === "on_hold" || stale;
@@ -225,6 +228,7 @@ export function CasesView({ cases, canManage, now }: CasesViewProps) {
           })}
         </ul>
       )}
+      <Pagination page={paged.page} pageCount={paged.pageCount} total={paged.total} onPageChange={paged.setPage} />
     </div>
   );
 }
