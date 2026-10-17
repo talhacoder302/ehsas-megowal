@@ -4,6 +4,9 @@ import { AppError } from "@/lib/errors";
 import { renderReportPdf } from "@/server/pdf/report-pdf";
 import { getMonthlyReport } from "@/server/reports";
 
+// PDF and Excel files can take a few seconds on a cold start.
+export const maxDuration = 60;
+
 const STATUS: Partial<Record<string, number>> = { unauthenticated: 401, forbidden: 403, invalidInput: 400, monthInFuture: 400 };
 
 // GET /api/reports/2026-10/pdf?lang=ur&version=members  -> the monthly report as a PDF.

@@ -3,6 +3,9 @@ import { isLocale } from "@/i18n/config";
 import { renderReceiptPdf } from "@/server/pdf/receipt-pdf";
 import { getReceiptByToken } from "@/server/payments";
 
+// PDF and Excel files can take a few seconds on a cold start.
+export const maxDuration = 60;
+
 // GET /receipt/<token>/pdf?lang=ur  -> the receipt as a PDF. Public like the receipt page.
 export async function GET(request: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;

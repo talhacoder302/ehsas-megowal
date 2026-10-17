@@ -6,6 +6,9 @@ import { ImportPanel } from "@/components/manage/setup/import-panel";
 import { can } from "@/lib/permissions";
 import { requirePageUser } from "@/server/auth/guards";
 
+// Excel imports run as Server Actions of this page and may check a few thousand rows.
+export const maxDuration = 60;
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("setup.imports");
   return { title: t("membersTitle") };

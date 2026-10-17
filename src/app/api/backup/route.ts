@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { AppError } from "@/lib/errors";
 import { buildBackupWorkbook } from "@/server/backup";
 
+// PDF and Excel files can take a few seconds on a cold start.
+export const maxDuration = 60;
+
 const STATUS: Partial<Record<string, number>> = { unauthenticated: 401, forbidden: 403, tooManyRequests: 429 };
 
 // GET /api/backup  -> every collection as one Excel file (admin only).

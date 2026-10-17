@@ -24,6 +24,12 @@ export async function connectDB(): Promise<typeof mongoose> {
       dbName: env.MONGODB_DB,
       bufferCommands: false,
       serverSelectionTimeoutMS: 10_000,
+      // On Vercel many short-lived function instances may each hold a pool. Keep
+      // pools small and let idle sockets close, so Atlas (M0: 500 connections)
+      // never runs out. Plenty for a village fund's traffic.
+      maxPoolSize: 5,
+      minPoolSize: 0,
+      maxIdleTimeMS: 60_000,
     });
   }
 

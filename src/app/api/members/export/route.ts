@@ -4,6 +4,9 @@ import { AppError } from "@/lib/errors";
 import { MEMBER_STATUSES, type MemberStatus } from "@/lib/member-status";
 import { buildMembersWorkbook } from "@/server/members-export";
 
+// PDF and Excel files can take a few seconds on a cold start.
+export const maxDuration = 60;
+
 // GET /api/members/export?status=active  -> members.xlsx (staff only)
 export async function GET(request: NextRequest) {
   const param = request.nextUrl.searchParams.get("status");

@@ -19,6 +19,12 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   serverExternalPackages: ["mongoose"],
   poweredByHeader: false,
+  // The PDF routes read the Urdu font from assets/fonts at runtime; serverless
+  // hosts (Vercel) only ship files that are traced, so include them explicitly.
+  outputFileTracingIncludes: {
+    "/receipt/*/pdf": ["./assets/fonts/**/*"],
+    "/api/reports/*/pdf": ["./assets/fonts/**/*"],
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

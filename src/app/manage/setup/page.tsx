@@ -16,6 +16,9 @@ import { cn } from "@/lib/utils";
 import { requirePageUser } from "@/server/auth/guards";
 import { getSetupState } from "@/server/setup";
 
+// Excel imports run as Server Actions of this page and may check a few thousand rows.
+export const maxDuration = 60;
+
 const STEPS = ["dates", "balances", "members", "imports", "summary"] as const;
 
 type Props = { searchParams: Promise<{ step?: string | string[] }> };
