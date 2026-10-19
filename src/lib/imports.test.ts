@@ -3,6 +3,7 @@ import {
   categoryCell,
   dateCell,
   duplicateRows,
+  joinAddress,
   excelSerialToDateKey,
   monthCell,
   normalizeHeader,
@@ -17,14 +18,14 @@ describe("readSheetRows", () => {
   it("matches headers loosely and skips empty rows", () => {
     const { rows, missing } = readSheetRows("members", [
       [],
-      ["NAME", "Father's name", "Mobile No.", "Mohalla", "Joining date", "Baqaya"],
-      ["Ali Raza", "Raza Khan", "0300-1234567", "Mohalla Arain", "15/03/2024", "1,500"],
+      ["NAME", "Father's name", "Mobile No.", "Address", "Joining date", "Baqaya"],
+      ["Ali Raza", "Raza Khan", "0300-1234567", "House 12, Mohalla Arain", "15/03/2024", "1,500"],
       ["", "", "", "", "", ""],
       ["Bilal", "", "", "Mohalla Arain", "2024-04-01", ""],
     ]);
     expect(missing).toEqual([]);
     expect(rows).toHaveLength(2);
-    expect(rows[0]).toMatchObject({ rowNumber: 3, values: { name: "Ali Raza", fatherName: "Raza Khan", openingDue: "1,500", email: "" } });
+    expect(rows[0]).toMatchObject({ rowNumber: 3, values: { name: "Ali Raza", fatherName: "Raza Khan", address: "House 12, Mohalla Arain", openingDue: "1,500", email: "" } });
     expect(rows[1].rowNumber).toBe(5);
   });
 
@@ -80,12 +81,12 @@ describe("row validation", () => {
   it("accepts a good member row and reports each bad field once", () => {
     const good = validateRow(
       memberImportRowSchema,
-      rowInput("members", { name: "Ali Raza", fatherName: "Raza Khan", mobile: "0300-1234567", mohalla: "Mohalla Arain", joinDate: 45366, openingDue: "" }),
+      rowInput("members", { name: "Ali Raza", fatherName: "Raza Khan", mobile: "0300-1234567", address: "House 12", mohalla: "Mohalla Arain", joinDate: 45366, openingDue: "" }),
     );
     expect(good.errors).toEqual([]);
-    expect(good.data).toMatchObject({ mobile: "03001234567", joinDate: "2024-03-15", openingDue: 0 });
+    expect(good.data).toMatchObject({ mobile: "03001234567", address: "House 12, Mohalla Arain", joinDate: "2024-03-15", openingDue: 0 });
 
-    const bad = validateRow(memberImportRowSchema, rowInput("members", { name: "", fatherName: "Raza", mobile: "12345", mohalla: "Arain", joinDate: "31/02/2024" }));
+    const bad = validateRow(memberImportRowSchema, rowInput("members", { name: "", fatherName: "Raza", mobile: "12345", address: "Arain", joinDate: "31/02/2024" }));
     expect(bad.data).toBeNull();
     expect(bad.errors).toEqual([
       { field: "name", code: "nameRequired" },
@@ -113,5 +114,14 @@ describe("row validation", () => {
 
   it("flags repeats after the first", () => {
     expect([...duplicateRows(["a", "b", "a", null, null, "b"])]).toEqual([2, 5]);
+  });
+});
+
+describe("joinAddress", () => {
+  it("adds an old Mohalla column to the address once", () => {
+    expect(joinAddress("House 12, Gali 3", "Mohalla Arain")).toBe("House 12, Gali 3, Mohalla Arain");
+    expect(joinAddress("", "Mohalla Arain")).toBe("Mohalla Arain");
+    expect(joinAddress("House 12, Mohalla Arain", "mohalla arain")).toBe("House 12, Mohalla Arain");
+    expect(joinAddress("House 12", "")).toBe("House 12");
   });
 });

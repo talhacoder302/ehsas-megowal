@@ -18,7 +18,8 @@ export const MAX_IMPORT_BYTES = 900 * 1024;
 /** Rows read from one file. */
 export const MAX_IMPORT_ROWS = 2000;
 
-type ColumnSpec = { field: string; header: string; aliases: string[]; required: boolean };
+/** `hidden` columns are read when a sheet has them but are not in the template. */
+type ColumnSpec = { field: string; header: string; aliases: string[]; required: boolean; hidden?: boolean };
 
 /** Columns of each template, in order. Headers are matched loosely (case, spaces and punctuation ignored). */
 export const IMPORT_COLUMNS: Record<ImportKind, readonly ColumnSpec[]> = {
@@ -26,12 +27,13 @@ export const IMPORT_COLUMNS: Record<ImportKind, readonly ColumnSpec[]> = {
     { field: "name", header: "Name", aliases: ["membername", "naam"], required: true },
     { field: "fatherName", header: "Father name", aliases: ["father", "fathersname", "walidkanaam", "walid"], required: true },
     { field: "mobile", header: "Mobile", aliases: ["phone", "mobileno", "mobilenumber", "contact"], required: false },
-    { field: "mohalla", header: "Mohalla", aliases: ["muhalla", "area"], required: true },
-    { field: "address", header: "Address", aliases: ["pata"], required: false },
+    { field: "address", header: "Address", aliases: ["pata", "houseaddress", "street"], required: false },
     { field: "joinDate", header: "Join date", aliases: ["joined", "joiningdate", "datejoined"], required: true },
     { field: "openingDue", header: "Opening due", aliases: ["due", "baqaya", "pending", "unpaid", "openingbalance"], required: false },
     { field: "email", header: "Email", aliases: ["emailaddress"], required: false },
     { field: "notes", header: "Notes", aliases: ["note", "remarks"], required: false },
+    // Older sheets kept the mohalla in its own column; it is added to the address.
+    { field: "mohalla", header: "Mohalla", aliases: ["muhalla", "area"], required: false, hidden: true },
   ],
   history: [
     { field: "memberNo", header: "Member no", aliases: ["memberno", "membernumber", "number", "no"], required: true },
@@ -209,6 +211,12 @@ export function categoryCell(value: unknown): string {
 /** An error on one field of one row. `code` is a key of the "validation" messages. */
 export type RowError = { field: string; code: string };
 
+/** "House 12, Gali 3" + "Mohalla Arain" -> "House 12, Gali 3, Mohalla Arain" (no repeats, no empty parts). */
+export function joinAddress(address: string, mohalla: string): string {
+  if (!mohalla || address.toLowerCase().includes(mohalla.toLowerCase())) return address;
+  return address ? `${address}, ${mohalla}` : mohalla;
+}
+
 /** Turns a sheet row into the shape the kind's schema expects. */
 export function rowInput(kind: ImportKind, values: Record<string, unknown>): Record<string, unknown> {
   switch (kind) {
@@ -217,8 +225,7 @@ export function rowInput(kind: ImportKind, values: Record<string, unknown>): Rec
         name: cellText(values.name),
         fatherName: cellText(values.fatherName),
         mobile: cellText(values.mobile),
-        mohalla: cellText(values.mohalla),
-        address: cellText(values.address),
+        address: joinAddress(cellText(values.address), cellText(values.mohalla)),
         joinDate: dateCell(values.joinDate),
         openingDue: amountCell(values.openingDue),
         email: cellText(values.email),

@@ -196,7 +196,6 @@ export async function runImport(kind: ImportKind, form: FormData): Promise<Impor
         fatherName: m.fatherName,
         mobile: m.mobile,
         email: m.email,
-        mohalla: m.mohalla,
         address: m.address,
         joinDate,
         notes: m.notes,
@@ -226,8 +225,8 @@ export async function runImport(kind: ImportKind, form: FormData): Promise<Impor
 
 const EXAMPLES: Record<ImportKind, (string | number)[][]> = {
   members: [
-    ["Muhammad Akram", "Ghulam Nabi", "0300-1234567", "Mohalla Arain", "Gali 3, Megowal", "2023-01-01", 1500, "", "Paid up to Dec in the register"],
-    ["Bashir Ahmad", "Allah Ditta", "", "Mohalla Masjid Wala", "", "2024-06-01", 0, "", ""],
+    ["Muhammad Akram", "Ghulam Nabi", "0300-1234567", "House 12, Gali 3, Mohalla Arain, Megowal", "2023-01-01", 1500, "", "Paid up to Dec in the register"],
+    ["Bashir Ahmad", "Allah Ditta", "", "Mohalla Masjid Wala", "2024-06-01", 0, "", ""],
   ],
   history: [
     ["EP-001", "2025-11", 500, "2025-11-05"],
@@ -238,10 +237,10 @@ const EXAMPLES: Record<ImportKind, (string | number)[][]> = {
 
 const HELP: Record<ImportKind, string[]> = {
   members: [
-    "One row per member. Name, Father name, Mohalla and Join date are required.",
+    "One row per member. Name, Father name and Join date are required. Address: street, mohalla and house in one cell.",
     "Dates: 2024-03-15 or 15/03/2024. Mobile: any common format (0300-1234567, +92 300 1234567).",
     "Opening due: what the member still owed in the register before the first app month (empty = 0).",
-    "Ek row mein ek member. Naam, walid ka naam, mohalla aur shamil hone ki tareekh zaroori hain.",
+    "Ek row mein ek member. Naam, walid ka naam aur shamil hone ki tareekh zaroori hain. Pata mein gali, mohalla aur ghar likhein.",
   ],
   history: [
     "One row per month paid, from the paper register, BEFORE the first month kept in the app.",
@@ -260,8 +259,9 @@ const HELP: Record<ImportKind, string[]> = {
 /** An empty template to fill in: headers, example rows and a help sheet. Same permission as the import. */
 export async function buildImportTemplate(kind: ImportKind): Promise<{ filename: string; body: Uint8Array }> {
   await requirePermission(PERMISSION[kind]);
-  const sheet = XLSX.utils.aoa_to_sheet([IMPORT_COLUMNS[kind].map((c) => c.header), ...EXAMPLES[kind]]);
-  sheet["!cols"] = IMPORT_COLUMNS[kind].map((c) => ({ wch: Math.max(14, c.header.length + 4) }));
+  const columns = IMPORT_COLUMNS[kind].filter((c) => !c.hidden);
+  const sheet = XLSX.utils.aoa_to_sheet([columns.map((c) => c.header), ...EXAMPLES[kind]]);
+  sheet["!cols"] = columns.map((c) => ({ wch: c.field === "address" ? 36 : Math.max(14, c.header.length + 4) }));
   const help = XLSX.utils.aoa_to_sheet(HELP[kind].map((line) => [line]));
   help["!cols"] = [{ wch: 110 }];
   const book = XLSX.utils.book_new();

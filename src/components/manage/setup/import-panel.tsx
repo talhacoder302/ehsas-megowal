@@ -18,7 +18,7 @@ import { callAction } from "@/lib/offline";
 
 /** Fields shown on each preview row (the rest only matter when they have an error). */
 const SUMMARY: Record<ImportKind, string[]> = {
-  members: ["name", "fatherName", "mohalla", "joinDate", "openingDue"],
+  members: ["name", "fatherName", "address", "joinDate", "openingDue"],
   history: ["memberNo", "month", "amount", "date"],
   cases: ["beneficiaryName", "category", "totalPaid", "date"],
 };
