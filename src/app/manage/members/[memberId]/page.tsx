@@ -71,7 +71,8 @@ export default async function MemberPage({ params, searchParams }: Props) {
           </div>
           <h1 className="text-2xl font-semibold">{member.name}</h1>
           <p className="text-sm text-muted-foreground">
-            {t("sonOf", { name: member.fatherName })} · {member.mohalla}
+            {t("sonOf", { name: member.fatherName })}
+            {member.address ? <span dir="auto">{` · ${member.address}`}</span> : null}
           </p>
           <p className="text-sm">
             {t("dueNow")}:{" "}

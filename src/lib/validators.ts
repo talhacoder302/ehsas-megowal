@@ -140,7 +140,7 @@ export const memberFormSchema = z.object({
   fatherName: z.string().trim().min(2, "fatherNameRequired").max(80, "nameTooLong"),
   mobile: optionalMobileSchema,
   email: optionalEmailSchema,
-  mohalla: z.string().trim().min(2, "mohallaRequired").max(60, "mohallaTooLong"),
+  // One free-text address (street, mohalla, house); there is no separate mohalla field any more.
   address: z.string().trim().max(200, "addressTooLong"),
   joinDate: pastDateKeySchema,
   notes: z.string().trim().max(1000, "notesTooLong"),

@@ -114,6 +114,7 @@ export type SeedMember = {
   mobile: string;
   /** Optional; demo addresses use example.com so nothing is ever delivered. */
   email?: string;
+  /** Demo only: becomes part of the address ("<mohalla>, Megowal"); members have no separate mohalla field. */
   mohalla: string;
   joinDate: Date;
   openingDue?: number;
@@ -129,7 +130,7 @@ export type SeedMember = {
 export async function ensureMembers(seeds: SeedMember[]): Promise<{ id: Types.ObjectId; memberNo: string; created: boolean }[]> {
   await connectDB();
   const out: { id: Types.ObjectId; memberNo: string; created: boolean }[] = [];
-  for (const { statusChange, ...seed } of seeds) {
+  for (const { statusChange, mohalla, ...seed } of seeds) {
     const existing = await Member.findOne({ name: seed.name, fatherName: seed.fatherName }).select("memberNo").lean();
     if (existing) {
       // Members seeded before emails existed get theirs, without overwriting a real one.
@@ -141,7 +142,7 @@ export async function ensureMembers(seeds: SeedMember[]): Promise<{ id: Types.Ob
     const member = await Member.create({
       ...seed,
       memberNo,
-      address: `${seed.mohalla}, Megowal`,
+      address: `${mohalla}, Megowal`,
       status: statusChange?.status ?? "active",
       statusChangedAt: statusChange?.date ?? null,
       statusReason: statusChange?.reason ?? "",

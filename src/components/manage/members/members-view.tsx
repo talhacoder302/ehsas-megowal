@@ -46,6 +46,7 @@ export function MembersView({ members, canManage }: MembersViewProps) {
         m.name.toLowerCase().includes(q) ||
         m.fatherName.toLowerCase().includes(q) ||
         m.memberNo.toLowerCase().includes(q) ||
+        m.address.toLowerCase().includes(q) ||
         (qMobile !== null && m.mobile.includes(qMobile))
       );
     });
@@ -168,7 +169,8 @@ export function MembersView({ members, canManage }: MembersViewProps) {
                         </div>
                         <span className="truncate font-medium">{m.name}</span>
                         <span className="truncate text-sm text-muted-foreground">
-                          {t("members.sonOf", { name: m.fatherName })} · {m.mohalla}
+                          {t("members.sonOf", { name: m.fatherName })}
+                          {m.address ? <span dir="auto">{` · ${m.address}`}</span> : null}
                         </span>
                         {m.mobile ? (
                           <span dir="ltr" className="self-start font-mono text-xs text-muted-foreground">
@@ -192,7 +194,7 @@ export function MembersView({ members, canManage }: MembersViewProps) {
                     <TableRow>
                       <TableHead className="w-20">{t("members.columns.memberNo")}</TableHead>
                       <TableHead>{t("members.columns.name")}</TableHead>
-                      <TableHead>{t("members.columns.mohalla")}</TableHead>
+                      <TableHead>{t("members.columns.address")}</TableHead>
                       <TableHead>{t("members.columns.mobile")}</TableHead>
                       <TableHead>{t("members.columns.status")}</TableHead>
                       <TableHead className="text-end">{t("members.columns.pending")}</TableHead>
@@ -216,7 +218,9 @@ export function MembersView({ members, canManage }: MembersViewProps) {
                             </span>
                           </Link>
                         </TableCell>
-                        <TableCell className="text-sm">{m.mohalla}</TableCell>
+                        <TableCell className="max-w-56 truncate text-sm" dir="auto" title={m.address}>
+                          {m.address}
+                        </TableCell>
                         <TableCell>
                           {m.mobile ? (
                             <span dir="ltr" className="font-mono text-sm">{formatMobile(m.mobile)}</span>

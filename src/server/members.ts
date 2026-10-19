@@ -21,7 +21,8 @@ export type MemberListItem = {
   name: string;
   fatherName: string;
   mobile: string;
-  mohalla: string;
+  /** One free-text address (street, mohalla, house). Older records without one show their old mohalla. */
+  address: string;
   /** ISO instant; show with formatDate or dateKey. */
   joinDate: string;
   status: MemberStatus;
@@ -50,7 +51,6 @@ export type MemberLogin = {
 
 export type MemberDetail = MemberListItem & {
   email: string;
-  address: string;
   notes: string;
   statusReason: string;
   openingDue: number;
@@ -89,7 +89,15 @@ const MEMBER_NO_ORDER = { locale: "en", numericOrdering: true } as const;
 // "muhammad ali" matches "Muhammad Ali".
 const CASE_INSENSITIVE = { locale: "en", strength: 2 } as const;
 
-const LIST_FIELDS = "memberNo name fatherName mobile mohalla joinDate status statusChangedAt openingDue";
+const LIST_FIELDS = "memberNo name fatherName mobile address mohalla joinDate status statusChangedAt openingDue";
+
+/**
+ * The address to show. Members are no longer asked for a mohalla (it is part
+ * of the address now); records saved before that may only have the mohalla.
+ */
+function memberAddress(m: { address?: string | null; mohalla?: string | null }): string {
+  return m.address?.trim() || m.mohalla?.trim() || "";
+}
 
 function toListItem(m: LeanMember, linkedMemberIds: Set<string>, billDues: Map<string, { due: number }>): MemberListItem {
   const id = m._id.toString();
@@ -99,7 +107,7 @@ function toListItem(m: LeanMember, linkedMemberIds: Set<string>, billDues: Map<s
     name: m.name,
     fatherName: m.fatherName,
     mobile: m.mobile,
-    mohalla: m.mohalla,
+    address: memberAddress(m),
     joinDate: m.joinDate.toISOString(),
     status: m.status,
     statusChangedAt: m.statusChangedAt ? m.statusChangedAt.toISOString() : null,
@@ -172,7 +180,6 @@ export async function getMemberDetail(memberId: string): Promise<MemberDetail | 
   return {
     ...toListItem(member, new Set(user ? [member._id.toString()] : []), await billDuesByMember(currentMonth(), member._id)),
     email: member.email ?? "",
-    address: member.address,
     notes: member.notes,
     statusReason: member.statusReason,
     openingDue: member.openingDue,
@@ -251,13 +258,6 @@ export async function listMemberActivity(memberId: string): Promise<MemberActivi
   });
 }
 
-/** Mohalla names already in use, for suggestions in the member form. */
-export async function listMohallas(): Promise<string[]> {
-  await requirePermission("members.read");
-  const values: string[] = await Member.distinct("mohalla");
-  return values.filter(Boolean).sort((a, b) => a.localeCompare(b));
-}
-
 /** Members to choose from when linking a login to a member record. Admin only. */
 export async function listMemberLinkOptions(): Promise<MemberLinkOption[]> {
   await requireRole("admin");
@@ -298,7 +298,6 @@ export async function createMember(input: unknown): Promise<{ id: string; member
     fatherName: values.fatherName,
     mobile: values.mobile,
     email: values.email,
-    mohalla: values.mohalla,
     address: values.address,
     joinDate: toDate(values.joinDate),
     notes: values.notes,
@@ -333,7 +332,6 @@ export async function updateMember(memberId: string, input: unknown): Promise<vo
     fatherName: member.fatherName,
     mobile: member.mobile,
     email: member.email ?? "",
-    mohalla: member.mohalla,
     address: member.address,
     joinDate: dateKey(member.joinDate),
     notes: member.notes,
@@ -417,13 +415,13 @@ export async function changeMemberStatus(memberId: string, input: unknown): Prom
 // Excel export
 // ---------------------------------------------------------------------------
 
-export type MemberExportRow = MemberListItem & { address: string; notes: string; statusReason: string };
+export type MemberExportRow = MemberListItem & { notes: string; statusReason: string };
 
 export async function listMembersForExport(status: MemberStatus | null): Promise<MemberExportRow[]> {
   await requirePermission("members.read");
   const [members, linked] = await Promise.all([
     Member.find(status ? { status } : {})
-      .select(`${LIST_FIELDS} address notes statusReason`)
+      .select(`${LIST_FIELDS} notes statusReason`)
       .sort({ memberNo: 1 })
       .collation(MEMBER_NO_ORDER)
       .lean<LeanMember[]>(),
@@ -432,7 +430,6 @@ export async function listMembersForExport(status: MemberStatus | null): Promise
   const dues = await billDuesByMember(currentMonth());
   return members.map((m) => ({
     ...toListItem(m, linked, dues),
-    address: m.address,
     notes: m.notes,
     statusReason: m.statusReason,
   }));

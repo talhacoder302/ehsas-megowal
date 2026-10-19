@@ -13,7 +13,8 @@ export type PendingRow = {
   name: string;
   fatherName: string;
   mobile: string;
-  mohalla: string;
+  /** Free-text address (older records: their old mohalla). */
+  address: string;
   status: MemberStatus;
   openingDue: number;
   /** Unpaid months up to the selected month, oldest first. */
@@ -49,7 +50,7 @@ export async function getPendingReport(input: unknown): Promise<PendingReport> {
     loadRates(),
     ContributionBill.find({ month }).select("amount paidAmount status").lean(),
     billDuesByMember(month),
-    Member.find().select("memberNo name fatherName mobile mohalla status statusHistory joinDate openingDue").lean(),
+    Member.find().select("memberNo name fatherName mobile address mohalla status statusHistory joinDate openingDue").lean(),
   ]);
 
   let billed = 0;
@@ -76,7 +77,7 @@ export async function getPendingReport(input: unknown): Promise<PendingReport> {
       name: m.name,
       fatherName: m.fatherName,
       mobile: m.mobile,
-      mohalla: m.mohalla,
+      address: m.address?.trim() || m.mohalla?.trim() || "",
       status: m.status,
       openingDue: m.openingDue,
       months: bill?.months ?? [],

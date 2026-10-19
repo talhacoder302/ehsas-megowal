@@ -105,8 +105,7 @@ describe("memberFormSchema", () => {
     fatherName: "Noor Muhammad",
     mobile: "+92 300 1110003",
     email: "",
-    mohalla: "Mohalla Arain",
-    address: "",
+    address: "House 12, Gali 3, Mohalla Arain, Megowal",
     joinDate: "2023-03-01",
     notes: "",
   };
@@ -121,12 +120,16 @@ describe("memberFormSchema", () => {
     expect(memberFormSchema.parse({ ...valid, mobile: "  " }).mobile).toBe("");
   });
 
-  it("rejects a wrong mobile, missing father name and mohalla, and a future join date", () => {
+  it("needs no mohalla: the address (optional) holds street, mohalla and house", () => {
+    expect(memberFormSchema.parse({ ...valid, address: "" }).address).toBe("");
+    expect(memberFormSchema.parse(valid)).not.toHaveProperty("mohalla");
+  });
+
+  it("rejects a wrong mobile, missing father name and a future join date", () => {
     const result = memberFormSchema.safeParse({
       ...valid,
       mobile: "12345",
       fatherName: "",
-      mohalla: " ",
       joinDate: "2999-01-01",
     });
     expect(result.success).toBe(false);
@@ -134,7 +137,6 @@ describe("memberFormSchema", () => {
     expect(messages).toEqual({
       mobile: "mobileFormat",
       fatherName: "fatherNameRequired",
-      mohalla: "mohallaRequired",
       joinDate: "dateInFuture",
     });
   });
@@ -171,7 +173,7 @@ describe("form schemas accept their own output", () => {
     [
       "memberFormSchema",
       memberFormSchema,
-      { name: "Ali Raza", fatherName: "Raza Khan", mobile: "", email: " Ali@Example.com ", mohalla: "Mohalla Arain", address: "", joinDate: "2024-01-01", notes: "" },
+      { name: "Ali Raza", fatherName: "Raza Khan", mobile: "", email: " Ali@Example.com ", address: "Mohalla Arain", joinDate: "2024-01-01", notes: "" },
     ],
     ["accountFormSchema", accountFormSchema, { name: "Cash", type: "cash_in_hand", holderUserId: "", openingBalance: "1,000" }],
     [

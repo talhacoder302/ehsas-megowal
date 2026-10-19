@@ -38,8 +38,16 @@ export async function MemberProfile({ member, canManage, isAdmin }: MemberProfil
         notSet
       ),
     },
-    { label: t("members.fields.mohalla"), value: member.mohalla || notSet },
-    { label: t("members.fields.address"), value: member.address || notSet },
+    {
+      label: t("members.fields.address"),
+      value: member.address ? (
+        <span dir="auto" className="whitespace-pre-line">
+          {member.address}
+        </span>
+      ) : (
+        notSet
+      ),
+    },
     { label: t("members.fields.joinDate"), value: formatDate(member.joinDate, locale) },
     {
       label: t("members.fields.status"),

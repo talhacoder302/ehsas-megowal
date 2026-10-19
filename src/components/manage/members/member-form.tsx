@@ -22,11 +22,9 @@ import { callAction } from "@/lib/offline";
 type MemberFormProps = {
   /** Leave out to add a new member. */
   member?: { id: string; values: MemberFormInput };
-  /** Mohallas already in use, offered as suggestions. */
-  mohallas: string[];
 };
 
-export function MemberForm({ member, mohallas }: MemberFormProps) {
+export function MemberForm({ member }: MemberFormProps) {
   const t = useTranslations();
   const validation = useValidationMessage();
   const router = useRouter();
@@ -39,7 +37,6 @@ export function MemberForm({ member, mohallas }: MemberFormProps) {
       fatherName: "",
       mobile: "",
       email: "",
-      mohalla: "",
       address: "",
       joinDate: todayKey(),
       notes: "",
@@ -172,41 +169,25 @@ export function MemberForm({ member, mohallas }: MemberFormProps) {
         />
 
         <Controller
-          name="mohalla"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="member-mohalla">{t("members.form.mohalla")}</FieldLabel>
-              <Input
-                {...field}
-                id="member-mohalla"
-                list="member-mohalla-options"
-                autoComplete="off"
-                className="h-10"
-                aria-invalid={fieldState.invalid}
-              />
-              <datalist id="member-mohalla-options">
-                {mohallas.map((m) => (
-                  <option key={m} value={m} />
-                ))}
-              </datalist>
-              {fieldState.error ? (
-                <FieldError>{validation(fieldState.error.message)}</FieldError>
-              ) : (
-                <FieldDescription>{t("members.form.mohallaHint")}</FieldDescription>
-              )}
-            </Field>
-          )}
-        />
-
-        <Controller
           name="address"
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor="member-address">{t("members.form.address")}</FieldLabel>
-              <Input {...field} id="member-address" autoComplete="off" className="h-10" aria-invalid={fieldState.invalid} />
-              <FieldError>{validation(fieldState.error?.message)}</FieldError>
+              <Textarea
+                {...field}
+                id="member-address"
+                rows={2}
+                dir="auto"
+                autoComplete="off"
+                placeholder={t("members.form.addressPlaceholder")}
+                aria-invalid={fieldState.invalid}
+              />
+              {fieldState.error ? (
+                <FieldError>{validation(fieldState.error.message)}</FieldError>
+              ) : (
+                <FieldDescription>{t("members.form.addressHint")}</FieldDescription>
+              )}
             </Field>
           )}
         />

@@ -19,7 +19,7 @@ import {
   caseStatusChangeSchema,
   type CaseFormValues,
 } from "@/lib/validators";
-import { AidCase, User, type AidCaseDoc } from "@/models";
+import { AidCase, Member, User, type AidCaseDoc } from "@/models";
 import { logActivity } from "./activity-log";
 import { payoutsByCase } from "./payout-totals";
 import { nextCaseNo } from "./sequence";
@@ -134,6 +134,14 @@ function caseFields(values: CaseFormValues) {
 // ---------------------------------------------------------------------------
 
 /** All cases, newest first, with names (heads and admin). */
+/** Mohalla names to suggest on the case form: from earlier cases, and from members' older records. */
+export async function listMohallaSuggestions(): Promise<string[]> {
+  await requirePermission("cases.manage");
+  const [fromCases, fromMembers] = await Promise.all([AidCase.distinct("mohalla"), Member.distinct("mohalla")]);
+  const names = new Set([...fromCases, ...fromMembers].map((v) => String(v ?? "").trim()).filter(Boolean));
+  return [...names].sort((a, b) => a.localeCompare(b));
+}
+
 export async function listCases(): Promise<CaseListItem[]> {
   const me = await requirePermission("cases.viewNames");
   const cases = await AidCase.find().select("-notes").sort({ createdAt: -1 }).lean<LeanCase[]>();

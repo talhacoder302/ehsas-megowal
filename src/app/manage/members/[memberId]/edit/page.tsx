@@ -7,7 +7,7 @@ import { dateKey } from "@/lib/dates";
 import { can } from "@/lib/permissions";
 import { formatMobile } from "@/lib/validators";
 import { requirePageUser } from "@/server/auth/guards";
-import { getMemberDetail, listMohallas } from "@/server/members";
+import { getMemberDetail } from "@/server/members";
 
 type Props = { params: Promise<{ memberId: string }> };
 
@@ -21,11 +21,7 @@ export default async function EditMemberPage({ params }: Props) {
   const me = await requirePageUser(`/manage/members/${memberId}/edit`);
   if (!can(me.role, "members.manage")) redirect(`/manage/members/${memberId}`);
 
-  const [t, member, mohallas] = await Promise.all([
-    getTranslations("members"),
-    getMemberDetail(memberId),
-    listMohallas(),
-  ]);
+  const [t, member] = await Promise.all([getTranslations("members"), getMemberDetail(memberId)]);
   if (!member) notFound();
 
   return (
@@ -36,7 +32,6 @@ export default async function EditMemberPage({ params }: Props) {
       subtitle={member.memberNo}
     >
       <MemberForm
-        mohallas={mohallas}
         member={{
           id: member.id,
           values: {
@@ -44,7 +39,6 @@ export default async function EditMemberPage({ params }: Props) {
             fatherName: member.fatherName,
             mobile: member.mobile ? formatMobile(member.mobile) : "",
             email: member.email,
-            mohalla: member.mohalla,
             address: member.address,
             joinDate: dateKey(member.joinDate),
             notes: member.notes,

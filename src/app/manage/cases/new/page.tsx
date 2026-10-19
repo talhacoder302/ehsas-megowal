@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/manage/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { can } from "@/lib/permissions";
 import { requirePageUser } from "@/server/auth/guards";
-import { listMohallas } from "@/server/members";
+import { listMohallaSuggestions } from "@/server/cases";
 import { readSettings } from "@/server/settings";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,7 +18,7 @@ export default async function NewCasePage() {
   const me = await requirePageUser("/manage/cases/new");
   if (!can(me.role, "cases.manage")) redirect("/manage/cases");
 
-  const [t, mohallas, settings] = await Promise.all([getTranslations("cases"), listMohallas(), readSettings()]);
+  const [t, mohallas, settings] = await Promise.all([getTranslations("cases"), listMohallaSuggestions(), readSettings()]);
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
       <PageHeader title={t("form.createTitle")} subtitle={t("form.createSubtitle")} back={{ href: "/manage/cases", label: t("title") }} />

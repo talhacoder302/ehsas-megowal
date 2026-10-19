@@ -50,7 +50,7 @@ export function PendingView({ report, currentMonth, canGenerate, programName, vi
     const q = query.trim().toLowerCase();
     if (!q) return report.rows;
     return report.rows.filter(
-      (r) => r.name.toLowerCase().includes(q) || r.memberNo.toLowerCase().includes(q) || r.mohalla.toLowerCase().includes(q),
+      (r) => r.name.toLowerCase().includes(q) || r.memberNo.toLowerCase().includes(q) || r.address.toLowerCase().includes(q),
     );
   }, [report.rows, query]);
 
@@ -192,10 +192,10 @@ export function PendingView({ report, currentMonth, canGenerate, programName, vi
                         </span>
                       </span>
                       <span className="truncate text-xs text-muted-foreground">
-                        {r.mohalla}
+                        {r.address ? <span dir="auto">{r.address}</span> : null}
                         {r.mobile ? (
                           <>
-                            {" · "}
+                            {r.address ? " · " : null}
                             <span dir="ltr">{formatMobile(r.mobile)}</span>
                           </>
                         ) : null}

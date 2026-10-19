@@ -160,7 +160,6 @@
       "name": "Name",
       "fatherName": "Father's name",
       "mobile": "Mobile",
-      "mohalla": "Mohalla",
       "address": "Address",
       "joinDate": "Join date",
       "status": "Status",
@@ -187,10 +186,10 @@
     "columns": {
       "memberNo": "No.",
       "name": "Name",
-      "mohalla": "Mohalla",
       "mobile": "Mobile",
       "status": "Status",
-      "pending": "Pending"
+      "pending": "Pending",
+      "address": "Address"
     },
     "form": {
       "createTitle": "Add member",
@@ -200,8 +199,6 @@
       "fatherName": "Father's name",
       "mobile": "Mobile number",
       "mobileHint": "Optional. Needed to create a login.",
-      "mohalla": "Mohalla",
-      "mohallaHint": "Pick one from the list or type a new name.",
       "address": "Address",
       "joinDate": "Join date",
       "joinDateHint": "Monthly contributions start from this month.",
@@ -209,7 +206,9 @@
       "notesHint": "Optional. Anything the heads should remember.",
       "create": "Add member",
       "email": "Email (optional)",
-      "emailHint": "Used only to send the monthly report by email."
+      "emailHint": "Used only to send the monthly report by email.",
+      "addressHint": "Optional. Street, mohalla and house in one line.",
+      "addressPlaceholder": "e.g. House 12, Gali 3, Mohalla Arain, Megowal"
     },
     "created": "Member {memberNo} added.",
     "updated": "Member saved.",
@@ -226,7 +225,6 @@
       "memberNo": "Member no.",
       "fatherName": "Father's name",
       "mobile": "Mobile",
-      "mohalla": "Mohalla",
       "address": "Address",
       "joinDate": "Join date",
       "notes": "Notes",
@@ -821,7 +819,6 @@
     "memberRequired": "A member login must be linked to a member record.",
     "invalidId": "Invalid selection.",
     "fatherNameRequired": "Please enter the father's name.",
-    "mohallaRequired": "Please enter the mohalla.",
     "mohallaTooLong": "Mohalla name is too long.",
     "addressTooLong": "Address is too long.",
     "notesTooLong": "Notes are too long.",

@@ -8,8 +8,7 @@ import { dateKey } from "@/lib/dates";
 import { can } from "@/lib/permissions";
 import { formatMobile } from "@/lib/validators";
 import { requirePageUser } from "@/server/auth/guards";
-import { getCase } from "@/server/cases";
-import { listMohallas } from "@/server/members";
+import { getCase, listMohallaSuggestions } from "@/server/cases";
 
 type Props = { params: Promise<{ caseId: string }> };
 
@@ -23,7 +22,7 @@ export default async function EditCasePage({ params }: Props) {
   const me = await requirePageUser(`/manage/cases/${caseId}/edit`);
   if (!can(me.role, "cases.manage")) redirect(`/manage/cases/${caseId}`);
 
-  const [t, aidCase, mohallas] = await Promise.all([getTranslations("cases"), getCase(caseId), listMohallas()]);
+  const [t, aidCase, mohallas] = await Promise.all([getTranslations("cases"), getCase(caseId), listMohallaSuggestions()]);
   if (!aidCase) notFound();
 
   return (
