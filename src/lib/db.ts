@@ -1,5 +1,7 @@
 import "server-only";
+import dns from "node:dns";
 import mongoose from "mongoose";
+import { needsPublicDns, PUBLIC_DNS_SERVERS } from "@/lib/dns-fallback";
 import { getServerEnv } from "@/lib/env";
 
 type MongooseCache = {
@@ -20,6 +22,12 @@ export async function connectDB(): Promise<typeof mongoose> {
 
   if (!cache.promise) {
     const env = getServerEnv();
+    // Some Windows machines give Node only 127.0.0.1 as DNS, so the Atlas
+    // "mongodb+srv" lookup fails (querySrv ECONNREFUSED). Use public DNS then.
+    if (needsPublicDns(env.MONGODB_URI, dns.getServers())) {
+      dns.setServers([...PUBLIC_DNS_SERVERS]);
+      console.warn("[db] Node had no usable DNS server (only 127.0.0.1); using public DNS to find MongoDB Atlas.");
+    }
     cache.promise = mongoose.connect(env.MONGODB_URI, {
       dbName: env.MONGODB_DB,
       bufferCommands: false,
